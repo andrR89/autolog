@@ -8,7 +8,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Contrato do serviço de sugestão de calendário de manutenção via IA.
 ///
-/// Dado `{type, make, model, year, engineDisplacementCc?, tankCapacityL?}`,
+/// Dado `{type, make, model, year, engineDisplacementCc?, tankCapacityL?,
+/// vehicleUf?, currentOdometerKm?}`,
 /// retorna uma lista típica de manutenções para o veículo informado.
 /// Lança [QuotaExhaustedException] quando a cota mensal é atingida.
 /// Lança [ScanException] em erro real.
@@ -20,6 +21,8 @@ abstract class MaintenanceSuggestionService {
     required int year,
     int? engineDisplacementCc,
     Decimal? tankCapacityL,
+    String? vehicleUf,
+    int? currentOdometerKm,
   });
 }
 
@@ -40,6 +43,8 @@ class RealMaintenanceSuggestionService
     required int year,
     int? engineDisplacementCc,
     Decimal? tankCapacityL,
+    String? vehicleUf,
+    int? currentOdometerKm,
   }) async {
     try {
       final body = <String, dynamic>{
@@ -53,6 +58,12 @@ class RealMaintenanceSuggestionService
       }
       if (tankCapacityL != null) {
         body['tank_capacity_l'] = tankCapacityL.toString();
+      }
+      if (vehicleUf != null) {
+        body['vehicle_uf'] = vehicleUf;
+      }
+      if (currentOdometerKm != null) {
+        body['current_odometer_km'] = currentOdometerKm;
       }
 
       final response = await _invoker.invoke('suggest-maintenance', body);
@@ -133,6 +144,8 @@ class MockMaintenanceSuggestionService
     required int year,
     int? engineDisplacementCc,
     Decimal? tankCapacityL,
+    String? vehicleUf,
+    int? currentOdometerKm,
   }) async {
     callCount++;
     await Future<void>.delayed(delay);

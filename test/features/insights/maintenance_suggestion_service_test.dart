@@ -119,6 +119,40 @@ void main() {
     });
   });
 
+  group('novos params (6.W.1)', () {
+    test('passa vehicle_uf e current_odometer_km quando fornecidos', () async {
+      final invoker = _FakeInvoker();
+      final svc = RealMaintenanceSuggestionService(invoker);
+
+      await svc.suggest(
+        type: VehicleType.carro,
+        make: 'Honda',
+        model: 'Civic LX',
+        year: 2018,
+        vehicleUf: 'SP',
+        currentOdometerKm: 80000,
+      );
+
+      expect(invoker.lastBody!['vehicle_uf'], 'SP');
+      expect(invoker.lastBody!['current_odometer_km'], 80000);
+    });
+
+    test('omite vehicle_uf e current_odometer_km quando não fornecidos', () async {
+      final invoker = _FakeInvoker();
+      final svc = RealMaintenanceSuggestionService(invoker);
+
+      await svc.suggest(
+        type: VehicleType.carro,
+        make: 'Honda',
+        model: 'Civic LX',
+        year: 2018,
+      );
+
+      expect(invoker.lastBody!.containsKey('vehicle_uf'), isFalse);
+      expect(invoker.lastBody!.containsKey('current_odometer_km'), isFalse);
+    });
+  });
+
   group('MockMaintenanceSuggestionService', () {
     test('callCount incrementa, retorna fixedResult', () async {
       const fixed = MaintenanceSchedule(items: [

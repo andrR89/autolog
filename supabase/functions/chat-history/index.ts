@@ -13,41 +13,184 @@ function json(body: unknown, status = 200): Response {
 }
 
 // ---------------------------------------------------------------------------
+// Stats computation
+// ---------------------------------------------------------------------------
+
+interface ComputedStats {
+  currentOdometerKm: number | null;
+  totalKmDriven: number | null;
+  avgConsumptionKmL: number | null;
+  favoriteStation: string | null;
+  topExpenseCategory: string | null;
+  activeRemindersCount: number;
+  cheapestPpl: number | null;
+  mostExpensivePpl: number | null;
+}
+
+function computeStats(
+  fuelEntries: any[],
+  expenses: any[],
+  reminders: any[],
+): ComputedStats {
+  // Odometer stats.
+  const odometerValues = fuelEntries
+    .map((f) => parseInt(f.odometer, 10))
+    .filter((v) => isFinite(v));
+  const currentOdometerKm =
+    odometerValues.length > 0 ? Math.max(...odometerValues) : null;
+  const minOdometer =
+    odometerValues.length > 0 ? Math.min(...odometerValues) : null;
+  const totalKmDriven =
+    currentOdometerKm != null && minOdometer != null
+      ? currentOdometerKm - minOdometer
+      : null;
+
+  // Average consumption: only when >= 2 fuel entries.
+  let avgConsumptionKmL: number | null = null;
+  if (fuelEntries.length >= 2 && totalKmDriven != null && totalKmDriven > 0) {
+    const totalLiters = fuelEntries.reduce(
+      (sum: number, f) => sum + (parseFloat(f.liters) || 0),
+      0,
+    );
+    if (totalLiters > 0) {
+      avgConsumptionKmL = totalKmDriven / totalLiters;
+    }
+  }
+
+  // Favorite station: top (brand || name) normalized, counted by entriesCount.
+  const stationCount: Record<string, number> = {};
+  for (const f of fuelEntries) {
+    const brand = (f.station_brand ?? '').trim();
+    const name = (f.station_name ?? '').trim();
+    const key = brand || name;
+    if (key) {
+      stationCount[key] = (stationCount[key] ?? 0) + 1;
+    }
+  }
+  let favoriteStation: string | null = null;
+  let favoriteCount = 0;
+  for (const [station, count] of Object.entries(stationCount)) {
+    if (count > favoriteCount) {
+      favoriteCount = count;
+      favoriteStation = station;
+    }
+  }
+  if (favoriteStation && favoriteCount > 0) {
+    favoriteStation = `${favoriteStation} (${favoriteCount} visitas)`;
+  }
+
+  // Top expense category.
+  const categoryCount: Record<string, number> = {};
+  for (const e of expenses) {
+    const cat = (e.category ?? '').trim();
+    if (cat) {
+      categoryCount[cat] = (categoryCount[cat] ?? 0) + 1;
+    }
+  }
+  let topExpenseCategory: string | null = null;
+  let topCatCount = 0;
+  for (const [cat, count] of Object.entries(categoryCount)) {
+    if (count > topCatCount) {
+      topCatCount = count;
+      topExpenseCategory = cat;
+    }
+  }
+
+  // Active reminders count: not done, not deleted.
+  const activeRemindersCount = reminders.filter(
+    (r) => !r.is_done && !r.deleted_at,
+  ).length;
+
+  // Price per liter min/max.
+  const ppls = fuelEntries
+    .map((f) => parseFloat(f.price_per_liter))
+    .filter((v) => isFinite(v) && v > 0);
+  const cheapestPpl = ppls.length > 0 ? Math.min(...ppls) : null;
+  const mostExpensivePpl = ppls.length > 0 ? Math.max(...ppls) : null;
+
+  return {
+    currentOdometerKm,
+    totalKmDriven,
+    avgConsumptionKmL,
+    favoriteStation,
+    topExpenseCategory,
+    activeRemindersCount,
+    cheapestPpl,
+    mostExpensivePpl,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Prompt PT-BR estruturado
 // ---------------------------------------------------------------------------
 
 function buildSystemPrompt(
   vehicle: Record<string, unknown>,
-  fuelEntries: unknown[],
-  expenses: unknown[],
-  reminders: unknown[],
+  fuelEntries: any[],
+  expenses: any[],
+  reminders: any[],
 ): string {
-  const vehicleLine = [
+  const stats = computeStats(fuelEntries, expenses, reminders);
+
+  // Vehicle line: year make model • placa • type • cor • uf
+  // NOTE: renavam e chassi são omitidos por privacidade (Regra de Ouro).
+  const vehicleHeader = [
     vehicle.year,
     vehicle.make,
     vehicle.model,
-    vehicle.uf ? `(${vehicle.uf})` : null,
   ]
     .filter(Boolean)
     .join(' ');
 
-  // Estatísticas agregadas simples
-  const totalFuelCost = fuelEntries.reduce(
-    (sum: number, f: any) => sum + (parseFloat(f.total_cost) || 0),
-    0,
-  );
-  const totalFuelLiters = fuelEntries.reduce(
-    (sum: number, f: any) => sum + (parseFloat(f.liters) || 0),
-    0,
-  );
-  const avgPricePerLiter =
-    totalFuelLiters > 0 ? totalFuelCost / totalFuelLiters : 0;
+  const vehicleMeta = [
+    vehicle.plate ? `placa ${vehicle.plate}` : null,
+    vehicle.type ?? null,
+    vehicle.color ? `cor ${vehicle.color}` : null,
+    vehicle.uf ?? null,
+  ]
+    .filter(Boolean)
+    .join(' • ');
 
-  const totalExpenses = expenses.reduce(
-    (sum: number, e: any) => sum + (parseFloat(e.amount) || 0),
-    0,
-  );
+  const vehicleLine = vehicleHeader
+    ? `${vehicleHeader}${vehicleMeta ? ' • ' + vehicleMeta : ''}`
+    : 'não informado';
 
+  // Specs line.
+  const engineCc = vehicle.engine_displacement_cc;
+  const tankL = vehicle.tank_capacity_l;
+  const hp = vehicle.horsepower;
+  const specsLine =
+    engineCc || tankL || hp
+      ? [
+          engineCc ? `Cilindrada: ${engineCc} cc` : null,
+          tankL ? `Tanque: ${tankL} L` : null,
+          hp ? `Potência: ${hp} cv` : null,
+        ]
+          .filter(Boolean)
+          .join(' · ')
+      : null;
+
+  // FIPE line.
+  const fipeValue = vehicle.fipe_value;
+  const fipeRef = vehicle.fipe_reference_month;
+  const fipeLine =
+    fipeValue
+      ? `FIPE: R$ ${parseFloat(fipeValue as string).toLocaleString('pt-BR', { minimumFractionDigits: 0 })}${fipeRef ? ` (${fipeRef})` : ''}`
+      : null;
+
+  // Consumption display.
+  const consumptionDisplay =
+    stats.avgConsumptionKmL != null
+      ? `${stats.avgConsumptionKmL.toFixed(1).replace('.', ',')} km/L`
+      : '—';
+
+  // Price per liter display.
+  const pplDisplay =
+    stats.cheapestPpl != null && stats.mostExpensivePpl != null
+      ? `R$ ${stats.cheapestPpl.toFixed(2).replace('.', ',')} (mín) a R$ ${stats.mostExpensivePpl.toFixed(2).replace('.', ',')} (máx)`
+      : '—';
+
+  // Compact history.
   const fuelCompact = fuelEntries
     .slice(-20)
     .map(
@@ -65,30 +208,32 @@ function buildSystemPrompt(
     .join('\n');
 
   const remindersCompact = reminders
+    .filter((r: any) => !r.is_done && !r.deleted_at)
     .map(
       (r: any) =>
-        `${r.title} | vence: ${r.due_date?.slice(0, 10) ?? r.due_km ? `${r.due_km}km` : 'N/A'}`,
+        `${r.title} | vence: ${r.due_date?.slice(0, 10) ?? (r.due_km ? `${r.due_km}km` : 'N/A')}`,
     )
     .join('\n');
 
-  return `Você é um assistente do AutoLog. Responda em PT-BR baseando-se no histórico do veículo ${vehicleLine || 'não informado'} fornecido abaixo. Seja direto e útil. Se não tiver dado pra responder, diga "Não tenho dados pra responder isso".
+  return `Você é o assistente do AutoLog. Responda em PT-BR com base no contexto abaixo.
+Seja direto, objetivo, útil. Se não tiver dado pra responder, diga "Não tenho dados pra responder isso" — nunca invente.
 
-# Contexto do veículo
+# Veículo do usuário
+${vehicleLine}${specsLine ? '\n' + specsLine : ''}${fipeLine ? '\n' + fipeLine : ''}
 
-Veículo: ${vehicleLine || 'não informado'}
+# Stats agregadas (últimos 36 meses)
+Odômetro atual: ${stats.currentOdometerKm != null ? stats.currentOdometerKm.toLocaleString('pt-BR') + ' km' : '—'} · Total rodado: ${stats.totalKmDriven != null ? stats.totalKmDriven.toLocaleString('pt-BR') + ' km' : '—'}
+Consumo médio: ${consumptionDisplay}
+Posto preferido: ${stats.favoriteStation ?? '—'}
+Categoria de despesa mais frequente: ${stats.topExpenseCategory ?? '—'}
+Preço gasolina: ${pplDisplay}
+Lembretes ativos: ${stats.activeRemindersCount}
 
-## Estatísticas (últimos 36 meses)
-- Total gasto com combustível: R$${totalFuelCost.toFixed(2)}
-- Total litros abastecidos: ${totalFuelLiters.toFixed(1)}L
-- Preço médio por litro: R$${avgPricePerLiter.toFixed(3)}
-- Total gasto com despesas: R$${totalExpenses.toFixed(2)}
-- Número de abastecimentos: ${fuelEntries.length}
-- Número de despesas registradas: ${expenses.length}
-
-## Últimos abastecimentos
+# Histórico bruto
+## Últimos abastecimentos (até 20)
 ${fuelCompact || '(nenhum)'}
 
-## Últimas despesas
+## Últimas despesas (até 20)
 ${expensesCompact || '(nenhuma)'}
 
 ## Lembretes ativos
@@ -189,9 +334,14 @@ serve(async (req: Request) => {
   }
 
   // --- 4. Load vehicle (verify ownership) ---
+  // NOTE: renavam and chassi are intentionally excluded for privacy.
   const { data: vehicle } = await supabase
     .from('vehicles')
-    .select('*')
+    .select(
+      'id,user_id,year,make,model,plate,type,color,uf,' +
+      'engine_displacement_cc,tank_capacity_l,horsepower,' +
+      'fipe_value,fipe_reference_month,initial_odometer',
+    )
     .eq('id', vehicle_id)
     .eq('user_id', userId)
     .maybeSingle();
@@ -207,7 +357,7 @@ serve(async (req: Request) => {
 
   const { data: fuelEntries } = await supabase
     .from('fuel_entries')
-    .select('date,odometer,liters,total_cost,fuel_type')
+    .select('date,odometer,liters,total_cost,fuel_type,price_per_liter,station_brand,station_name')
     .eq('vehicle_id', vehicle_id)
     .is('deleted_at', null)
     .gte('date', sinceIso)
@@ -223,7 +373,7 @@ serve(async (req: Request) => {
 
   const { data: reminders } = await supabase
     .from('reminders')
-    .select('title,due_date,due_km,type')
+    .select('title,due_date,due_km,type,is_done,deleted_at')
     .eq('vehicle_id', vehicle_id)
     .is('deleted_at', null)
     .eq('is_done', false);

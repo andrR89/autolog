@@ -144,6 +144,15 @@ Migration 0003 aplicada e edge function `analyze-history` deployada em produçã
 
 > **🏁🏁 ONDA 2 COMPLETA (26/05/2026)** — 10 sprints, 751 testes verdes, 0 analyze issues, iOS build OK. Migrations pendentes em prod: 0007 (documents) + 0008 (station) + 0009 (chat_quota). Edge functions novas: `suggest-maintenance`, `chat-history`. Próximo passo: commit inicial em https://github.com/andrR89/autolog.
 
+## Sprint 6.W.1 — Patch IA contextual ✅
+
+Patch corretivo pós-homologação:
+- **Fix 1:** `chat-history` agora envia veículo completo (placa/type/specs/FIPE, sem renavam/chassi por privacidade) + stats computadas (odômetro atual, total rodado, consumo médio, posto preferido, top categoria de despesa, faixa de preços, lembretes ativos).
+- **Fix 2:** `suggest-maintenance` aceita `vehicle_uf` + `current_odometer_km`; prompt regional com regras condicionais (UF litorânea → corrosão; ≥80k km → correia/embreagem/suspensão; ≤2010 → mangueiras/borrachas).
+- **Fix 3:** `brFiscalCalendar` expandido de 6 → **27 UFs** (todos os estados BR cobertos, valores típicos 2024-2026 com disclaimer "Confira no Detran" obrigatório na UI).
+
+**757 testes verdes** (+6). Edge functions `chat-history` + `suggest-maintenance` a re-deployar.
+
 ## ONDA 3 — Conforto, viralidade & integrações
 
 - [ ] **6.W** Modo "viagem" — agrupa abastecimentos + despesas como uma unidade ("Viagem a Floripa — R$ 850"). Tela timeline da viagem.

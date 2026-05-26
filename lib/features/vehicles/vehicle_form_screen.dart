@@ -127,6 +127,13 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
   }
 
   Future<void> _openCrlvScan() async {
+    // Captura o ScaffoldMessenger ANTES de qualquer await — evita usar
+    // context dentro de callbacks (ex: TextButton.onPressed do banner) que
+    // podem disparar depois do State já ter sido desmontado.
+    // Regressão 26/05/2026: app crashava quando user tocava "Fechar" no
+    // MaterialBanner após sair da tela. (use_build_context_synchronously)
+    final messenger = ScaffoldMessenger.of(context);
+
     final source = await showCrlvSourceSheet(context);
     if (source == null || !mounted) return;
 
@@ -184,44 +191,39 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
         if (scanned.chassi != null) _chassiCtrl.text = scanned.chassi!;
       });
     } on QuotaExhaustedException {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showMaterialBanner(
-          MaterialBanner(
-            content: const Text(
-              'Cota mensal de scans esgotada — vire premium ou preencha manualmente.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () =>
-                    ScaffoldMessenger.of(context).hideCurrentMaterialBanner(),
-                child: const Text('Fechar'),
-              ),
-            ],
+      messenger.showMaterialBanner(
+        MaterialBanner(
+          content: const Text(
+            'Cota mensal de scans esgotada — vire premium ou preencha manualmente.',
           ),
-        );
-      }
+          actions: [
+            TextButton(
+              // Usa `messenger` capturado, não `context` — seguro mesmo
+              // se o usuário sair da tela antes de tocar "Fechar".
+              onPressed: () => messenger.hideCurrentMaterialBanner(),
+              child: const Text('Fechar'),
+            ),
+          ],
+        ),
+      );
     } on ScanException {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Não conseguimos ler o CRLV. Tente outra foto/arquivo ou preencha manualmente.',
-            ),
-            behavior: SnackBarBehavior.floating,
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Não conseguimos ler o CRLV. Tente outra foto/arquivo ou preencha manualmente.',
           ),
-        );
-      }
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Não conseguimos ler o CRLV. Tente outra foto/arquivo ou preencha manualmente.',
-            ),
-            behavior: SnackBarBehavior.floating,
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Não conseguimos ler o CRLV. Tente outra foto/arquivo ou preencha manualmente.',
           ),
-        );
-      }
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     } finally {
       if (mounted) setState(() => _crlvScanning = false);
     }

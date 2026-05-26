@@ -15,8 +15,10 @@ import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/data/repositories/fuel_entry_repository.dart';
 import 'package:autolog/data/repositories/reminder_repository.dart';
 import 'package:autolog/domain/models/enums.dart';
+import 'package:autolog/domain/models/fuel_entry.dart';
 import 'package:autolog/domain/models/reminder.dart';
 import 'package:autolog/domain/models/vehicle.dart';
+import 'package:autolog/features/fuel/fuel_history_screen.dart';
 import 'package:autolog/features/insights/dedupe.dart';
 import 'package:autolog/features/insights/history_insights.dart';
 import 'package:autolog/features/insights/maintenance_schedule.dart';
@@ -72,6 +74,15 @@ class _MaintenancePlanScreenState
     try {
       final svc = ref.read(maintenanceSuggestionServiceProvider);
       final v = widget.vehicle;
+
+      // Compute currentOdometerKm from local fuel entries (max odometer).
+      final fuels =
+          ref.read(fuelEntriesByVehicleProvider(widget.vehicle.id)).valueOrNull ??
+          const <FuelEntry>[];
+      final currentOdometerKm = fuels.isEmpty
+          ? null
+          : fuels.map((e) => e.odometer).reduce((a, b) => a > b ? a : b);
+
       final schedule = await svc.suggest(
         type: v.type,
         make: v.make ?? '',
@@ -79,6 +90,8 @@ class _MaintenancePlanScreenState
         year: v.year ?? DateTime.now().year,
         engineDisplacementCc: v.engineDisplacementCc,
         tankCapacityL: v.tankCapacityL,
+        vehicleUf: v.uf,
+        currentOdometerKm: currentOdometerKm,
       );
 
       // Dedupe contra lembretes ativos.

@@ -29,10 +29,30 @@ function buildPrompt(
   year: number,
   engineCc?: number,
   tankL?: string,
+  uf?: string,
+  odometerKm?: number,
 ): string {
   const extras = [
     engineCc != null ? `  Cilindrada: ${engineCc} cc` : null,
     tankL != null ? `  Tanque: ${tankL} L` : null,
+    uf != null ? `  UF: ${uf}` : null,
+    odometerKm != null
+      ? `  Quilometragem atual: ${odometerKm.toLocaleString('pt-BR')} km`
+      : null,
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+  const regionalSuffix = [
+    uf != null
+      ? '- Se UF for litorânea (RJ, SP, BA, CE, PE, ES, SC, etc.), considere itens de prevenção a corrosão (revisão de partes metálicas, pintura).'
+      : null,
+    odometerKm != null && odometerKm >= 80000
+      ? '- Quilometragem >= 80.000 km: priorize correia dentada, embreagem, suspensão e amortecedores.'
+      : null,
+    year <= 2010
+      ? '- Ano <= 2010: mencione revisão de mangueiras, borrachas e juntas.'
+      : null,
   ]
     .filter(Boolean)
     .join('\n');
@@ -69,7 +89,7 @@ Regras:
 - cadence_type: use "km" quando a cadência é só por km, "months" quando só por tempo, "km_or_months" quando for o que ocorrer primeiro.
 - every_km deve ser int positivo ou null; every_months deve ser int positivo ou null.
 - notes é opcional — use para observações importantes (ex: "Use óleo sintético 5W30").
-- Nunca invente dados sem base; prefira omitir a fabricar intervalos incorretos.`;
+- Nunca invente dados sem base; prefira omitir a fabricar intervalos incorretos.${regionalSuffix ? '\n' + regionalSuffix : ''}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -165,6 +185,8 @@ serve(async (req: Request) => {
   let year: number;
   let engineDisplacementCc: number | undefined;
   let tankCapacityL: string | undefined;
+  let vehicleUf: string | undefined;
+  let currentOdometerKm: number | undefined;
 
   try {
     const body = await req.json();
@@ -204,6 +226,13 @@ serve(async (req: Request) => {
         tankCapacityL = body.tank_capacity_l;
       }
     }
+    // New optional params (6.W.1).
+    if (typeof body.vehicle_uf === 'string') {
+      vehicleUf = body.vehicle_uf;
+    }
+    if (typeof body.current_odometer_km === 'number') {
+      currentOdometerKm = Math.round(body.current_odometer_km);
+    }
   } catch {
     return json({ error: 'invalid_json_body' }, 400);
   }
@@ -232,7 +261,16 @@ serve(async (req: Request) => {
     return json({ error: 'server_configuration_error' }, 500);
   }
 
-  const prompt = buildPrompt(vehicleType, make, model, year, engineDisplacementCc, tankCapacityL);
+  const prompt = buildPrompt(
+    vehicleType,
+    make,
+    model,
+    year,
+    engineDisplacementCc,
+    tankCapacityL,
+    vehicleUf,
+    currentOdometerKm,
+  );
 
   let claudeText: string;
   try {
