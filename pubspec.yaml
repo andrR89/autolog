@@ -1,0 +1,80 @@
+name: autolog
+description: "AutoLog - Registro inteligente de abastecimentos e despesas veiculares."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # State management
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+
+  # Serialization
+  freezed_annotation: ^3.0.0
+  json_annotation: ^4.9.0
+
+  # Local database
+  drift: ^2.27.0
+  sqlite3_flutter_libs: ^0.5.32
+  path_provider: ^2.1.5
+  path: ^1.9.1
+
+  # Backend
+  supabase_flutter: ^2.9.0
+
+  # Utilities
+  uuid: ^4.5.1
+  intl: ^0.20.2
+  decimal: ^3.2.1
+
+  # Routing
+  go_router: ^15.1.2
+
+  # Charts
+  fl_chart: ^0.70.2
+
+  # HTTP client — FIPE API
+  http: ^1.2.0
+
+  # Image
+  image_picker: ^1.1.2
+
+  # File picker (CRLV PDF/imagem)
+  file_picker: ^8.0.0
+
+  # ML Kit OCR (mobile only) — REMOVIDO temporariamente: não suporta arm64
+  # no simulador iOS (Apple Silicon). Re-adicionar no Sprint 3.4 e testar o
+  # OCR de odômetro em device físico. Ver docs/BACKLOG.md §3.4.
+  # google_mlkit_text_recognition: ^0.14.0
+
+  # Notifications
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.10.1
+
+  # Design system — tipografia (Bricolage Grotesque display + Manrope body).
+  # Justificativa: identidade visual distinta vs. fonte do sistema. Carrega
+  # sob demanda e faz cache local; impacto runtime irrisório no primeiro start.
+  google_fonts: ^6.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+
+  # Code generation
+  freezed: ^3.0.6
+  json_serializable: ^6.9.4
+  build_runner: ^2.4.15
+  riverpod_generator: ^2.6.5
+  drift_dev: ^2.27.0
+
+flutter:
+  uses-material-design: true

@@ -1,0 +1,582 @@
+// Tela de Relatórios do AutoLog — redesign editorial animado.
+//
+// Estrutura:
+//   1. Hero header (brand escuro) com gasto do mês em count-up + delta %
+//   2. Seção "Gasto" — BarChart animado (barras crescem na entrada)
+//   3. Seção "Consumo" — AreaChart animado (linha desenha + fill lima)
+//   4. Seção "Preço/litro" — LineChart minimalista (linha cotação)
+//
+// Cada seção entra com fade+slide em cascata (StaggeredReveal, ~90ms entre).
+// Os gráficos fl_chart re-animam automaticamente quando dados mudam
+// via swapAnimationDuration: 800ms / swapAnimationCurve: easeOutCubic.
+//
+// Providers e funções de agregação NÃO foram alterados.
+
+import 'package:autolog/core/design/tokens.dart';
+import 'package:autolog/core/design/typography.dart';
+import 'package:autolog/domain/models/vehicle.dart';
+import 'package:autolog/features/reports/monthly_consumption.dart';
+import 'package:autolog/features/reports/monthly_price.dart';
+import 'package:autolog/features/reports/monthly_spending.dart';
+import 'package:autolog/features/reports/reports_providers.dart';
+import 'package:autolog/features/reports/widgets/chart_section.dart';
+import 'package:autolog/features/reports/widgets/consumption_area_chart.dart';
+import 'package:autolog/features/reports/widgets/empty_chart_state.dart';
+import 'package:autolog/features/reports/widgets/monthly_hero_metric.dart';
+import 'package:autolog/features/reports/widgets/price_line_chart.dart';
+import 'package:autolog/features/reports/widgets/spending_bar_chart.dart';
+import 'package:autolog/features/reports/widgets/staggered_reveal.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+
+/// Tela de relatórios com animações editoriais para [vehicle].
+class ReportsScreen extends ConsumerWidget {
+  const ReportsScreen({super.key, required this.vehicle});
+
+  final Vehicle vehicle;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final spendingAsync = ref.watch(monthlySpendingProvider(vehicle.id));
+    final consumptionAsync = ref.watch(monthlyConsumptionProvider(vehicle.id));
+    final priceAsync = ref.watch(monthlyPriceProvider(vehicle.id));
+
+    return Scaffold(
+      backgroundColor: AppColors.surface,
+      appBar: AppBar(
+        title: const Text('Relatórios'),
+        backgroundColor: AppColors.brand,
+        foregroundColor: AppColors.brandInk,
+        iconTheme: const IconThemeData(color: AppColors.brandInk),
+        titleTextStyle: AppTypography.body(
+          18,
+          weight: FontWeight.w600,
+          color: AppColors.brandInk,
+        ),
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.transparent,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light,
+          statusBarBrightness: Brightness.dark,
+        ),
+      ),
+      body: CustomScrollView(
+        slivers: [
+          // Card "Recap" — destaque no topo, antes do hero metric
+          SliverToBoxAdapter(
+            child: _RecapCard(),
+          ),
+
+          // Hero metric — gasto do mês corrente com count-up
+          SliverToBoxAdapter(
+            child: spendingAsync.when(
+              loading: _HeroSkeleton.new,
+              error: (_, e) => const SizedBox.shrink(),
+              data: (data) => MonthlyHeroMetric(
+                vehicleNickname: vehicle.nickname,
+                monthlyData: data,
+              ),
+            ),
+          ),
+
+          // Separador visual
+          const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
+
+          // Card "Meus postos" — acesso rápido à agregação por posto
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: _MyStationsCard(),
+            ),
+          ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
+
+          // 3 seções de gráfico em cascata
+          SliverToBoxAdapter(
+            child: _ChartSections(
+              spendingAsync: spendingAsync,
+              consumptionAsync: consumptionAsync,
+              priceAsync: priceAsync,
+            ),
+          ),
+
+          // Espaço inferior para não colar no nav bar
+          const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.huge)),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Seções de gráfico com stagger reveal
+// ---------------------------------------------------------------------------
+
+class _ChartSections extends StatelessWidget {
+  const _ChartSections({
+    required this.spendingAsync,
+    required this.consumptionAsync,
+    required this.priceAsync,
+  });
+
+  final AsyncValue<List<MonthlyTotal>> spendingAsync;
+  final AsyncValue<List<MonthlyConsumption>> consumptionAsync;
+  final AsyncValue<List<MonthlyPrice>> priceAsync;
+
+  @override
+  Widget build(BuildContext context) {
+    return StaggeredReveal(
+      delayStep: const Duration(milliseconds: 90),
+      initialDelay: const Duration(milliseconds: 100),
+      children: [
+        // Seção 1 — Gasto mensal (BarChart)
+        _buildSection(
+          async: spendingAsync,
+          overline: 'Gasto',
+          title: 'Por mês',
+          overlineColor: AppColors.brand,
+          emptyMessage:
+              'Cadastre mais abastecimentos e despesas pra ver a evolução do gasto.',
+          buildChart: (data) => SpendingBarChart(data: data),
+          buildInsight: (data) => _spendingInsight(data),
+        ),
+
+        const SizedBox(height: AppSpacing.sm),
+
+        // Seção 2 — Consumo médio (AreaChart com fill lima)
+        _buildSection(
+          async: consumptionAsync,
+          overline: 'Consumo',
+          title: 'Média mensal',
+          overlineColor: AppColors.success,
+          emptyMessage:
+              'Registre dois abastecimentos cheios seguidos pra calcular o consumo.',
+          buildChart: (data) => ConsumptionAreaChart(data: data),
+          buildInsight: (data) => _consumptionInsight(data),
+        ),
+
+        const SizedBox(height: AppSpacing.sm),
+
+        // Seção 3 — Preço por litro (LineChart minimalista)
+        _buildSection(
+          async: priceAsync,
+          overline: 'Preço/litro',
+          title: 'Evolução',
+          overlineColor: AppColors.inkMuted,
+          emptyMessage:
+              'Cadastre abastecimentos pra ver a variação do preço do combustível.',
+          buildChart: (data) => PriceLineChart(data: data),
+          buildInsight: (data) => _priceInsight(data),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSection<T>({
+    required AsyncValue<List<T>> async,
+    required String overline,
+    required String title,
+    required Color overlineColor,
+    required String emptyMessage,
+    required Widget Function(List<T>) buildChart,
+    required String? Function(List<T>) buildInsight,
+  }) {
+    return switch (async) {
+      AsyncLoading() => _SectionSkeleton(overline: overline, title: title),
+      AsyncError() => _SectionError(overline: overline, title: title),
+      AsyncData(:final value) when value.isEmpty => ChartSection(
+        overline: overline,
+        title: title,
+        overlineColor: overlineColor,
+        chart: EmptyChartState(message: emptyMessage),
+      ),
+      AsyncData(:final value) => ChartSection(
+        overline: overline,
+        title: title,
+        overlineColor: overlineColor,
+        insight: buildInsight(value),
+        chart: buildChart(value),
+      ),
+      _ => const SizedBox.shrink(),
+    };
+  }
+
+  // --- Insights contextuais ---
+
+  String? _spendingInsight(List<MonthlyTotal> data) {
+    if (data.isEmpty) return null;
+    final now = DateTime.now();
+    final thisBucket = DateTime.utc(now.year, now.month, 1);
+    final thisMonth = data.where((d) => d.month == thisBucket).firstOrNull;
+    if (thisMonth == null) return null;
+    final fmt = NumberFormat.currency(
+      locale: 'pt_BR',
+      symbol: r'R$',
+      decimalDigits: 2,
+    );
+    return 'Este mês: ${fmt.format(thisMonth.total.toDouble())}';
+  }
+
+  String? _consumptionInsight(List<MonthlyConsumption> data) {
+    if (data.isEmpty) return null;
+    final last = data.last;
+    final fmt = NumberFormat('0.0', 'pt_BR');
+    return 'Último: ${fmt.format(last.kmPerLiter.toDouble())} km/L';
+  }
+
+  String? _priceInsight(List<MonthlyPrice> data) {
+    if (data.isEmpty) return null;
+    final last = data.last;
+    final fmt = NumberFormat.currency(
+      locale: 'pt_BR',
+      symbol: r'R$',
+      decimalDigits: 2,
+    );
+    return 'Último: ${fmt.format(last.pricePerLiter.toDouble())}/L';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Skeleton do hero — exibido enquanto dados carregam
+// ---------------------------------------------------------------------------
+
+class _HeroSkeleton extends StatefulWidget {
+  @override
+  State<_HeroSkeleton> createState() => _HeroSkeletonState();
+}
+
+class _HeroSkeletonState extends State<_HeroSkeleton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _shimmer;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
+    _shimmer = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _shimmer,
+      builder: (context, _) {
+        final alpha = (0.15 + _shimmer.value * 0.12).clamp(0.0, 1.0);
+        return Container(
+          color: AppColors.brand,
+          padding: const EdgeInsets.all(AppSpacing.xxl),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _bar(width: 80, height: 11, alpha: alpha),
+              const SizedBox(height: AppSpacing.sm),
+              _bar(width: 140, height: 13, alpha: alpha),
+              const SizedBox(height: AppSpacing.lg),
+              _bar(width: 220, height: 46, alpha: alpha),
+              const SizedBox(height: AppSpacing.sm),
+              _bar(width: 100, height: 13, alpha: alpha),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _bar({
+    required double width,
+    required double height,
+    required double alpha,
+  }) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: AppColors.brandInk.withValues(alpha: alpha),
+        borderRadius: AppRadius.allSm,
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Skeleton de seção — exibido enquanto dados carregam
+// ---------------------------------------------------------------------------
+
+class _SectionSkeleton extends StatefulWidget {
+  const _SectionSkeleton({required this.overline, required this.title});
+
+  final String overline;
+  final String title;
+
+  @override
+  State<_SectionSkeleton> createState() => _SectionSkeletonState();
+}
+
+class _SectionSkeletonState extends State<_SectionSkeleton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _shimmer;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat(reverse: true);
+    _shimmer = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _shimmer,
+      builder: (context, _) {
+        final alpha = (0.08 + _shimmer.value * 0.08).clamp(0.0, 1.0);
+        return Container(
+          color: AppColors.surfaceRaised,
+          padding: const EdgeInsets.all(AppSpacing.xxl),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _bar(width: 48, height: 10, alpha: alpha),
+              const SizedBox(height: AppSpacing.xs + 2),
+              _bar(width: 100, height: 18, alpha: alpha),
+              const SizedBox(height: AppSpacing.lg),
+              _bar(width: double.infinity, height: 180, alpha: alpha),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _bar({
+    required double width,
+    required double height,
+    required double alpha,
+  }) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: AppColors.ink.withValues(alpha: alpha),
+        borderRadius: AppRadius.allSm,
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Estado de erro de seção
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Card "Meus postos" — atalho global para a tela de agregação por posto
+// ---------------------------------------------------------------------------
+
+class _MyStationsCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.push('/stations'),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surfaceRaised,
+          borderRadius: AppRadius.allMd,
+          border: Border.all(color: AppColors.hairline),
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
+        child: Row(
+          children: [
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                color: AppColors.surfaceSunken,
+                borderRadius: AppRadius.allSm,
+              ),
+              child: SizedBox(
+                width: 40,
+                height: 40,
+                child: Icon(
+                  Icons.local_gas_station_outlined,
+                  size: 20,
+                  color: AppColors.inkMuted,
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Meus postos',
+                    style: AppTypography.body(
+                      15,
+                      weight: FontWeight.w600,
+                      color: AppColors.ink,
+                    ),
+                  ),
+                  Text(
+                    'Veja onde você abastece e o preço médio',
+                    style: AppTypography.body(12, color: AppColors.inkMuted),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right,
+              color: AppColors.inkSoft,
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionError extends StatelessWidget {
+  const _SectionError({required this.overline, required this.title});
+
+  final String overline;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return ChartSection(
+      overline: overline,
+      title: title,
+      chart: const EmptyChartState(
+        message: 'Não foi possível carregar este relatório.\nTente novamente.',
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Card "Recap" — entry point destacado no topo dos relatórios
+// ---------------------------------------------------------------------------
+
+class _RecapCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.lg,
+        AppSpacing.lg,
+        0,
+      ),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.brand, AppColors.brandSoft],
+        ),
+        borderRadius: AppRadius.allMd,
+        boxShadow: AppShadows.floating,
+      ),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text('✨', style: TextStyle(fontSize: 28)),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  'Seu Recap mensal',
+                  style: AppTypography.display(
+                    20,
+                    weight: FontWeight.w700,
+                    color: AppColors.brandInk,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Um resumo visual dos seus gastos e km rodados no mês.',
+            style: AppTypography.body(
+              13,
+              color: AppColors.brandInk.withValues(alpha: 0.7),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton(
+                  onPressed: () => context.push('/recap?period=month'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.accent,
+                    foregroundColor: AppColors.accentInk,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.md,
+                    ),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: AppRadius.allSm,
+                    ),
+                  ),
+                  child: Text(
+                    'Ver agora',
+                    style: AppTypography.body(
+                      15,
+                      weight: FontWeight.w700,
+                      color: AppColors.accentInk,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              TextButton(
+                onPressed: () => context.push('/recap?period=week'),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.brandInk.withValues(alpha: 0.7),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.md,
+                  ),
+                ),
+                child: Text(
+                  'Ver semana',
+                  style: AppTypography.body(
+                    13,
+                    color: AppColors.brandInk.withValues(alpha: 0.7),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}

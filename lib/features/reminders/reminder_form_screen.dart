@@ -1,0 +1,692 @@
+import 'dart:async';
+
+import 'package:autolog/core/design/tokens.dart';
+import 'package:autolog/data/repositories/fuel_entry_repository.dart';
+import 'package:autolog/domain/models/enums.dart';
+import 'package:autolog/domain/models/reminder.dart';
+import 'package:autolog/domain/models/vehicle.dart';
+import 'package:autolog/features/fuel/widgets/date_picker_field.dart';
+import 'package:autolog/features/fuel/widgets/form_section_card.dart';
+import 'package:autolog/features/fuel/widgets/inline_validation_chip.dart';
+import 'package:autolog/features/fuel/widgets/vehicle_context_chip.dart';
+import 'package:autolog/features/reminders/reminder_saver.dart';
+import 'package:autolog/features/reminders/reminder_validators.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+/// Valida que o campo não está vazio.
+String? _validateRequired(String? value, {required String fieldLabel}) {
+  if (value == null || value.trim().isEmpty) {
+    return 'Informe $fieldLabel';
+  }
+  return null;
+}
+
+/// Tela de formulário de lembrete — criar ou editar.
+///
+/// [initial] == null → modo criar ("Novo lembrete").
+/// [initial] != null → modo editar ("Editar lembrete").
+///
+/// Redesenhada na Tranche C: VehicleContextChip no topo, campos agrupados
+/// em FormSectionCard, InlineValidationChip para dueKm, DatePickerField
+/// do DS, botão sticky na barra inferior. Switch "Concluído" só em edição.
+class ReminderFormScreen extends ConsumerStatefulWidget {
+  const ReminderFormScreen({super.key, required this.vehicle, this.initial});
+
+  final Vehicle vehicle;
+  final Reminder? initial;
+
+  @override
+  ConsumerState<ReminderFormScreen> createState() => _ReminderFormScreenState();
+}
+
+class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
+  final _formKey = GlobalKey<FormState>();
+
+  late ReminderType _type;
+  late final TextEditingController _titleCtrl;
+  late final TextEditingController _dueKmCtrl;
+  DateTime? _dueDate;
+  late bool _isDone;
+
+  bool _saving = false;
+  String? _dueKmError;
+
+  Timer? _dueKmDebounce;
+
+  bool get _isEditing => widget.initial != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final r = widget.initial;
+    _type = r?.type ?? ReminderType.porKm;
+    _titleCtrl = TextEditingController(text: r?.title ?? '');
+    _dueKmCtrl = TextEditingController(text: r?.dueKm?.toString() ?? '');
+    // Para criação, data alvo padrão = hoje + 30 dias.
+    _dueDate = r?.dueDate ?? DateTime.now().add(const Duration(days: 30));
+    _isDone = r?.isDone ?? false;
+
+    _dueKmCtrl.addListener(_onDueKmChanged);
+  }
+
+  @override
+  void dispose() {
+    _dueKmDebounce?.cancel();
+    _dueKmCtrl.removeListener(_onDueKmChanged);
+    _titleCtrl.dispose();
+    _dueKmCtrl.dispose();
+    super.dispose();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Validação bloqueante de dueKm — Sprint 4.5
+  // ---------------------------------------------------------------------------
+
+  void _onDueKmChanged() {
+    _dueKmDebounce?.cancel();
+    _dueKmDebounce = Timer(const Duration(milliseconds: 600), () {
+      _runDueKmValidation();
+    });
+  }
+
+  Future<void> _runDueKmValidation() async {
+    if (_type != ReminderType.porKm) {
+      if (mounted) setState(() => _dueKmError = null);
+      return;
+    }
+
+    final raw = _dueKmCtrl.text.trim();
+    final candidate = int.tryParse(raw);
+    if (candidate == null) {
+      // Campo vazio ou formato inválido — o validador required cuida disso.
+      if (mounted) setState(() => _dueKmError = null);
+      return;
+    }
+
+    try {
+      final repo = ref.read(fuelEntryRepositoryProvider);
+      final entries = await repo.listByVehicle(widget.vehicle.id);
+      final error = validateDueKm(
+        dueKm: candidate,
+        vehicleInitialOdometer: widget.vehicle.initialOdometer,
+        entries: entries,
+      );
+      if (mounted) {
+        setState(() => _dueKmError = error);
+      }
+    } catch (_) {
+      // Falha silenciosa — libera o botão em caso de erro ao carregar entries.
+      if (mounted) setState(() => _dueKmError = null);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // DatePicker
+  // ---------------------------------------------------------------------------
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _dueDate ?? DateTime.now().add(const Duration(days: 30)),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) {
+      setState(() => _dueDate = picked);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Submit
+  // ---------------------------------------------------------------------------
+
+  Future<void> _submit() async {
+    // Validação manual de campos condicionais.
+    bool valid = _formKey.currentState!.validate();
+
+    if (_type == ReminderType.porKm) {
+      final kmText = _dueKmCtrl.text.trim();
+      if (kmText.isEmpty ||
+          int.tryParse(kmText) == null ||
+          int.parse(kmText) < 0) {
+        valid = false;
+        // A validação inline no TextFormField já exibe a mensagem de erro.
+      }
+    } else {
+      if (_dueDate == null) {
+        valid = false;
+      }
+    }
+
+    if (!valid) return;
+
+    setState(() => _saving = true);
+
+    try {
+      final saver = ref.read(reminderSaverProvider);
+
+      // Garante que o campo oposto seja null.
+      final int? dueKm = _type == ReminderType.porKm
+          ? int.parse(_dueKmCtrl.text.trim())
+          : null;
+      final DateTime? dueDate = _type == ReminderType.porData ? _dueDate : null;
+
+      if (_isEditing) {
+        await saver.update(
+          widget.initial!,
+          type: _type,
+          title: _titleCtrl.text.trim(),
+          dueKm: dueKm,
+          dueDate: dueDate,
+          isDone: _isDone,
+        );
+      } else {
+        await saver.create(
+          vehicleId: widget.vehicle.id,
+          type: _type,
+          title: _titleCtrl.text.trim(),
+          dueKm: dueKm,
+          dueDate: dueDate,
+          isDone: false,
+        );
+      }
+
+      if (mounted) {
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go('/vehicles/${widget.vehicle.id}/reminders');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Não foi possível salvar o lembrete. Tente novamente.',
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _saving = false);
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Build
+  // ---------------------------------------------------------------------------
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.surface,
+      appBar: AppBar(
+        backgroundColor: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 1,
+        shadowColor: AppColors.hairline,
+        // Status bar com ícones escuros — fundo é o surface off-white.
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
+        ),
+        title: Text(_isEditing ? 'Editar lembrete' : 'Novo lembrete'),
+        leading: Tooltip(
+          message: 'Voltar',
+          child: BackButton(
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/vehicles/${widget.vehicle.id}/reminders');
+              }
+            },
+          ),
+        ),
+      ),
+      body: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            // Scrollable content.
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // ── Contexto do veículo ──────────────────────────────────
+                    VehicleContextChip(vehicle: widget.vehicle),
+
+                    // ── Seção 1: O que lembrar ───────────────────────────────
+                    FormSectionCard(
+                      eyebrow: 'O que lembrar',
+                      children: [
+                        TextFormField(
+                          controller: _titleCtrl,
+                          decoration: const InputDecoration(
+                            labelText: 'Título',
+                            hintText: 'Ex.: Troca de óleo',
+                          ),
+                          textCapitalization: TextCapitalization.sentences,
+                          validator: (v) =>
+                              _validateRequired(v, fieldLabel: 'o título'),
+                        ),
+                      ],
+                    ),
+
+                    // ── Seção 2: Quando ──────────────────────────────────────
+                    FormSectionCard(
+                      eyebrow: 'Quando',
+                      children: [
+                        // Tipo: porKm / porData — segmentado estilizado.
+                        const _SectionFieldLabel('TIPO DE LEMBRETE'),
+                        const SizedBox(height: AppSpacing.sm),
+                        _ReminderTypeSegmented(
+                          value: _type,
+                          onChanged: (t) {
+                            setState(() {
+                              _type = t;
+                              // Limpa o campo oposto ao trocar de tipo.
+                              if (_type == ReminderType.porKm) {
+                                _dueDate = null;
+                                _dueKmError = null;
+                              } else {
+                                _dueKmCtrl.clear();
+                                _dueKmError = null;
+                              }
+                            });
+                            // Ao selecionar porKm, valida imediatamente.
+                            if (_type == ReminderType.porKm) {
+                              _runDueKmValidation();
+                            }
+                          },
+                        ),
+
+                        const SizedBox(height: AppSpacing.lg),
+
+                        // Campo condicional por tipo — animado com
+                        // AnimatedSwitcher para suavizar a troca.
+                        AnimatedSwitcher(
+                          duration: AppMotion.standard,
+                          switchInCurve: AppMotion.standardCurve,
+                          switchOutCurve: AppMotion.standardCurve,
+                          transitionBuilder: (child, animation) =>
+                              FadeTransition(opacity: animation, child: child),
+                          child: _type == ReminderType.porKm
+                              ? _DueKmField(
+                                  key: const ValueKey('due_km'),
+                                  controller: _dueKmCtrl,
+                                  error: _dueKmError,
+                                )
+                              : _DueDateField(
+                                  key: const ValueKey('due_date'),
+                                  dueDate: _dueDate,
+                                  onTap: _pickDate,
+                                ),
+                        ),
+
+                        // Switch "Concluído" — só em modo edição.
+                        if (_isEditing) ...[
+                          const SizedBox(height: AppSpacing.lg),
+                          _DoneToggle(
+                            value: _isDone,
+                            onChanged: (v) => setState(() => _isDone = v),
+                          ),
+                        ],
+                      ],
+                    ),
+
+                    const SizedBox(height: AppSpacing.xxl),
+                  ],
+                ),
+              ),
+            ),
+
+            // ── Barra sticky de salvar ───────────────────────────────────────
+            _SaveActionBar(
+              onSave: _submit,
+              saving: _saving,
+              disabled: _dueKmError != null,
+              isEditing: _isEditing,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Sub-widgets de build
+// ---------------------------------------------------------------------------
+
+/// Eyebrow label para campo interno de seção.
+class _SectionFieldLabel extends StatelessWidget {
+  const _SectionFieldLabel(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label,
+      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+        color: AppColors.inkSoft,
+        letterSpacing: 1.4,
+        fontWeight: FontWeight.w700,
+      ),
+    );
+  }
+}
+
+/// Seletor de tipo de lembrete — duas pílulas horizontais (porKm / porData).
+/// Espelha a estética do FuelTypeSegmented mas com apenas dois itens.
+class _ReminderTypeSegmented extends StatelessWidget {
+  const _ReminderTypeSegmented({required this.value, required this.onChanged});
+
+  final ReminderType value;
+  final ValueChanged<ReminderType> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        _TypeChip(
+          icon: Icons.speed_rounded,
+          label: 'Por quilômetro',
+          selected: value == ReminderType.porKm,
+          onTap: () => onChanged(ReminderType.porKm),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        _TypeChip(
+          icon: Icons.event_rounded,
+          label: 'Por data',
+          selected: value == ReminderType.porData,
+          onTap: () => onChanged(ReminderType.porData),
+        ),
+      ],
+    );
+  }
+}
+
+class _TypeChip extends StatelessWidget {
+  const _TypeChip({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Material(
+      color: selected
+          ? AppColors.brand.withValues(alpha: 0.10)
+          : AppColors.surfaceSunken,
+      borderRadius: const BorderRadius.all(Radius.circular(AppRadius.pill)),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        splashColor: AppColors.brand.withValues(alpha: 0.10),
+        child: AnimatedContainer(
+          duration: AppMotion.fast,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md + 2,
+            vertical: AppSpacing.sm,
+          ),
+          decoration: BoxDecoration(
+            borderRadius: const BorderRadius.all(
+              Radius.circular(AppRadius.pill),
+            ),
+            border: Border.all(
+              color: selected ? AppColors.brand : Colors.transparent,
+              width: 1.5,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 15,
+                color: selected ? AppColors.brand : AppColors.inkMuted,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                label,
+                style: textTheme.labelMedium?.copyWith(
+                  color: selected ? AppColors.brand : AppColors.inkMuted,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Campo de quilometragem alvo (porKm) com InlineValidationChip.
+class _DueKmField extends StatelessWidget {
+  const _DueKmField({super.key, required this.controller, required this.error});
+
+  final TextEditingController controller;
+  final String? error;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextFormField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: 'Quilometragem alvo (km)',
+            hintText: 'Ex.: 50000',
+          ),
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          validator: (v) {
+            if (v == null || v.trim().isEmpty) {
+              return 'Informe a quilometragem alvo';
+            }
+            final parsed = int.tryParse(v.trim());
+            if (parsed == null || parsed < 0) {
+              return 'Informe a quilometragem alvo';
+            }
+            return null;
+          },
+        ),
+        // InlineValidationChip — mensagem PT-BR do validateDueKm.
+        InlineValidationChip(message: error),
+      ],
+    );
+  }
+}
+
+/// Campo de data alvo (porData) — usa DatePickerField do DS.
+class _DueDateField extends StatelessWidget {
+  const _DueDateField({super.key, required this.dueDate, required this.onTap});
+
+  final DateTime? dueDate;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    // Se não houver data (ao trocar para porData), usa hoje + 30 como fallback
+    // visual (o valor real é controlado pelo estado pai).
+    final effectiveDate =
+        dueDate ?? DateTime.now().add(const Duration(days: 30));
+    return DatePickerField(value: effectiveDate, onTap: onTap);
+  }
+}
+
+/// Toggle "Concluído" — substituição do SwitchListTile cru, com visual
+/// coerente com FullTankToggle (mesmo padrão: fundo colorido + ícone).
+/// Aparece apenas no modo edição.
+class _DoneToggle extends StatelessWidget {
+  const _DoneToggle({required this.value, required this.onChanged});
+
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final bgColor = value
+        ? AppColors.successSoft
+        : AppColors.surfaceSunken.withValues(alpha: 0.65);
+    final iconColor = value ? AppColors.success : AppColors.inkMuted;
+
+    return AnimatedContainer(
+      duration: AppMotion.standard,
+      curve: AppMotion.standardCurve,
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: AppRadius.allMd,
+        border: Border.all(
+          color: value
+              ? AppColors.success.withValues(alpha: 0.18)
+              : AppColors.hairline,
+          width: 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: AppRadius.allMd,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => onChanged(!value),
+          splashColor: value
+              ? AppColors.success.withValues(alpha: 0.08)
+              : AppColors.hairline,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.md + 2,
+              AppSpacing.sm,
+              AppSpacing.md + 2,
+            ),
+            child: Row(
+              children: [
+                AnimatedContainer(
+                  duration: AppMotion.standard,
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: value
+                        ? AppColors.success.withValues(alpha: 0.15)
+                        : AppColors.surfaceRaised,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    value
+                        ? Icons.check_circle_outline_rounded
+                        : Icons.radio_button_unchecked_rounded,
+                    size: 18,
+                    color: iconColor,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        value ? 'Lembrete concluído' : 'Marcar como concluído',
+                        style: textTheme.titleSmall?.copyWith(
+                          color: AppColors.ink,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        value
+                            ? 'Este lembrete foi atendido.'
+                            : 'O lembrete continua ativo.',
+                        style: textTheme.bodySmall?.copyWith(
+                          color: AppColors.inkMuted,
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Switch.adaptive(value: value, onChanged: onChanged),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Barra sticky inferior: botão Salvar com surfaceRaised + hairline top.
+class _SaveActionBar extends StatelessWidget {
+  const _SaveActionBar({
+    required this.onSave,
+    required this.saving,
+    required this.disabled,
+    required this.isEditing,
+  });
+
+  final VoidCallback onSave;
+  final bool saving;
+  final bool disabled;
+  final bool isEditing;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Container(
+        decoration: const BoxDecoration(
+          color: AppColors.surfaceRaised,
+          border: Border(top: AppBorders.hairline),
+        ),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.md,
+          AppSpacing.lg,
+          AppSpacing.md,
+        ),
+        child: FilledButton(
+          onPressed: (saving || disabled) ? null : onSave,
+          style: FilledButton.styleFrom(
+            minimumSize: const Size(double.infinity, 52),
+          ),
+          child: saving
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.brandInk,
+                  ),
+                )
+              : Text(isEditing ? 'Salvar alterações' : 'Criar lembrete'),
+        ),
+      ),
+    );
+  }
+}
