@@ -89,6 +89,11 @@ class _VehiclesListScreenState extends ConsumerState<VehiclesListScreen> {
             onPressed: () => context.push('/personal-documents'),
           ),
           IconButton(
+            icon: const Icon(Icons.settings_outlined, color: AppColors.inkMuted),
+            tooltip: 'Configurações',
+            onPressed: () => context.push('/settings'),
+          ),
+          IconButton(
             icon: const Icon(Icons.logout, color: AppColors.inkMuted),
             tooltip: 'Sair',
             onPressed: () async {

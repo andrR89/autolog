@@ -16,9 +16,9 @@ void main() {
   tearDown(() => db.close());
 
   group('schema', () {
-    test('abre com schemaVersion 11 e expõe exatamente 13 tabelas', () {
-      expect(db.schemaVersion, 11); // v11 com fiscal_lookup_cache (Sprint 6.W.3)
-      expect(db.allTables.length, 13); // +FiscalLookupCache
+    test('abre com schemaVersion 12 e expõe exatamente 14 tabelas', () {
+      expect(db.schemaVersion, 12); // v12 com user_settings (Sprint 6.AA)
+      expect(db.allTables.length, 14); // +UserSettings
     });
   });
 

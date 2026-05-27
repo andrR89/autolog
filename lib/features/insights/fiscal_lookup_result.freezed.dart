@@ -17,6 +17,7 @@ mixin _$FiscalEntry {
 
  int get month;// 1..12
  int? get day;// null se desconhecido
+// ignore: invalid_annotation_target
 @JsonKey(name: 'source') String? get sourceCitation;
 /// Create a copy of FiscalEntry
 /// with the given fields replaced by the non-null parameter values.
@@ -220,6 +221,7 @@ class _FiscalEntry implements FiscalEntry {
 // 1..12
 @override final  int? day;
 // null se desconhecido
+// ignore: invalid_annotation_target
 @override@JsonKey(name: 'source') final  String? sourceCitation;
 
 /// Create a copy of FiscalEntry

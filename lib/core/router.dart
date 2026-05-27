@@ -28,6 +28,7 @@ import 'package:autolog/features/reminders/reminder_form_screen.dart';
 import 'package:autolog/features/reminders/reminders_list_screen.dart';
 import 'package:autolog/features/reports/fuel_economy_screen.dart';
 import 'package:autolog/features/reports/reports_screen.dart';
+import 'package:autolog/features/settings/settings_screen.dart';
 import 'package:autolog/features/vehicles/vehicle_form_screen.dart';
 import 'package:autolog/features/vehicles/vehicles_list_screen.dart';
 import 'package:flutter/material.dart';
@@ -303,6 +304,13 @@ final List<RouteBase> appRoutes = [
         child: RecapScreen(period: period),
       );
     },
+  ),
+
+  // Tela de configurações.
+  GoRoute(
+    path: '/settings',
+    pageBuilder: (context, state) =>
+        appTransitionPage(state: state, child: const SettingsScreen()),
   ),
 
   // ── Lembretes ─────────────────────────────────────────────────────────────

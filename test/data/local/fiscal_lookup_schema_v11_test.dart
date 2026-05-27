@@ -9,7 +9,7 @@ void main() {
   group('Schema v11', () {
     test('schemaVersion bumped to 11', () {
       final db = AppDatabase(NativeDatabase.memory());
-      expect(db.schemaVersion, 11);
+      expect(db.schemaVersion, 12); // v12 com user_settings (Sprint 6.AA)
       db.close();
     });
 

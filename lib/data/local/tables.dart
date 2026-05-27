@@ -285,6 +285,22 @@ class FiscalLookupCache extends Table {
 }
 
 // ---------------------------------------------------------------------------
+// user_settings — preferências locais do usuário (theme mode etc).
+// PK = userId. Local-only; não sincroniza com Supabase.
+// ---------------------------------------------------------------------------
+
+@DataClassName('UserSettingsRow')
+class UserSettings extends Table {
+  TextColumn get userId => text()();
+  // 'themePref' armazena 'system' | 'light' | 'dark'.
+  // Nota: 'themeMode' é reservado internamente pelo Drift; usar 'themePref'.
+  TextColumn get themePref => text().withDefault(const Constant('system'))();
+
+  @override
+  Set<Column> get primaryKey => {userId};
+}
+
+// ---------------------------------------------------------------------------
 // usage_quota — sem campos de sync (ver ARCHITECTURE §3 e spec §4)
 // ---------------------------------------------------------------------------
 
