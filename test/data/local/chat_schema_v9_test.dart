@@ -10,7 +10,7 @@ void main() {
   group('Schema v9', () {
     test('schemaVersion bumped to 9', () {
       final db = AppDatabase(NativeDatabase.memory());
-      expect(db.schemaVersion, 10);
+      expect(db.schemaVersion, 11);
       db.close();
     });
 

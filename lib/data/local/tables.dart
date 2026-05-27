@@ -271,6 +271,20 @@ class NotificationsLog extends Table {
 }
 
 // ---------------------------------------------------------------------------
+// fiscal_lookup_cache — local-only, NÃO sincroniza com Supabase
+// ---------------------------------------------------------------------------
+
+@DataClassName('FiscalLookupCacheRow')
+class FiscalLookupCache extends Table {
+  TextColumn get cacheKey => text()(); // "UF-digit-year" ex "SC-6-2026"
+  TextColumn get value => text()(); // JSON serializado
+  DateTimeColumn get expiresAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {cacheKey};
+}
+
+// ---------------------------------------------------------------------------
 // usage_quota — sem campos de sync (ver ARCHITECTURE §3 e spec §4)
 // ---------------------------------------------------------------------------
 

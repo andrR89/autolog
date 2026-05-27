@@ -7217,6 +7217,274 @@ class NotificationsLogCompanion extends UpdateCompanion<NotificationLogRow> {
   }
 }
 
+class $FiscalLookupCacheTable extends FiscalLookupCache
+    with TableInfo<$FiscalLookupCacheTable, FiscalLookupCacheRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FiscalLookupCacheTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _cacheKeyMeta = const VerificationMeta(
+    'cacheKey',
+  );
+  @override
+  late final GeneratedColumn<String> cacheKey = GeneratedColumn<String>(
+    'cache_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _valueMeta = const VerificationMeta('value');
+  @override
+  late final GeneratedColumn<String> value = GeneratedColumn<String>(
+    'value',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _expiresAtMeta = const VerificationMeta(
+    'expiresAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> expiresAt = GeneratedColumn<DateTime>(
+    'expires_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [cacheKey, value, expiresAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'fiscal_lookup_cache';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FiscalLookupCacheRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('cache_key')) {
+      context.handle(
+        _cacheKeyMeta,
+        cacheKey.isAcceptableOrUnknown(data['cache_key']!, _cacheKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_cacheKeyMeta);
+    }
+    if (data.containsKey('value')) {
+      context.handle(
+        _valueMeta,
+        value.isAcceptableOrUnknown(data['value']!, _valueMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_valueMeta);
+    }
+    if (data.containsKey('expires_at')) {
+      context.handle(
+        _expiresAtMeta,
+        expiresAt.isAcceptableOrUnknown(data['expires_at']!, _expiresAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_expiresAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {cacheKey};
+  @override
+  FiscalLookupCacheRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FiscalLookupCacheRow(
+      cacheKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cache_key'],
+      )!,
+      value: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}value'],
+      )!,
+      expiresAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}expires_at'],
+      )!,
+    );
+  }
+
+  @override
+  $FiscalLookupCacheTable createAlias(String alias) {
+    return $FiscalLookupCacheTable(attachedDatabase, alias);
+  }
+}
+
+class FiscalLookupCacheRow extends DataClass
+    implements Insertable<FiscalLookupCacheRow> {
+  final String cacheKey;
+  final String value;
+  final DateTime expiresAt;
+  const FiscalLookupCacheRow({
+    required this.cacheKey,
+    required this.value,
+    required this.expiresAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['cache_key'] = Variable<String>(cacheKey);
+    map['value'] = Variable<String>(value);
+    map['expires_at'] = Variable<DateTime>(expiresAt);
+    return map;
+  }
+
+  FiscalLookupCacheCompanion toCompanion(bool nullToAbsent) {
+    return FiscalLookupCacheCompanion(
+      cacheKey: Value(cacheKey),
+      value: Value(value),
+      expiresAt: Value(expiresAt),
+    );
+  }
+
+  factory FiscalLookupCacheRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FiscalLookupCacheRow(
+      cacheKey: serializer.fromJson<String>(json['cacheKey']),
+      value: serializer.fromJson<String>(json['value']),
+      expiresAt: serializer.fromJson<DateTime>(json['expiresAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'cacheKey': serializer.toJson<String>(cacheKey),
+      'value': serializer.toJson<String>(value),
+      'expiresAt': serializer.toJson<DateTime>(expiresAt),
+    };
+  }
+
+  FiscalLookupCacheRow copyWith({
+    String? cacheKey,
+    String? value,
+    DateTime? expiresAt,
+  }) => FiscalLookupCacheRow(
+    cacheKey: cacheKey ?? this.cacheKey,
+    value: value ?? this.value,
+    expiresAt: expiresAt ?? this.expiresAt,
+  );
+  FiscalLookupCacheRow copyWithCompanion(FiscalLookupCacheCompanion data) {
+    return FiscalLookupCacheRow(
+      cacheKey: data.cacheKey.present ? data.cacheKey.value : this.cacheKey,
+      value: data.value.present ? data.value.value : this.value,
+      expiresAt: data.expiresAt.present ? data.expiresAt.value : this.expiresAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FiscalLookupCacheRow(')
+          ..write('cacheKey: $cacheKey, ')
+          ..write('value: $value, ')
+          ..write('expiresAt: $expiresAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(cacheKey, value, expiresAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FiscalLookupCacheRow &&
+          other.cacheKey == this.cacheKey &&
+          other.value == this.value &&
+          other.expiresAt == this.expiresAt);
+}
+
+class FiscalLookupCacheCompanion extends UpdateCompanion<FiscalLookupCacheRow> {
+  final Value<String> cacheKey;
+  final Value<String> value;
+  final Value<DateTime> expiresAt;
+  final Value<int> rowid;
+  const FiscalLookupCacheCompanion({
+    this.cacheKey = const Value.absent(),
+    this.value = const Value.absent(),
+    this.expiresAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FiscalLookupCacheCompanion.insert({
+    required String cacheKey,
+    required String value,
+    required DateTime expiresAt,
+    this.rowid = const Value.absent(),
+  }) : cacheKey = Value(cacheKey),
+       value = Value(value),
+       expiresAt = Value(expiresAt);
+  static Insertable<FiscalLookupCacheRow> custom({
+    Expression<String>? cacheKey,
+    Expression<String>? value,
+    Expression<DateTime>? expiresAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (cacheKey != null) 'cache_key': cacheKey,
+      if (value != null) 'value': value,
+      if (expiresAt != null) 'expires_at': expiresAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FiscalLookupCacheCompanion copyWith({
+    Value<String>? cacheKey,
+    Value<String>? value,
+    Value<DateTime>? expiresAt,
+    Value<int>? rowid,
+  }) {
+    return FiscalLookupCacheCompanion(
+      cacheKey: cacheKey ?? this.cacheKey,
+      value: value ?? this.value,
+      expiresAt: expiresAt ?? this.expiresAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (cacheKey.present) {
+      map['cache_key'] = Variable<String>(cacheKey.value);
+    }
+    if (value.present) {
+      map['value'] = Variable<String>(value.value);
+    }
+    if (expiresAt.present) {
+      map['expires_at'] = Variable<DateTime>(expiresAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FiscalLookupCacheCompanion(')
+          ..write('cacheKey: $cacheKey, ')
+          ..write('value: $value, ')
+          ..write('expiresAt: $expiresAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -7234,6 +7502,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $NotificationsLogTable notificationsLog = $NotificationsLogTable(
     this,
   );
+  late final $FiscalLookupCacheTable fiscalLookupCache =
+      $FiscalLookupCacheTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -7251,6 +7521,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     insurances,
     chatMessages,
     notificationsLog,
+    fiscalLookupCache,
   ];
 }
 
@@ -10814,6 +11085,181 @@ typedef $$NotificationsLogTableProcessedTableManager =
       NotificationLogRow,
       PrefetchHooks Function()
     >;
+typedef $$FiscalLookupCacheTableCreateCompanionBuilder =
+    FiscalLookupCacheCompanion Function({
+      required String cacheKey,
+      required String value,
+      required DateTime expiresAt,
+      Value<int> rowid,
+    });
+typedef $$FiscalLookupCacheTableUpdateCompanionBuilder =
+    FiscalLookupCacheCompanion Function({
+      Value<String> cacheKey,
+      Value<String> value,
+      Value<DateTime> expiresAt,
+      Value<int> rowid,
+    });
+
+class $$FiscalLookupCacheTableFilterComposer
+    extends Composer<_$AppDatabase, $FiscalLookupCacheTable> {
+  $$FiscalLookupCacheTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get cacheKey => $composableBuilder(
+    column: $table.cacheKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get expiresAt => $composableBuilder(
+    column: $table.expiresAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$FiscalLookupCacheTableOrderingComposer
+    extends Composer<_$AppDatabase, $FiscalLookupCacheTable> {
+  $$FiscalLookupCacheTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get cacheKey => $composableBuilder(
+    column: $table.cacheKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get expiresAt => $composableBuilder(
+    column: $table.expiresAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$FiscalLookupCacheTableAnnotationComposer
+    extends Composer<_$AppDatabase, $FiscalLookupCacheTable> {
+  $$FiscalLookupCacheTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get cacheKey =>
+      $composableBuilder(column: $table.cacheKey, builder: (column) => column);
+
+  GeneratedColumn<String> get value =>
+      $composableBuilder(column: $table.value, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get expiresAt =>
+      $composableBuilder(column: $table.expiresAt, builder: (column) => column);
+}
+
+class $$FiscalLookupCacheTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $FiscalLookupCacheTable,
+          FiscalLookupCacheRow,
+          $$FiscalLookupCacheTableFilterComposer,
+          $$FiscalLookupCacheTableOrderingComposer,
+          $$FiscalLookupCacheTableAnnotationComposer,
+          $$FiscalLookupCacheTableCreateCompanionBuilder,
+          $$FiscalLookupCacheTableUpdateCompanionBuilder,
+          (
+            FiscalLookupCacheRow,
+            BaseReferences<
+              _$AppDatabase,
+              $FiscalLookupCacheTable,
+              FiscalLookupCacheRow
+            >,
+          ),
+          FiscalLookupCacheRow,
+          PrefetchHooks Function()
+        > {
+  $$FiscalLookupCacheTableTableManager(
+    _$AppDatabase db,
+    $FiscalLookupCacheTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FiscalLookupCacheTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FiscalLookupCacheTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$FiscalLookupCacheTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> cacheKey = const Value.absent(),
+                Value<String> value = const Value.absent(),
+                Value<DateTime> expiresAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FiscalLookupCacheCompanion(
+                cacheKey: cacheKey,
+                value: value,
+                expiresAt: expiresAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String cacheKey,
+                required String value,
+                required DateTime expiresAt,
+                Value<int> rowid = const Value.absent(),
+              }) => FiscalLookupCacheCompanion.insert(
+                cacheKey: cacheKey,
+                value: value,
+                expiresAt: expiresAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$FiscalLookupCacheTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $FiscalLookupCacheTable,
+      FiscalLookupCacheRow,
+      $$FiscalLookupCacheTableFilterComposer,
+      $$FiscalLookupCacheTableOrderingComposer,
+      $$FiscalLookupCacheTableAnnotationComposer,
+      $$FiscalLookupCacheTableCreateCompanionBuilder,
+      $$FiscalLookupCacheTableUpdateCompanionBuilder,
+      (
+        FiscalLookupCacheRow,
+        BaseReferences<
+          _$AppDatabase,
+          $FiscalLookupCacheTable,
+          FiscalLookupCacheRow
+        >,
+      ),
+      FiscalLookupCacheRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -10842,4 +11288,6 @@ class $AppDatabaseManager {
       $$ChatMessagesTableTableManager(_db, _db.chatMessages);
   $$NotificationsLogTableTableManager get notificationsLog =>
       $$NotificationsLogTableTableManager(_db, _db.notificationsLog);
+  $$FiscalLookupCacheTableTableManager get fiscalLookupCache =>
+      $$FiscalLookupCacheTableTableManager(_db, _db.fiscalLookupCache);
 }

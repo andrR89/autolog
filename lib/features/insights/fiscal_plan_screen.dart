@@ -1,9 +1,9 @@
 // Tela de Lembretes Fiscais (IPVA + Licenciamento) por UF e final de placa.
 //
-// Baseada em calendário típico hardcoded — sem IA, sem rede, sem cota.
-// Disclaimer obrigatório: "Confira com seu Detran".
+// Sprint 6.W.3: substituído lookup hardcoded por FiscalLookupService (IA + cache).
+// Fallback: se IA falhar, usa calendário hardcoded (FallbackComputer).
 //
-// Padrão espelhado de MaintenancePlanScreen (Sprint 6.M).
+// Disclaimer obrigatório: "Confira com seu Detran".
 
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
@@ -13,6 +13,8 @@ import 'package:autolog/domain/models/reminder.dart';
 import 'package:autolog/domain/models/vehicle.dart';
 import 'package:autolog/features/insights/dedupe.dart';
 import 'package:autolog/features/insights/fiscal_calendar.dart';
+import 'package:autolog/features/insights/fiscal_lookup_result.dart';
+import 'package:autolog/features/insights/fiscal_lookup_service.dart';
 import 'package:autolog/features/insights/history_insights.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -24,11 +26,6 @@ import 'package:uuid/uuid.dart';
 // ---------------------------------------------------------------------------
 
 /// Lembretes ativos do veículo via `watchByVehicle` — Stream reativa.
-///
-/// Regressão 26/05/2026: o `FutureProvider.family` cacheava um snapshot
-/// estale após criar reminders, fazendo a tela mostrar lista vazia
-/// erroneamente ao navegar entre veículos. `StreamProvider` resolve
-/// porque o Drift emite nova lista a cada insert/update/delete.
 final _fiscalActiveRemindersProvider =
     StreamProvider.family<List<Reminder>, String>((ref, vehicleId) {
       final repo = ref.watch(reminderRepositoryProvider);
@@ -36,12 +33,50 @@ final _fiscalActiveRemindersProvider =
     });
 
 // ---------------------------------------------------------------------------
+// Provider do resultado do lookup fiscal
+// ---------------------------------------------------------------------------
+
+/// Parâmetros para o lookup fiscal.
+class _FiscalLookupParams {
+  const _FiscalLookupParams({
+    required this.uf,
+    required this.plateLastDigit,
+    required this.year,
+  });
+
+  final String uf;
+  final int plateLastDigit;
+  final int year;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is _FiscalLookupParams &&
+          uf == other.uf &&
+          plateLastDigit == other.plateLastDigit &&
+          year == other.year;
+
+  @override
+  int get hashCode => Object.hash(uf, plateLastDigit, year);
+}
+
+final _fiscalLookupProvider =
+    FutureProvider.family<FiscalLookupResult, _FiscalLookupParams>(
+      (ref, params) {
+        final service = ref.watch(fiscalLookupServiceProvider);
+        return service.lookup(
+          uf: params.uf,
+          plateLastDigit: params.plateLastDigit,
+          year: params.year,
+        );
+      },
+    );
+
+// ---------------------------------------------------------------------------
 // Tela principal
 // ---------------------------------------------------------------------------
 
 /// Tela de lembretes fiscais (IPVA + Licenciamento) para o veículo dado.
-///
-/// Acesso: `/vehicles/:vehicleId/insights/fiscal`.
 class FiscalPlanScreen extends ConsumerStatefulWidget {
   const FiscalPlanScreen({super.key, required this.vehicle});
 
@@ -52,33 +87,64 @@ class FiscalPlanScreen extends ConsumerStatefulWidget {
 }
 
 class _FiscalPlanScreenState extends ConsumerState<FiscalPlanScreen> {
-  // Títulos normalizados ignorados nesta sessão (não persiste).
-  // Reativo: as propostas são derivadas no build a partir do veículo +
-  // dos reminders ativos atuais (StreamProvider). Sem snapshot manual.
   final Set<String> _ignoredTitles = {};
 
-  /// Computa as propostas visíveis pra render. Combina:
-  ///   - propostas hardcoded do calendário fiscal do veículo
-  ///   - dedupe contra lembretes ativos (vindos do Stream)
-  ///   - exclusão de itens ignorados nesta sessão
-  List<ProposedReminder> _visibleProposals(List<Reminder> activeReminders) {
+  /// Constrói propostas a partir do resultado do lookup fiscal.
+  List<_FiscalProposal> _buildProposals(
+    FiscalLookupResult result,
+    List<Reminder> activeReminders,
+  ) {
     final v = widget.vehicle;
     final year = DateTime.now().year;
-    final proposed = suggestFiscalReminders(
-      uf: v.uf,
-      plate: v.plate,
-      year: year,
-    );
+
+    final ipvaDate = DateTime.utc(year, result.ipva.month, result.ipva.day ?? 1);
+    final licDate = DateTime.utc(year, result.licensing.month, result.licensing.day ?? 1);
+
+    final proposed = [
+      ProposedReminder(
+        title: 'IPVA $year',
+        dueDate: ipvaDate,
+        rationale: _buildRationale(v.uf, result.source, result.ipva.sourceCitation),
+      ),
+      ProposedReminder(
+        title: 'Licenciamento $year',
+        dueDate: licDate,
+        rationale: _buildRationale(v.uf, result.source, result.licensing.sourceCitation),
+      ),
+    ];
+
     final deduped = dedupeProposed(proposed, activeReminders);
-    return deduped
+    final filtered = deduped
         .where((p) => !_ignoredTitles.contains(normalizeTitle(p.title)))
         .toList();
+
+    // Map para associar source info a cada proposta.
+    return filtered.map((p) {
+      final isIpva = p.title.startsWith('IPVA');
+      final entry = isIpva ? result.ipva : result.licensing;
+      return _FiscalProposal(
+        reminder: p,
+        source: result.source,
+        sourceCitation: entry.sourceCitation,
+      );
+    }).toList();
+  }
+
+  String _buildRationale(
+    String? uf,
+    FiscalLookupSource source,
+    String? citation,
+  ) {
+    if (source == FiscalLookupSource.localFallback) {
+      return 'Estimativa local — confira no Detran do seu estado.';
+    }
+    if (citation != null && citation.isNotEmpty) {
+      return 'Fonte: $citation — confira no Detran.';
+    }
+    return 'Fonte: IA — confira no Detran.';
   }
 
   Future<void> _createReminder(ProposedReminder proposed) async {
-    // Marca como ignorado otimisticamente pra sumir da lista imediato.
-    // O Stream do repo vai emitir o novo Reminder em seguida e o dedupe
-    // confirmar — não precisa de revert manual (idempotente).
     setState(() => _ignoredTitles.add(normalizeTitle(proposed.title)));
 
     final id = const Uuid().v4();
@@ -110,10 +176,8 @@ class _FiscalPlanScreenState extends ConsumerState<FiscalPlanScreen> {
           );
       }
     } catch (_) {
-      // Reverte o ignore otimista pra item reaparecer e user tentar de novo.
       if (mounted) {
-        setState(() =>
-            _ignoredTitles.remove(normalizeTitle(proposed.title)));
+        setState(() => _ignoredTitles.remove(normalizeTitle(proposed.title)));
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
           ..showSnackBar(
@@ -132,21 +196,29 @@ class _FiscalPlanScreenState extends ConsumerState<FiscalPlanScreen> {
     setState(() => _ignoredTitles.add(normalizeTitle(proposed.title)));
   }
 
-  Future<void> _createAll(List<ProposedReminder> remaining) async {
+  Future<void> _createAll(List<_FiscalProposal> remaining) async {
     for (final item in remaining) {
-      await _createReminder(item);
+      await _createReminder(item.reminder);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Reativo: o body é função do StreamProvider de reminders ativos.
+    final v = widget.vehicle;
+    final year = DateTime.now().year;
+    final digit = lastDigitOfPlate(v.plate);
+
+    // Lookup fiscal via service.
+    final lookupAsync = (v.uf != null && digit != null)
+        ? ref.watch(
+            _fiscalLookupProvider(
+              _FiscalLookupParams(uf: v.uf!, plateLastDigit: digit, year: year),
+            ),
+          )
+        : null;
+
     final remindersAsync =
         ref.watch(_fiscalActiveRemindersProvider(widget.vehicle.id));
-    final visible = remindersAsync.maybeWhen(
-      data: _visibleProposals,
-      orElse: () => const <ProposedReminder>[],
-    );
 
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -168,8 +240,6 @@ class _FiscalPlanScreenState extends ConsumerState<FiscalPlanScreen> {
           statusBarBrightness: Brightness.dark,
         ),
         actions: [
-          // Regerar: limpa os "ignorados" da sessão pra propostas reaparecerem.
-          // Lembretes já criados continuam filtrados pelo dedupe (não duplica).
           if (_ignoredTitles.isNotEmpty)
             IconButton(
               tooltip: 'Mostrar propostas ignoradas',
@@ -178,36 +248,60 @@ class _FiscalPlanScreenState extends ConsumerState<FiscalPlanScreen> {
             ),
         ],
       ),
-      floatingActionButton: visible.isNotEmpty
-          ? FloatingActionButton.extended(
-              onPressed: () => _createAll(visible),
-              backgroundColor: AppColors.brand,
-              foregroundColor: AppColors.brandInk,
-              icon: const Icon(Icons.playlist_add_check, size: 20),
-              label: const Text('Criar todos restantes'),
-            )
-          : null,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Banner disclaimer — OBRIGATÓRIO conforme spec.
           _DisclaimerBanner(),
-          // Header de contexto: deixa claro pra qual veículo/UF/placa as
-          // datas se referem (evita confusão quando user navega entre
-          // veículos e vê o mesmo card visualmente).
           _VehicleContextStrip(vehicle: widget.vehicle),
-          // Conteúdo.
-          Expanded(child: _buildBody(visible, remindersAsync)),
+          Expanded(
+            child: _buildBody(lookupAsync, remindersAsync),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildBody(
-    List<ProposedReminder> visible,
+    AsyncValue<FiscalLookupResult>? lookupAsync,
     AsyncValue<List<Reminder>> remindersAsync,
   ) {
-    // Loading inicial (Stream ainda não emitiu) → spinner discreto.
+    // Se não tem UF ou dígito, cai para fallback imediato.
+    if (lookupAsync == null) {
+      final v = widget.vehicle;
+      final year = DateTime.now().year;
+      final digit = lastDigitOfPlate(v.plate) ?? 0;
+      final fallback = const FallbackComputer().compute(v.uf ?? '', digit, year);
+      return _buildWithResult(fallback, remindersAsync);
+    }
+
+    // Loading inicial do lookup (primeira vez — cache miss).
+    if (lookupAsync.isLoading && !lookupAsync.hasValue) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(AppSpacing.xxl),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    // Resultado disponível (cache hit é instantâneo).
+    final result = lookupAsync.valueOrNull;
+    if (result != null) {
+      return _buildWithResult(result, remindersAsync);
+    }
+
+    // Erro no lookup → fallback local imediato.
+    final v = widget.vehicle;
+    final year = DateTime.now().year;
+    final digit = lastDigitOfPlate(v.plate) ?? 0;
+    final fallback = const FallbackComputer().compute(v.uf ?? '', digit, year);
+    return _buildWithResult(fallback, remindersAsync);
+  }
+
+  Widget _buildWithResult(
+    FiscalLookupResult result,
+    AsyncValue<List<Reminder>> remindersAsync,
+  ) {
     if (remindersAsync.isLoading && !remindersAsync.hasValue) {
       return const Center(
         child: Padding(
@@ -216,7 +310,11 @@ class _FiscalPlanScreenState extends ConsumerState<FiscalPlanScreen> {
         ),
       );
     }
-    if (visible.isEmpty) {
+
+    final activeReminders = remindersAsync.valueOrNull ?? const [];
+    final proposals = _buildProposals(result, activeReminders);
+
+    if (proposals.isEmpty) {
       return _EmptyState(
         hasIgnored: _ignoredTitles.isNotEmpty,
         onResetIgnored: _ignoredTitles.isEmpty
@@ -225,22 +323,57 @@ class _FiscalPlanScreenState extends ConsumerState<FiscalPlanScreen> {
       );
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        AppSpacing.lg,
-        AppSpacing.lg,
-        AppSpacing.huge + 80, // espaço pro FAB
-      ),
-      itemCount: visible.length,
-      separatorBuilder: (context, _) => const SizedBox(height: AppSpacing.md),
-      itemBuilder: (context, i) => _FiscalItemCard(
-        proposed: visible[i],
-        onCreate: () => _createReminder(visible[i]),
-        onIgnore: () => _ignoreItem(visible[i]),
-      ),
+    return Stack(
+      children: [
+        ListView.separated(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.lg,
+            AppSpacing.lg,
+            AppSpacing.huge + 80,
+          ),
+          itemCount: proposals.length,
+          separatorBuilder: (context, _) =>
+              const SizedBox(height: AppSpacing.md),
+          itemBuilder: (context, i) => _FiscalItemCard(
+            proposal: proposals[i],
+            onCreate: () => _createReminder(proposals[i].reminder),
+            onIgnore: () => _ignoreItem(proposals[i].reminder),
+          ),
+        ),
+        Positioned(
+          bottom: 16,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: FloatingActionButton.extended(
+              onPressed: () => _createAll(proposals),
+              backgroundColor: AppColors.brand,
+              foregroundColor: AppColors.brandInk,
+              icon: const Icon(Icons.playlist_add_check, size: 20),
+              label: const Text('Criar todos restantes'),
+            ),
+          ),
+        ),
+      ],
     );
   }
+}
+
+// ---------------------------------------------------------------------------
+// Modelo interno de proposta com metadata de fonte
+// ---------------------------------------------------------------------------
+
+class _FiscalProposal {
+  const _FiscalProposal({
+    required this.reminder,
+    required this.source,
+    this.sourceCitation,
+  });
+
+  final ProposedReminder reminder;
+  final FiscalLookupSource source;
+  final String? sourceCitation;
 }
 
 // ---------------------------------------------------------------------------
@@ -296,8 +429,7 @@ class _DisclaimerBanner extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Strip de contexto do veículo: mostra nickname + placa + UF pra deixar
-// claro a qual veículo as datas se referem.
+// Strip de contexto do veículo
 // ---------------------------------------------------------------------------
 
 class _VehicleContextStrip extends StatelessWidget {
@@ -321,7 +453,10 @@ class _VehicleContextStrip extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.md,
+        AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.lg,
+        AppSpacing.md,
       ),
       child: Row(
         children: [
@@ -357,8 +492,6 @@ class _VehicleContextStrip extends StatelessWidget {
 class _EmptyState extends StatelessWidget {
   const _EmptyState({this.hasIgnored = false, this.onResetIgnored});
 
-  /// `true` quando o user ignorou alguma proposta nesta sessão e a lista
-  /// ficou vazia por causa disso (em vez de tudo já ter sido criado).
   final bool hasIgnored;
   final VoidCallback? onResetIgnored;
 
@@ -411,41 +544,41 @@ class _EmptyState extends StatelessWidget {
 
 class _FiscalItemCard extends StatelessWidget {
   const _FiscalItemCard({
-    required this.proposed,
+    required this.proposal,
     required this.onCreate,
     required this.onIgnore,
   });
 
-  final ProposedReminder proposed;
+  final _FiscalProposal proposal;
   final VoidCallback onCreate;
   final VoidCallback onIgnore;
 
   String _formatDueDate(DateTime? date) {
     if (date == null) return '';
-    // Formata como "jan/26", "mar/2026" etc.
     const months = [
-      'jan',
-      'fev',
-      'mar',
-      'abr',
-      'mai',
-      'jun',
-      'jul',
-      'ago',
-      'set',
-      'out',
-      'nov',
-      'dez',
+      'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
+      'jul', 'ago', 'set', 'out', 'nov', 'dez',
     ];
     final mon = months[date.month - 1];
-    final yr = date.year.toString().substring(2); // '26' de 2026
+    final yr = date.year.toString().substring(2);
     return 'Vence em $mon/$yr';
+  }
+
+  String _sourceLabel(_FiscalProposal p) {
+    if (p.source == FiscalLookupSource.localFallback) {
+      return 'fonte: estimativa local';
+    }
+    if (p.sourceCitation != null && p.sourceCitation!.isNotEmpty) {
+      return 'fonte: IA (${p.sourceCitation})';
+    }
+    return 'fonte: IA';
   }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final dueLabel = _formatDueDate(proposed.dueDate);
+    final dueLabel = _formatDueDate(proposal.reminder.dueDate);
+    final sourceLabel = _sourceLabel(proposal);
 
     return Container(
       decoration: BoxDecoration(
@@ -458,7 +591,7 @@ class _FiscalItemCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            proposed.title,
+            proposal.reminder.title,
             style: AppTypography.body(
               15,
               weight: FontWeight.w600,
@@ -484,13 +617,31 @@ class _FiscalItemCard extends StatelessWidget {
               ],
             ),
           ],
-          if (proposed.rationale.isNotEmpty) ...[
+          if (proposal.reminder.rationale.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.xs),
             Text(
-              proposed.rationale,
+              proposal.reminder.rationale,
               style: textTheme.bodySmall?.copyWith(color: AppColors.inkSoft),
             ),
           ],
+          const SizedBox(height: AppSpacing.sm),
+          // Chip de fonte (IA vs estimativa local).
+          Chip(
+            label: Text(
+              sourceLabel,
+              style: textTheme.labelSmall?.copyWith(
+                color: proposal.source == FiscalLookupSource.localFallback
+                    ? AppColors.inkSoft
+                    : AppColors.brand,
+              ),
+            ),
+            backgroundColor: proposal.source == FiscalLookupSource.localFallback
+                ? AppColors.surfaceSunken
+                : AppColors.brand.withValues(alpha: 0.08),
+            padding: EdgeInsets.zero,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            side: BorderSide.none,
+          ),
           const SizedBox(height: AppSpacing.md),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,

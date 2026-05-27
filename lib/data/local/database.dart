@@ -25,6 +25,7 @@ part 'database.g.dart';
   Insurances,
   ChatMessages,
   NotificationsLog,
+  FiscalLookupCache,
 ])
 class AppDatabase extends _$AppDatabase {
   /// Construtor testável: aceita qualquer [QueryExecutor].
@@ -33,7 +34,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -77,6 +78,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 10) {
         await m.createTable(notificationsLog);
+      }
+      if (from < 11) {
+        await m.createTable(fiscalLookupCache);
       }
     },
   );
