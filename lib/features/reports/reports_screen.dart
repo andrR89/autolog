@@ -538,12 +538,15 @@ class _RecapBanner extends ConsumerWidget {
         ? 'Seu Recap de ${decision.periodLabel} tá pronto'
         : 'Seu Recap de ${decision.periodLabel} já tem cara';
 
+    // Visual de banner INFORMATIVO (azul-soft) — mais leve que brand-dark,
+    // condiz com a natureza esporádica/descobrível do Recap. Ícone do
+    // Material (não emoji) pra render confiável em qualquer fonte.
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 0,
       ),
       child: Material(
-        color: AppColors.brandSoft,
+        color: AppColors.infoSoft,
         borderRadius: AppRadius.allMd,
         child: InkWell(
           borderRadius: AppRadius.allMd,
@@ -554,22 +557,33 @@ class _RecapBanner extends ConsumerWidget {
             ),
             child: Row(
               children: [
-                const Text('✨', style: TextStyle(fontSize: 20)),
-                const SizedBox(width: AppSpacing.sm),
+                Container(
+                  width: 32, height: 32,
+                  decoration: const BoxDecoration(
+                    color: AppColors.info,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.auto_awesome_rounded,
+                    size: 18,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Text(
                     label,
                     style: AppTypography.body(
                       14,
                       weight: FontWeight.w600,
-                      color: AppColors.brandInk,
+                      color: AppColors.info,
                     ),
                   ),
                 ),
                 Icon(
                   Icons.arrow_forward_rounded,
                   size: 18,
-                  color: AppColors.brandInk.withValues(alpha: 0.7),
+                  color: AppColors.info.withValues(alpha: 0.7),
                 ),
               ],
             ),
@@ -587,7 +601,7 @@ class _RecapMenuAction extends StatelessWidget {
   Widget build(BuildContext context) {
     return PopupMenuButton<String>(
       tooltip: 'Recap',
-      icon: const Text('✨', style: TextStyle(fontSize: 18)),
+      icon: const Icon(Icons.auto_awesome_rounded),
       onSelected: (route) => context.push(route),
       itemBuilder: (_) => const [
         PopupMenuItem(
