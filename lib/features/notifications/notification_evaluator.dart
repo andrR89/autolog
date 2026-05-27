@@ -13,8 +13,15 @@ import 'package:autolog/domain/models/fuel_entry.dart';
 import 'package:autolog/domain/models/user_profile.dart';
 import 'package:autolog/features/insights/fiscal_calendar.dart';
 import 'package:autolog/features/insights/history_insights.dart' show ProposedReminder;
+import 'package:autolog/features/recap/recap_banner_gate.dart' show kRecapMinEntries;
 import 'package:autolog/features/reports/trend_analyzer.dart';
 import 'package:decimal/decimal.dart';
+
+const _ptBrMonthsForRecap = <String>[
+  '',
+  'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+  'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
+];
 
 class NotificationProposal {
   const NotificationProposal({
@@ -100,6 +107,25 @@ NotificationProposal? evaluateNotifications({
       body:
           'Seu consumo piorou ${trend.deltaPercent.abs()}% nos últimos 3 meses.',
     );
+  }
+
+  // 4) Recap ready — primeiros 3 dias do mês, mês anterior fechou com
+  // dados suficientes pra contar uma história. Dedupe de 7 dias garante
+  // 1 disparo por virada (gate "now.day <= 3" também limita).
+  if (now.day <= 3) {
+    final prevMonth = now.month == 1 ? 12 : now.month - 1;
+    final prevYear = now.month == 1 ? now.year - 1 : now.year;
+    final entriesInPrev = fuelEntries.where((e) =>
+        e.date.year == prevYear && e.date.month == prevMonth).length;
+    if (entriesInPrev >= kRecapMinEntries &&
+        !dedupedRecently('recap_ready')) {
+      final monthName = _ptBrMonthsForRecap[prevMonth];
+      return NotificationProposal(
+        category: 'recap_ready',
+        title: '✨ Seu Recap de $monthName tá pronto',
+        body: 'Veja seus gastos e km do mês fechado.',
+      );
+    }
   }
 
   return null;

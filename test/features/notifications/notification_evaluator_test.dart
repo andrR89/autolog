@@ -244,6 +244,63 @@ void main() {
       expect(r, isNull);
     });
 
+    test('recap_ready: dia 2 do mês com 4 entries no anterior → proposta', () {
+      final nowLocal = DateTime.utc(2026, 6, 2);
+      final r = evaluateNotifications(
+        fuelEntries: [
+          for (var d = 1; d <= 4; d++)
+            _f(id: 'e$d', odometer: 100 + d * 100, liters: '40',
+                date: DateTime.utc(2026, 5, 5 + d)),
+        ],
+        userProfile: null,
+        recentLog: const [],
+        now: nowLocal,
+        vehicleId: 'v1',
+        vehicleUf: null,
+        vehiclePlate: null,
+      );
+      expect(r, isNotNull);
+      expect(r!.category, 'recap_ready');
+      expect(r.title.toLowerCase().contains('maio'), isTrue);
+    });
+
+    test('recap_ready: dia 5 do mês já fora da janela → null', () {
+      final nowLocal = DateTime.utc(2026, 6, 5);
+      final r = evaluateNotifications(
+        fuelEntries: [
+          for (var d = 1; d <= 4; d++)
+            _f(id: 'e$d', odometer: 100 + d * 100, liters: '40',
+                date: DateTime.utc(2026, 5, 5 + d)),
+        ],
+        userProfile: null,
+        recentLog: const [],
+        now: nowLocal,
+        vehicleId: 'v1',
+        vehicleUf: null,
+        vehiclePlate: null,
+      );
+      expect(r, isNull);
+    });
+
+    test('recap_ready: dia 2 mas só 2 entries no anterior → null', () {
+      final nowLocal = DateTime.utc(2026, 6, 2);
+      final r = evaluateNotifications(
+        fuelEntries: [
+          _f(id: 'e1', odometer: 100, liters: '40',
+              date: DateTime.utc(2026, 5, 10)),
+          _f(id: 'e2', odometer: 200, liters: '40',
+              date: DateTime.utc(2026, 5, 20)),
+        ],
+        userProfile: null,
+        recentLog: const [],
+        now: nowLocal,
+        vehicleId: 'v1',
+        vehicleUf: null,
+        vehiclePlate: null,
+      );
+      expect(r, isNull);
+    });
+
     test('já notificou há 8 dias → renotifica', () {
       final r = evaluateNotifications(
         fuelEntries: [
