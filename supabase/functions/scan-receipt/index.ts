@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { readQuota, incrementQuota } from '../_shared/quota.ts';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -90,19 +91,9 @@ serve(async (req: Request) => {
   }
 
   // --- 3. Quota check (spec §2) ---
-  const currentMonth = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+  const { effective, isPremium, currentMonth } = await readQuota(supabase, userId);
 
-  const { data: quotaRow } = await supabase
-    .from('usage_quota')
-    .select('*')
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  const isPremium: boolean = quotaRow?.is_premium ?? false;
-  const effectiveCount: number =
-    quotaRow?.month === currentMonth ? (quotaRow.scan_count as number) : 0;
-
-  if (!isPremium && effectiveCount >= 5) {
+  if (!isPremium && effective.scan >= 5) {
     return json({ error: 'quota_exhausted' }, 429);
   }
 
@@ -194,11 +185,8 @@ serve(async (req: Request) => {
   // "incrementa só se pelo menos liters E price_per_liter vierem não-nulos"
   if (litersStr !== null && priceStr !== null) {
     try {
-      await supabase.from('usage_quota').upsert({
-        user_id: userId,
-        month: currentMonth,
-        scan_count: effectiveCount + 1,
-        is_premium: isPremium,
+      await incrementQuota(supabase, {
+        userId, currentMonth, effective, isPremium, field: 'scan_count',
       });
     } catch (e) {
       // Non-fatal: log and continue — user got their data, quota increment failure
