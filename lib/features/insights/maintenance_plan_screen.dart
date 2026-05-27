@@ -33,10 +33,12 @@ import 'package:uuid/uuid.dart';
 // Provider de lembretes ativos do veículo (para dedupe)
 // ---------------------------------------------------------------------------
 
+/// Stream reativo: emite a cada insert/update/delete de reminder pelo Drift.
+/// Evita cache estale do FutureProvider entre navegações (regressão fiscal).
 final _maintenanceActiveRemindersProvider =
-    FutureProvider.family<List<Reminder>, String>((ref, vehicleId) {
+    StreamProvider.family<List<Reminder>, String>((ref, vehicleId) {
       final repo = ref.watch(reminderRepositoryProvider);
-      return repo.listByVehicle(vehicleId);
+      return repo.watchByVehicle(vehicleId);
     });
 
 // ---------------------------------------------------------------------------

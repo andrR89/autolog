@@ -23,10 +23,16 @@ import 'package:uuid/uuid.dart';
 // Provider de lembretes ativos do veículo (para dedupe)
 // ---------------------------------------------------------------------------
 
+/// Lembretes ativos do veículo via `watchByVehicle` — Stream reativa.
+///
+/// Regressão 26/05/2026: o `FutureProvider.family` cacheava um snapshot
+/// estale após criar reminders, fazendo a tela mostrar lista vazia
+/// erroneamente ao navegar entre veículos. `StreamProvider` resolve
+/// porque o Drift emite nova lista a cada insert/update/delete.
 final _fiscalActiveRemindersProvider =
-    FutureProvider.family<List<Reminder>, String>((ref, vehicleId) {
+    StreamProvider.family<List<Reminder>, String>((ref, vehicleId) {
       final repo = ref.watch(reminderRepositoryProvider);
-      return repo.listByVehicle(vehicleId);
+      return repo.watchByVehicle(vehicleId);
     });
 
 // ---------------------------------------------------------------------------
@@ -46,20 +52,16 @@ class FiscalPlanScreen extends ConsumerStatefulWidget {
 }
 
 class _FiscalPlanScreenState extends ConsumerState<FiscalPlanScreen> {
-  // Propostas visíveis após dedupe e remoções otimistas.
-  List<ProposedReminder> _visibleItems = [];
-  bool _initialized = false;
+  // Títulos normalizados ignorados nesta sessão (não persiste).
+  // Reativo: as propostas são derivadas no build a partir do veículo +
+  // dos reminders ativos atuais (StreamProvider). Sem snapshot manual.
+  final Set<String> _ignoredTitles = {};
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_initialized) {
-      _initialized = true;
-      _computeProposals();
-    }
-  }
-
-  void _computeProposals() {
+  /// Computa as propostas visíveis pra render. Combina:
+  ///   - propostas hardcoded do calendário fiscal do veículo
+  ///   - dedupe contra lembretes ativos (vindos do Stream)
+  ///   - exclusão de itens ignorados nesta sessão
+  List<ProposedReminder> _visibleProposals(List<Reminder> activeReminders) {
     final v = widget.vehicle;
     final year = DateTime.now().year;
     final proposed = suggestFiscalReminders(
@@ -67,18 +69,17 @@ class _FiscalPlanScreenState extends ConsumerState<FiscalPlanScreen> {
       plate: v.plate,
       year: year,
     );
-
-    // Dedupe contra lembretes ativos já carregados.
-    final remindersAsync = ref.read(_fiscalActiveRemindersProvider(v.id));
-    final existing = remindersAsync.valueOrNull ?? [];
-    final deduped = dedupeProposed(proposed, existing);
-
-    setState(() => _visibleItems = List.of(deduped));
+    final deduped = dedupeProposed(proposed, activeReminders);
+    return deduped
+        .where((p) => !_ignoredTitles.contains(normalizeTitle(p.title)))
+        .toList();
   }
 
   Future<void> _createReminder(ProposedReminder proposed) async {
-    // Remoção otimista imediata.
-    setState(() => _visibleItems.remove(proposed));
+    // Marca como ignorado otimisticamente pra sumir da lista imediato.
+    // O Stream do repo vai emitir o novo Reminder em seguida e o dedupe
+    // confirmar — não precisa de revert manual (idempotente).
+    setState(() => _ignoredTitles.add(normalizeTitle(proposed.title)));
 
     final id = const Uuid().v4();
     final now = DateTime.now().toUtc();
@@ -109,9 +110,10 @@ class _FiscalPlanScreenState extends ConsumerState<FiscalPlanScreen> {
           );
       }
     } catch (_) {
-      // Reverte remoção otimista em caso de erro.
+      // Reverte o ignore otimista pra item reaparecer e user tentar de novo.
       if (mounted) {
-        setState(() => _visibleItems.add(proposed));
+        setState(() =>
+            _ignoredTitles.remove(normalizeTitle(proposed.title)));
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
           ..showSnackBar(
@@ -127,11 +129,10 @@ class _FiscalPlanScreenState extends ConsumerState<FiscalPlanScreen> {
   }
 
   void _ignoreItem(ProposedReminder proposed) {
-    setState(() => _visibleItems.remove(proposed));
+    setState(() => _ignoredTitles.add(normalizeTitle(proposed.title)));
   }
 
-  Future<void> _createAll() async {
-    final remaining = List.of(_visibleItems);
+  Future<void> _createAll(List<ProposedReminder> remaining) async {
     for (final item in remaining) {
       await _createReminder(item);
     }
@@ -139,6 +140,14 @@ class _FiscalPlanScreenState extends ConsumerState<FiscalPlanScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Reativo: o body é função do StreamProvider de reminders ativos.
+    final remindersAsync =
+        ref.watch(_fiscalActiveRemindersProvider(widget.vehicle.id));
+    final visible = remindersAsync.maybeWhen(
+      data: _visibleProposals,
+      orElse: () => const <ProposedReminder>[],
+    );
+
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppBar(
@@ -159,9 +168,9 @@ class _FiscalPlanScreenState extends ConsumerState<FiscalPlanScreen> {
           statusBarBrightness: Brightness.dark,
         ),
       ),
-      floatingActionButton: _visibleItems.isNotEmpty
+      floatingActionButton: visible.isNotEmpty
           ? FloatingActionButton.extended(
-              onPressed: _createAll,
+              onPressed: () => _createAll(visible),
               backgroundColor: AppColors.brand,
               foregroundColor: AppColors.brandInk,
               icon: const Icon(Icons.playlist_add_check, size: 20),
@@ -174,14 +183,26 @@ class _FiscalPlanScreenState extends ConsumerState<FiscalPlanScreen> {
           // Banner disclaimer — OBRIGATÓRIO conforme spec.
           _DisclaimerBanner(),
           // Conteúdo.
-          Expanded(child: _buildBody()),
+          Expanded(child: _buildBody(visible, remindersAsync)),
         ],
       ),
     );
   }
 
-  Widget _buildBody() {
-    if (_visibleItems.isEmpty) {
+  Widget _buildBody(
+    List<ProposedReminder> visible,
+    AsyncValue<List<Reminder>> remindersAsync,
+  ) {
+    // Loading inicial (Stream ainda não emitiu) → spinner discreto.
+    if (remindersAsync.isLoading && !remindersAsync.hasValue) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(AppSpacing.xxl),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+    if (visible.isEmpty) {
       return const _EmptyState();
     }
 
@@ -192,12 +213,12 @@ class _FiscalPlanScreenState extends ConsumerState<FiscalPlanScreen> {
         AppSpacing.lg,
         AppSpacing.huge + 80, // espaço pro FAB
       ),
-      itemCount: _visibleItems.length,
+      itemCount: visible.length,
       separatorBuilder: (context, _) => const SizedBox(height: AppSpacing.md),
       itemBuilder: (context, i) => _FiscalItemCard(
-        proposed: _visibleItems[i],
-        onCreate: () => _createReminder(_visibleItems[i]),
-        onIgnore: () => _ignoreItem(_visibleItems[i]),
+        proposed: visible[i],
+        onCreate: () => _createReminder(visible[i]),
+        onIgnore: () => _ignoreItem(visible[i]),
       ),
     );
   }
