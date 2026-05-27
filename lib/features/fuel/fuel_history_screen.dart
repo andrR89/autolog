@@ -41,6 +41,7 @@ import 'package:autolog/features/fuel/fuel_history_helpers.dart';
 import 'package:autolog/features/fuel/widgets/favorite_station_card.dart';
 import 'package:autolog/features/fuel/widgets/fuel_entry_card.dart';
 import 'package:autolog/features/fuel/widgets/vehicle_hero_header.dart';
+import 'package:autolog/features/reports/widgets/co2_card.dart';
 import 'package:autolog/features/reports/widgets/cost_per_km_card.dart';
 import 'package:autolog/features/reports/widgets/trend_card.dart';
 import 'package:autolog/features/vehicles/widgets/fipe_history_chart.dart';
@@ -228,6 +229,9 @@ class _DataBody extends ConsumerWidget {
           ),
           SliverToBoxAdapter(
             child: TrendCard(vehicle: vehicle),
+          ),
+          SliverToBoxAdapter(
+            child: Co2Card(vehicle: vehicle),
           ),
           SliverToBoxAdapter(
             child: FavoriteStationCard(vehicle: vehicle),
