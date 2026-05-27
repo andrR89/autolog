@@ -541,9 +541,12 @@ class _RecapBanner extends ConsumerWidget {
     // Visual de banner INFORMATIVO (azul-soft) — mais leve que brand-dark,
     // condiz com a natureza esporádica/descobrível do Recap. Ícone do
     // Material (não emoji) pra render confiável em qualquer fonte.
+    // Sem padding top — banner cola direto no AppBar; faixa branca entre os
+    // dois ficava órfã visualmente (regressão 27/05/2026). Manter laterais
+    // pra respiro horizontal e bottom = 0 deixa o hero metric encostar.
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 0,
+        AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.sm,
       ),
       child: Material(
         color: AppColors.infoSoft,
