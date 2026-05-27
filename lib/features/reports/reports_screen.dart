@@ -14,7 +14,14 @@
 
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
+import 'package:autolog/domain/models/expense.dart';
+import 'package:autolog/domain/models/fuel_entry.dart';
 import 'package:autolog/domain/models/vehicle.dart';
+import 'package:autolog/features/expenses/expenses_list_screen.dart'
+    show expensesByVehicleProvider;
+import 'package:autolog/features/fuel/fuel_history_screen.dart'
+    show fuelEntriesByVehicleProvider;
+import 'package:autolog/features/recap/recap_banner_gate.dart';
 import 'package:autolog/features/reports/monthly_consumption.dart';
 import 'package:autolog/features/reports/monthly_price.dart';
 import 'package:autolog/features/reports/monthly_spending.dart';
@@ -63,13 +70,15 @@ class ReportsScreen extends ConsumerWidget {
           statusBarIconBrightness: Brightness.light,
           statusBarBrightness: Brightness.dark,
         ),
+        // Recap sempre acessível por ✨ no AppBar (3 opções de período),
+        // mesmo quando o banner contextual não está visível.
+        actions: const [_RecapMenuAction()],
       ),
       body: CustomScrollView(
         slivers: [
-          // Card "Recap" — destaque no topo, antes do hero metric
-          SliverToBoxAdapter(
-            child: _RecapCard(),
-          ),
+          // Banner Recap contextual — só aparece em fim/início de mês
+          // E com dados suficientes (≥3 entries). Esporádico por design.
+          SliverToBoxAdapter(child: _RecapBanner(vehicle: vehicle)),
 
           // Hero metric — gasto do mês corrente com count-up
           SliverToBoxAdapter(
@@ -479,104 +488,127 @@ class _SectionError extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Card "Recap" — entry point destacado no topo dos relatórios
+// Recap — entry points novos (Sprint 6.W.2)
+//
+// Substitui o `_RecapCard` antigo (gigante, sempre visível) por:
+//   - `_RecapBanner`: linha compacta contextual. Só aparece em momentos
+//     específicos do mês com dados suficientes (ver recap_banner_gate).
+//   - `_RecapMenuAction`: ícone ✨ no AppBar sempre visível, abre menu
+//     com 3 opções (mês atual / mês anterior / esta semana).
 // ---------------------------------------------------------------------------
 
-class _RecapCard extends StatelessWidget {
+class _RecapBanner extends ConsumerWidget {
+  const _RecapBanner({required this.vehicle});
+
+  final Vehicle vehicle;
+
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        AppSpacing.lg,
-        AppSpacing.lg,
-        0,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final fuelsAsync = ref.watch(fuelEntriesByVehicleProvider(vehicle.id));
+    final expensesAsync = ref.watch(expensesByVehicleProvider(vehicle.id));
+
+    final fuels = fuelsAsync.valueOrNull ?? const <FuelEntry>[];
+    final expenses = expensesAsync.valueOrNull ?? const <Expense>[];
+
+    final now = DateTime.now();
+    final firstThisMonth = DateTime(now.year, now.month);
+    final firstPrevMonth = DateTime(now.year, now.month - 1);
+
+    int countInMonth(DateTime ref) =>
+        fuels.where((e) =>
+            e.date.year == ref.year && e.date.month == ref.month).length +
+        expenses.where((e) =>
+            e.date.year == ref.year && e.date.month == ref.month).length;
+
+    final decision = shouldShowRecapBanner(
+      now: now,
+      currentMonthEntries: countInMonth(firstThisMonth),
+      previousMonthEntries: countInMonth(firstPrevMonth),
+    );
+
+    if (decision.decision == RecapShowDecision.hide) {
+      // Banner não tem espaço quando não deve ser mostrado.
+      return const SizedBox.shrink();
+    }
+
+    final period = decision.decision == RecapShowDecision.previousMonth
+        ? 'month'
+        : 'month'; // ambos usam recap mensal — o gate só muda o label
+    final label = decision.decision == RecapShowDecision.previousMonth
+        ? 'Seu Recap de ${decision.periodLabel} tá pronto'
+        : 'Seu Recap de ${decision.periodLabel} já tem cara';
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 0,
       ),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColors.brand, AppColors.brandSoft],
-        ),
+      child: Material(
+        color: AppColors.brandSoft,
         borderRadius: AppRadius.allMd,
-        boxShadow: AppShadows.floating,
-      ),
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Text('✨', style: TextStyle(fontSize: 28)),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Text(
-                  'Seu Recap mensal',
-                  style: AppTypography.display(
-                    20,
-                    weight: FontWeight.w700,
-                    color: AppColors.brandInk,
+        child: InkWell(
+          borderRadius: AppRadius.allMd,
+          onTap: () => context.push('/recap?period=$period'),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg, vertical: AppSpacing.md,
+            ),
+            child: Row(
+              children: [
+                const Text('✨', style: TextStyle(fontSize: 20)),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: AppTypography.body(
+                      14,
+                      weight: FontWeight.w600,
+                      color: AppColors.brandInk,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            'Um resumo visual dos seus gastos e km rodados no mês.',
-            style: AppTypography.body(
-              13,
-              color: AppColors.brandInk.withValues(alpha: 0.7),
+                Icon(
+                  Icons.arrow_forward_rounded,
+                  size: 18,
+                  color: AppColors.brandInk.withValues(alpha: 0.7),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: AppSpacing.lg),
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton(
-                  onPressed: () => context.push('/recap?period=month'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.accent,
-                    foregroundColor: AppColors.accentInk,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppSpacing.md,
-                    ),
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: AppRadius.allSm,
-                    ),
-                  ),
-                  child: Text(
-                    'Ver agora',
-                    style: AppTypography.body(
-                      15,
-                      weight: FontWeight.w700,
-                      color: AppColors.accentInk,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              TextButton(
-                onPressed: () => context.push('/recap?period=week'),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.brandInk.withValues(alpha: 0.7),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.md,
-                  ),
-                ),
-                child: Text(
-                  'Ver semana',
-                  style: AppTypography.body(
-                    13,
-                    color: AppColors.brandInk.withValues(alpha: 0.7),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
+    );
+  }
+}
+
+class _RecapMenuAction extends StatelessWidget {
+  const _RecapMenuAction();
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<String>(
+      tooltip: 'Recap',
+      icon: const Text('✨', style: TextStyle(fontSize: 18)),
+      onSelected: (route) => context.push(route),
+      itemBuilder: (_) => const [
+        PopupMenuItem(
+          value: '/recap?period=month',
+          child: ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(Icons.calendar_month_outlined),
+            title: Text('Recap deste mês'),
+          ),
+        ),
+        PopupMenuItem(
+          value: '/recap?period=week',
+          child: ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(Icons.calendar_view_week_outlined),
+            title: Text('Esta semana'),
+          ),
+        ),
+      ],
     );
   }
 }
