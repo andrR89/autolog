@@ -30,12 +30,17 @@ import 'package:uuid/uuid.dart';
 // Provider de lembretes ativos do veículo (para dedupe)
 // ---------------------------------------------------------------------------
 
-final _activeRemindersProvider = FutureProvider.family<List<Reminder>, String>((
+/// Stream reativo de lembretes ativos. Antes era `FutureProvider`, mas o
+/// snapshot ficava estale após `repo.create(reminder)` — segunda análise
+/// dedupava contra lista vazia (não filtrava o que acabou de ser criado).
+/// `StreamProvider` + `watchByVehicle` emite a cada mudança do Drift.
+/// (Regressão 27/05/2026 — mesma classe do fix em fiscal/maintenance.)
+final _activeRemindersProvider = StreamProvider.family<List<Reminder>, String>((
   ref,
   vehicleId,
 ) {
   final repo = ref.watch(reminderRepositoryProvider);
-  return repo.listByVehicle(vehicleId);
+  return repo.watchByVehicle(vehicleId);
 });
 
 // ---------------------------------------------------------------------------
@@ -69,11 +74,12 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
       final svc = ref.read(insightsServiceProvider);
       final result = await svc.analyze(widget.vehicle.id);
 
-      // Dedupe contra lembretes ativos.
-      final remindersAsync = ref.read(
-        _activeRemindersProvider(widget.vehicle.id),
+      // Dedupe contra lembretes ativos — usa `.future` pra aguardar o Stream
+      // emitir o valor mais recente (importante quando user acabou de criar
+      // reminders e clica "Analisar" de novo).
+      final existing = await ref.read(
+        _activeRemindersProvider(widget.vehicle.id).future,
       );
-      final existing = remindersAsync.valueOrNull ?? [];
       final deduped = dedupeProposed(result.proposedReminders, existing);
 
       setState(() {
