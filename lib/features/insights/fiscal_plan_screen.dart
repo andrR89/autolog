@@ -167,6 +167,16 @@ class _FiscalPlanScreenState extends ConsumerState<FiscalPlanScreen> {
           statusBarIconBrightness: Brightness.light,
           statusBarBrightness: Brightness.dark,
         ),
+        actions: [
+          // Regerar: limpa os "ignorados" da sessão pra propostas reaparecerem.
+          // Lembretes já criados continuam filtrados pelo dedupe (não duplica).
+          if (_ignoredTitles.isNotEmpty)
+            IconButton(
+              tooltip: 'Mostrar propostas ignoradas',
+              icon: const Icon(Icons.refresh),
+              onPressed: () => setState(_ignoredTitles.clear),
+            ),
+        ],
       ),
       floatingActionButton: visible.isNotEmpty
           ? FloatingActionButton.extended(
@@ -182,6 +192,10 @@ class _FiscalPlanScreenState extends ConsumerState<FiscalPlanScreen> {
         children: [
           // Banner disclaimer — OBRIGATÓRIO conforme spec.
           _DisclaimerBanner(),
+          // Header de contexto: deixa claro pra qual veículo/UF/placa as
+          // datas se referem (evita confusão quando user navega entre
+          // veículos e vê o mesmo card visualmente).
+          _VehicleContextStrip(vehicle: widget.vehicle),
           // Conteúdo.
           Expanded(child: _buildBody(visible, remindersAsync)),
         ],
@@ -203,7 +217,12 @@ class _FiscalPlanScreenState extends ConsumerState<FiscalPlanScreen> {
       );
     }
     if (visible.isEmpty) {
-      return const _EmptyState();
+      return _EmptyState(
+        hasIgnored: _ignoredTitles.isNotEmpty,
+        onResetIgnored: _ignoredTitles.isEmpty
+            ? null
+            : () => setState(_ignoredTitles.clear),
+      );
     }
 
     return ListView.separated(
@@ -277,11 +296,71 @@ class _DisclaimerBanner extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
+// Strip de contexto do veículo: mostra nickname + placa + UF pra deixar
+// claro a qual veículo as datas se referem.
+// ---------------------------------------------------------------------------
+
+class _VehicleContextStrip extends StatelessWidget {
+  const _VehicleContextStrip({required this.vehicle});
+
+  final Vehicle vehicle;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final plate = vehicle.plate;
+    final uf = vehicle.uf;
+    final lastDigit = lastDigitOfPlate(plate);
+
+    final parts = <String>[
+      vehicle.nickname,
+      if (plate != null && plate.trim().isNotEmpty) plate.trim().toUpperCase(),
+      uf ?? 'sem UF',
+      if (lastDigit != null) 'final $lastDigit',
+    ];
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.md,
+      ),
+      child: Row(
+        children: [
+          Icon(
+            vehicle.type == VehicleType.moto
+                ? Icons.two_wheeler
+                : Icons.directions_car,
+            size: 18,
+            color: AppColors.inkMuted,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              parts.join(' · '),
+              style: textTheme.labelMedium?.copyWith(
+                color: AppColors.inkMuted,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Empty state
 // ---------------------------------------------------------------------------
 
 class _EmptyState extends StatelessWidget {
-  const _EmptyState();
+  const _EmptyState({this.hasIgnored = false, this.onResetIgnored});
+
+  /// `true` quando o user ignorou alguma proposta nesta sessão e a lista
+  /// ficou vazia por causa disso (em vez de tudo já ter sido criado).
+  final bool hasIgnored;
+  final VoidCallback? onResetIgnored;
 
   @override
   Widget build(BuildContext context) {
@@ -299,10 +378,26 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'Lembretes já criados — você está em dia.',
+              hasIgnored
+                  ? 'Você ignorou todas as propostas nesta sessão.'
+                  : 'Lembretes já criados — você está em dia.\n'
+                      'Para ver de novo, exclua um lembrete na aba '
+                      '"Lembretes" e volte aqui.',
               style: textTheme.bodyMedium?.copyWith(color: AppColors.inkMuted),
               textAlign: TextAlign.center,
             ),
+            if (hasIgnored && onResetIgnored != null) ...[
+              const SizedBox(height: AppSpacing.lg),
+              FilledButton.icon(
+                onPressed: onResetIgnored,
+                icon: const Icon(Icons.refresh, size: 18),
+                label: const Text('Mostrar de novo'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.brand,
+                  foregroundColor: AppColors.brandInk,
+                ),
+              ),
+            ],
           ],
         ),
       ),
