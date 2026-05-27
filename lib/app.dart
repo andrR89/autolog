@@ -1,44 +1,16 @@
 import 'package:autolog/core/design/app_theme.dart';
 import 'package:autolog/core/router.dart';
-import 'package:autolog/data/repositories/user_settings_repository.dart';
-import 'package:autolog/domain/repositories/user_settings_repository.dart';
 import 'package:autolog/features/auth/auth_redirect.dart';
 import 'package:autolog/features/auth/auth_service.dart';
-import 'package:autolog/features/vehicles/vehicles_provider.dart';
+import 'package:autolog/features/settings/theme_mode_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-// ---------------------------------------------------------------------------
-// Provider global de ThemeMode — stream-based, reativo a mudanças.
-//
-// Retorna [ThemeMode.system] enquanto não há sessão ativa ou enquanto
-// o primeiro valor ainda não chegou do stream.
-// ---------------------------------------------------------------------------
-
-final _themeModeEnumProvider = StreamProvider<ThemeModeEnum>((ref) {
-  // Se não houver sessão, não há userId — default system (stream vazio).
-  String userId;
-  try {
-    userId = ref.watch(currentUserIdProvider);
-  } catch (_) {
-    return const Stream.empty();
-  }
-  final repo = ref.watch(userSettingsRepositoryProvider);
-  return repo.watchThemeMode(userId);
-});
-
-/// ThemeMode derivado da preferência persistida do usuário.
-///
-/// Usado em [AutoLogApp.build] para alimentar [MaterialApp.router.themeMode].
-final themeModeProvider = Provider<ThemeMode>((ref) {
-  final modeEnum = ref.watch(_themeModeEnumProvider).valueOrNull;
-  return switch (modeEnum) {
-    ThemeModeEnum.light => ThemeMode.light,
-    ThemeModeEnum.dark => ThemeMode.dark,
-    _ => ThemeMode.system,
-  };
-});
+// Providers de ThemeMode foram movidos pra
+// `features/settings/theme_mode_providers.dart` pra serem compartilhados
+// entre AutoLogApp e SettingsScreen (evita provider inline que descartava
+// state a cada rebuild — bug 27/05/2026).
 
 // ---------------------------------------------------------------------------
 // App root

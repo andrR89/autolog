@@ -85,6 +85,16 @@ class TripDetailScreen extends ConsumerWidget {
           const SizedBox(width: AppSpacing.xs),
         ],
       ),
+      // FAB "+ Adicionar" abre sheet com 2 atalhos pra entry novo
+      // (abastecimento ou despesa) com data dentro do range da viagem.
+      // Decisão: navega pras rotas existentes; user escolhe data no form.
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: AppColors.brand,
+        foregroundColor: AppColors.brandInk,
+        icon: const Icon(Icons.add),
+        label: const Text('Adicionar'),
+        onPressed: () => _showAddSheet(context, vehicle.id),
+      ),
       body: fuelsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => const Center(
@@ -101,6 +111,64 @@ class TripDetailScreen extends ConsumerWidget {
       ),
     );
   }
+
+  Future<void> _showAddSheet(BuildContext context, String vehicleId) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: AppSpacing.sm),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.sm,
+              ),
+              child: Text(
+                'ADICIONAR À VIAGEM',
+                style: Theme.of(ctx).textTheme.labelSmall?.copyWith(
+                  color: AppColors.inkMuted,
+                  letterSpacing: 1.4,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.local_gas_station_outlined),
+              title: const Text('Abastecimento'),
+              subtitle: Text(
+                'Lembre de usar uma data dentro de '
+                '${_fmt(trip.startDate)} a ${_fmt(trip.endDate)}.',
+                style: const TextStyle(fontSize: 12),
+              ),
+              onTap: () {
+                Navigator.pop(ctx);
+                context.push('/vehicles/$vehicleId/fuel/new');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.receipt_long_outlined),
+              title: const Text('Despesa'),
+              subtitle: Text(
+                'Lembre de usar uma data dentro de '
+                '${_fmt(trip.startDate)} a ${_fmt(trip.endDate)}.',
+                style: const TextStyle(fontSize: 12),
+              ),
+              onTap: () {
+                Navigator.pop(ctx);
+                context.push('/vehicles/$vehicleId/expenses/new');
+              },
+            ),
+            const SizedBox(height: AppSpacing.sm),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _fmt(DateTime d) =>
+      '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}';
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
     final confirmed = await showDialog<bool>(

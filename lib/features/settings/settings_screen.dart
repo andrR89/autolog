@@ -1,5 +1,6 @@
 import 'package:autolog/data/repositories/user_settings_repository.dart';
 import 'package:autolog/domain/repositories/user_settings_repository.dart';
+import 'package:autolog/features/settings/theme_mode_providers.dart';
 import 'package:autolog/features/vehicles/vehicles_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,12 +13,10 @@ class SettingsScreen extends ConsumerWidget {
     final userId = ref.watch(currentUserIdProvider);
     final repo = ref.watch(userSettingsRepositoryProvider);
 
-    final themeModeAsync = ref.watch(
-      StreamProvider<ThemeModeEnum>(
-        (ref) => repo.watchThemeMode(userId),
-      ),
-    );
-
+    // Usa provider GLOBAL — NÃO criar inline em build (descartava state).
+    // Bug 27/05/2026: provider inline fazia o radio nunca refletir a
+    // gravação e o tema voltar pra system ao sair.
+    final themeModeAsync = ref.watch(themeModeEnumProvider);
     final current = themeModeAsync.valueOrNull ?? ThemeModeEnum.system;
 
     return Scaffold(
