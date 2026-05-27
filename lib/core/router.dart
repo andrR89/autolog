@@ -6,6 +6,7 @@ import 'package:autolog/data/repositories/fine_repository.dart';
 import 'package:autolog/data/repositories/fuel_entry_repository.dart';
 import 'package:autolog/data/repositories/insurance_repository.dart';
 import 'package:autolog/data/repositories/reminder_repository.dart';
+import 'package:autolog/data/repositories/trip_repository.dart';
 import 'package:autolog/data/repositories/vehicle_repository.dart';
 import 'package:autolog/features/auth/login_screen.dart';
 import 'package:autolog/features/auth/signup_screen.dart';
@@ -29,6 +30,9 @@ import 'package:autolog/features/reminders/reminders_list_screen.dart';
 import 'package:autolog/features/reports/fuel_economy_screen.dart';
 import 'package:autolog/features/reports/reports_screen.dart';
 import 'package:autolog/features/settings/settings_screen.dart';
+import 'package:autolog/features/trips/trip_detail_screen.dart';
+import 'package:autolog/features/trips/trip_form_screen.dart';
+import 'package:autolog/features/trips/trips_list_screen.dart';
 import 'package:autolog/features/vehicles/vehicle_form_screen.dart';
 import 'package:autolog/features/vehicles/vehicles_list_screen.dart';
 import 'package:flutter/material.dart';
@@ -343,6 +347,52 @@ final List<RouteBase> appRoutes = [
       child: _ReminderEditLoader(
         vehicleId: state.pathParameters['vehicleId']!,
         reminderId: state.pathParameters['reminderId']!,
+      ),
+    ),
+  ),
+
+  // ── Viagens ───────────────────────────────────────────────────────────────
+
+  // Lista de viagens do veículo.
+  GoRoute(
+    path: '/vehicles/:vehicleId/trips',
+    pageBuilder: (context, state) => appTransitionPage(
+      state: state,
+      child: _VehicleTripsLoader(
+        vehicleId: state.pathParameters['vehicleId']!,
+      ),
+    ),
+  ),
+
+  // Formulário de nova viagem.
+  GoRoute(
+    path: '/vehicles/:vehicleId/trips/new',
+    pageBuilder: (context, state) => appTransitionPage(
+      state: state,
+      child: _TripNewLoader(vehicleId: state.pathParameters['vehicleId']!),
+    ),
+  ),
+
+  // Detalhe de viagem.
+  GoRoute(
+    path: '/vehicles/:vehicleId/trips/:tripId',
+    pageBuilder: (context, state) => appTransitionPage(
+      state: state,
+      child: _TripDetailLoader(
+        vehicleId: state.pathParameters['vehicleId']!,
+        tripId: state.pathParameters['tripId']!,
+      ),
+    ),
+  ),
+
+  // Formulário de edição de viagem.
+  GoRoute(
+    path: '/vehicles/:vehicleId/trips/:tripId/edit',
+    pageBuilder: (context, state) => appTransitionPage(
+      state: state,
+      child: _TripEditLoader(
+        vehicleId: state.pathParameters['vehicleId']!,
+        tripId: state.pathParameters['tripId']!,
       ),
     ),
   ),
@@ -1092,6 +1142,202 @@ class _InsuranceEditLoader extends ConsumerWidget {
           );
         }
         return InsuranceFormScreen(initial: snapshot.data);
+      },
+    );
+  }
+}
+
+/// Carrega o [Vehicle] e exibe a lista de viagens.
+///
+/// Redireciona para /vehicles se o veículo não existir.
+class _VehicleTripsLoader extends ConsumerWidget {
+  const _VehicleTripsLoader({required this.vehicleId});
+
+  final String vehicleId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final future = Future(() async {
+      final repo = ref.read(vehicleRepositoryProvider);
+      return repo.getById(vehicleId);
+    });
+
+    return FutureBuilder(
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snapshot.hasError || snapshot.data == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) context.go('/vehicles');
+          });
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        return TripsListScreen(vehicle: snapshot.data!);
+      },
+    );
+  }
+}
+
+/// Carrega o [Vehicle] e abre o formulário de nova viagem.
+///
+/// Redireciona para /vehicles se o veículo não existir.
+class _TripNewLoader extends ConsumerWidget {
+  const _TripNewLoader({required this.vehicleId});
+
+  final String vehicleId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final future = Future(() async {
+      final repo = ref.read(vehicleRepositoryProvider);
+      return repo.getById(vehicleId);
+    });
+
+    return FutureBuilder(
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snapshot.hasError || snapshot.data == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) context.go('/vehicles');
+          });
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        return TripFormScreen(vehicle: snapshot.data!, initial: null);
+      },
+    );
+  }
+}
+
+/// Carrega o [Vehicle] e o [Trip] e exibe o detalhe da viagem.
+///
+/// - Veículo não encontrado → redireciona para /vehicles.
+/// - Viagem não encontrada → redireciona para /vehicles/:vehicleId/trips.
+class _TripDetailLoader extends ConsumerWidget {
+  const _TripDetailLoader({required this.vehicleId, required this.tripId});
+
+  final String vehicleId;
+  final String tripId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final future = Future(() async {
+      final vehicleRepo = ref.read(vehicleRepositoryProvider);
+      final tripRepo = ref.read(tripRepositoryProvider);
+      final vehicle = await vehicleRepo.getById(vehicleId);
+      final trip = await tripRepo.getById(tripId);
+      return (vehicle: vehicle, trip: trip);
+    });
+
+    return FutureBuilder(
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snapshot.hasError || snapshot.data == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) context.go('/vehicles');
+          });
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        final vehicle = snapshot.data!.vehicle;
+        final trip = snapshot.data!.trip;
+
+        if (vehicle == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) context.go('/vehicles');
+          });
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (trip == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) context.go('/vehicles/$vehicleId/trips');
+          });
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        return TripDetailScreen(vehicle: vehicle, trip: trip);
+      },
+    );
+  }
+}
+
+/// Carrega o [Vehicle] e o [Trip] e abre o formulário de edição de viagem.
+///
+/// - Veículo não encontrado → redireciona para /vehicles.
+/// - Viagem não encontrada → redireciona para /vehicles/:vehicleId/trips.
+class _TripEditLoader extends ConsumerWidget {
+  const _TripEditLoader({required this.vehicleId, required this.tripId});
+
+  final String vehicleId;
+  final String tripId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final future = Future(() async {
+      final vehicleRepo = ref.read(vehicleRepositoryProvider);
+      final tripRepo = ref.read(tripRepositoryProvider);
+      final vehicle = await vehicleRepo.getById(vehicleId);
+      final trip = await tripRepo.getById(tripId);
+      return (vehicle: vehicle, trip: trip);
+    });
+
+    return FutureBuilder(
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snapshot.hasError || snapshot.data == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) context.go('/vehicles');
+          });
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        final vehicle = snapshot.data!.vehicle;
+        final trip = snapshot.data!.trip;
+
+        if (vehicle == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) context.go('/vehicles');
+          });
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (trip == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) context.go('/vehicles/$vehicleId/trips');
+          });
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        return TripFormScreen(vehicle: vehicle, initial: trip);
       },
     );
   }

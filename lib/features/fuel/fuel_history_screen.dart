@@ -232,6 +232,10 @@ class _DataBody extends ConsumerWidget {
           SliverToBoxAdapter(
             child: FavoriteStationCard(vehicle: vehicle),
           ),
+          // Card de viagens — acesso rápido ao modo viagem.
+          SliverToBoxAdapter(
+            child: _TripsBannerCard(vehicleId: vehicle.id),
+          ),
           // Calculadora etanol × gasolina — exclusiva pra veículos flex.
           if (vehicle.fuelType == FuelType.flex)
             SliverToBoxAdapter(
@@ -691,6 +695,84 @@ class _DismissBackground extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// Banner: Viagens
+// ============================================================================
+
+class _TripsBannerCard extends StatelessWidget {
+  const _TripsBannerCard({required this.vehicleId});
+
+  final String vehicleId;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.sm,
+      ),
+      child: InkWell(
+        borderRadius: AppRadius.allMd,
+        onTap: () => context.push('/vehicles/$vehicleId/trips'),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: AppColors.surfaceRaised,
+            borderRadius: AppRadius.allMd,
+            border: Border.all(color: AppColors.hairline),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: const BoxDecoration(
+                    color: AppColors.surfaceSunken,
+                    borderRadius: AppRadius.allSm,
+                  ),
+                  child: const Icon(
+                    Icons.map_outlined,
+                    color: AppColors.inkMuted,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Viagens',
+                        style: AppTypography.body(
+                          15,
+                          weight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        'Agrupe abastecimentos e despesas por período',
+                        style: AppTypography.body(
+                          13,
+                          color: AppColors.inkMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.chevron_right,
+                  color: AppColors.inkMuted,
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -301,6 +301,28 @@ class UserSettings extends Table {
 }
 
 // ---------------------------------------------------------------------------
+// trips — agrupamento local de fuel_entries + expenses por intervalo de datas.
+// Local-only no MVP; NÃO entra em GlobalSync.
+// ---------------------------------------------------------------------------
+
+@DataClassName('TripRow')
+class Trips extends Table {
+  TextColumn get id => text()();
+  TextColumn get vehicleId => text()();
+  TextColumn get name => text()();
+  DateTimeColumn get startDate => dateTime()();
+  DateTimeColumn get endDate => dateTime()();
+  TextColumn get notes => text().nullable()();
+
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// ---------------------------------------------------------------------------
 // usage_quota — sem campos de sync (ver ARCHITECTURE §3 e spec §4)
 // ---------------------------------------------------------------------------
 
