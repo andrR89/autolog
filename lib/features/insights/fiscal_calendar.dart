@@ -161,11 +161,15 @@ const Map<String, UfFiscalCalendar> brFiscalCalendar = {
     }),
   ),
 
-  // SC: IPVA fev (cota única). Lic jul-nov.
+  // SC: IPVA distribuído pelo final da placa (final N → mês N; final 0 → out).
+  // Correção da homologação (27/05/2026): antes eu havia errado pra cota
+  // única em fev. O calendário real de SC vence o IPVA conforme o último
+  // dígito da placa.
+  // Lic jul-nov (aproximado por par de dígitos).
   'SC': UfFiscalCalendar(
     ipva: FiscalScheduleByDigit({
-      0: 2, 1: 2, 2: 2, 3: 2, 4: 2,
-      5: 2, 6: 2, 7: 2, 8: 2, 9: 2,
+      1: 1, 2: 2, 3: 3, 4: 4, 5: 5,
+      6: 6, 7: 7, 8: 8, 9: 9, 0: 10,
     }),
     licensing: FiscalScheduleByDigit({
       1: 7, 2: 7,

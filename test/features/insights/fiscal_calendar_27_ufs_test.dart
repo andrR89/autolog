@@ -50,5 +50,30 @@ void main() {
         );
       }
     });
+
+    // Regressões de homologação — quando o Diretor reportar erro UF×final,
+    // adicione caso aqui.
+    test('SC final 6 → IPVA junho (regressão 27/05/2026)', () {
+      final r = suggestFiscalReminders(
+        uf: 'SC', plate: 'TPJ4B26', year: 2026,
+      );
+      final ipva = r.firstWhere((p) => p.title.startsWith('IPVA'));
+      expect(ipva.dueDate!.month, 6);
+    });
+
+    test('SC: pattern final N → mês N (1..9), final 0 → out', () {
+      for (var d = 1; d <= 9; d++) {
+        final r = suggestFiscalReminders(
+          uf: 'SC', plate: 'ABC1D2$d', year: 2026,
+        );
+        final ipva = r.firstWhere((p) => p.title.startsWith('IPVA'));
+        expect(ipva.dueDate!.month, d, reason: 'SC final $d');
+      }
+      final r0 = suggestFiscalReminders(
+        uf: 'SC', plate: 'ABC1D20', year: 2026,
+      );
+      expect(r0.firstWhere((p) => p.title.startsWith('IPVA')).dueDate!.month,
+          10);
+    });
   });
 }
