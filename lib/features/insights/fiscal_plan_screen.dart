@@ -221,7 +221,6 @@ class _FiscalPlanScreenState extends ConsumerState<FiscalPlanScreen> {
         ref.watch(_fiscalActiveRemindersProvider(widget.vehicle.id));
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
       appBar: AppBar(
         title: const Text('Lembretes fiscais'),
         backgroundColor: AppColors.brand,

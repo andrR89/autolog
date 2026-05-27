@@ -66,9 +66,7 @@ class _PersonalDocumentsScreenState
     final vehiclesAsync = ref.watch(_vehiclesProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 1,

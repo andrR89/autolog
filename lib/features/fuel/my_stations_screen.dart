@@ -67,9 +67,7 @@ class MyStationsScreen extends ConsumerWidget {
     final statsAsync = ref.watch(allStationStatsProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 1,

@@ -121,7 +121,6 @@ class _FuelEconomyScreenState extends ConsumerState<FuelEconomyScreen> {
         }
 
         return Scaffold(
-          backgroundColor: AppColors.surface,
           appBar: _buildAppBar(context),
           body: ListView(
             padding: const EdgeInsets.all(AppSpacing.lg),
@@ -154,7 +153,6 @@ class _FuelEconomyScreenState extends ConsumerState<FuelEconomyScreen> {
 
   AppBar _buildAppBar(BuildContext context) {
     return AppBar(
-      backgroundColor: AppColors.surface,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       scrolledUnderElevation: 0,

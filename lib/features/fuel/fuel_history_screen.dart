@@ -108,7 +108,6 @@ class _FuelHistoryScreenState extends ConsumerState<FuelHistoryScreen> {
     final entriesAsync = ref.watch(fuelEntriesByVehicleProvider(vehicle.id));
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
       body: entriesAsync.when(
         loading: () => _ScaffoldedBody(
           vehicle: vehicle,

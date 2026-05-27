@@ -292,7 +292,6 @@ class _MaintenancePlanScreenState
             .trim();
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
       appBar: AppBar(
         title: const Text('Plano de manutenção'),
         backgroundColor: AppColors.brand,

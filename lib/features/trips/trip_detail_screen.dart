@@ -34,7 +34,6 @@ class TripDetailScreen extends ConsumerWidget {
     final expensesAsync = ref.watch(expensesByVehicleProvider(vehicle.id));
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
       appBar: AppBar(
         backgroundColor: AppColors.brand,
         elevation: 0,
@@ -115,7 +114,6 @@ class TripDetailScreen extends ConsumerWidget {
   Future<void> _showAddSheet(BuildContext context, String vehicleId) async {
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppColors.surface,
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,

@@ -54,7 +54,6 @@ class ExpensesListScreen extends ConsumerWidget {
     final expensesAsync = ref.watch(expensesByVehicleProvider(vehicle.id));
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,

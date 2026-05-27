@@ -101,7 +101,6 @@ class _AuthScaffoldState extends State<AuthScaffold>
         statusBarBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: AppColors.surface,
         resizeToAvoidBottomInset: true,
         body: Column(
           children: [

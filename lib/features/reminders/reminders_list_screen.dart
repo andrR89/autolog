@@ -47,7 +47,6 @@ class RemindersListScreen extends ConsumerWidget {
     final remindersAsync = ref.watch(remindersByVehicleProvider(vehicle.id));
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,

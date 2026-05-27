@@ -502,9 +502,7 @@ class _FuelEntryFormScreenState extends ConsumerState<FuelEntryFormScreen> {
     final litersHint = isGnv ? 'Ex.: 12,500' : 'Ex.: 43,219';
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 1,

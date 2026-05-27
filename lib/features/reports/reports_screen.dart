@@ -52,7 +52,6 @@ class ReportsScreen extends ConsumerWidget {
     final priceAsync = ref.watch(monthlyPriceProvider(vehicle.id));
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
       appBar: AppBar(
         title: const Text('Relatórios'),
         backgroundColor: AppColors.brand,

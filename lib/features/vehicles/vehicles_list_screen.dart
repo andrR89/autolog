@@ -64,11 +64,9 @@ class _VehiclesListScreenState extends ConsumerState<VehiclesListScreen> {
     final vehiclesAsync = ref.watch(vehiclesProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
       // AppBar enxuta — sem título; o header da seção (logo abaixo) é
       // que carrega o display type. Mantém os actions críticos.
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
         // Status bar com ícones escuros — fundo é o surface off-white.

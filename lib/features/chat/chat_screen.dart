@@ -161,7 +161,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final messages = ref.watch(chatMessagesProvider(widget.vehicle.id));
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
       appBar: AppBar(
         title: const Text('Pergunte ao histórico'),
         backgroundColor: AppColors.brand,

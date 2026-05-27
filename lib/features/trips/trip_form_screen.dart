@@ -166,9 +166,7 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
     final dateFmt = DateFormat('dd/MM/yyyy', 'pt_BR');
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 1,

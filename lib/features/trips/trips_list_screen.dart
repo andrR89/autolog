@@ -29,7 +29,6 @@ class TripsListScreen extends ConsumerWidget {
     final tripsAsync = ref.watch(tripsByVehicleProvider(vehicle.id));
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
       appBar: AppBar(
         backgroundColor: AppColors.brand,
         elevation: 0,
