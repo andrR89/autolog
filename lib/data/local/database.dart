@@ -28,6 +28,7 @@ part 'database.g.dart';
   FiscalLookupCache,
   UserSettings,
   Trips,
+  VehicleMembers,
 ])
 class AppDatabase extends _$AppDatabase {
   /// Construtor testável: aceita qualquer [QueryExecutor].
@@ -36,7 +37,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -95,6 +96,9 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(userSettings, userSettings.notifCnh);
         await m.addColumn(userSettings, userSettings.notifFiscal);
         await m.addColumn(userSettings, userSettings.notifRecapReady);
+      }
+      if (from < 15) {
+        await m.createTable(vehicleMembers);
       }
     },
   );

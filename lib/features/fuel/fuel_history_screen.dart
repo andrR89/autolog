@@ -414,6 +414,12 @@ class _AppBar extends StatelessWidget {
           onPressed: () => context.push('/vehicles/${vehicle.id}/reports'),
         ),
         IconButton(
+          icon: const Icon(Icons.share_outlined),
+          color: foreground,
+          tooltip: 'Compartilhar',
+          onPressed: () => context.push('/vehicles/${vehicle.id}/share'),
+        ),
+        IconButton(
           icon: const Icon(Icons.edit),
           color: foreground,
           tooltip: 'Editar veículo',

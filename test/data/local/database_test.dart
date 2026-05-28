@@ -16,9 +16,9 @@ void main() {
   tearDown(() => db.close());
 
   group('schema', () {
-    test('abre com schemaVersion 14 e expõe exatamente 15 tabelas', () {
-      expect(db.schemaVersion, 14); // v14 com notif prefs (Sprint 6.W.4)
-      expect(db.allTables.length, 15);
+    test('abre com schemaVersion 15 e expõe exatamente 16 tabelas', () {
+      expect(db.schemaVersion, 15); // v15 com vehicle_members (Sprint 6.Y)
+      expect(db.allTables.length, 16);
     });
   });
 

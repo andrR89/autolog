@@ -331,6 +331,23 @@ class Trips extends Table {
 }
 
 // ---------------------------------------------------------------------------
+// vehicle_members — membros compartilhados de um veículo (Sprint 6.Y).
+// PK composta (vehicleId + userId). Sem soft delete — remoção é DELETE.
+// Sync futuro: pós-MVP. No MVP, operação via Edge Fn atualiza local também.
+// ---------------------------------------------------------------------------
+
+@DataClassName('VehicleMemberRow')
+class VehicleMembers extends Table {
+  TextColumn get vehicleId => text()();
+  TextColumn get userId => text()();
+  TextColumn get role => text().withDefault(const Constant('member'))();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {vehicleId, userId};
+}
+
+// ---------------------------------------------------------------------------
 // usage_quota — sem campos de sync (ver ARCHITECTURE §3 e spec §4)
 // ---------------------------------------------------------------------------
 

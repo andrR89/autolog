@@ -33,6 +33,7 @@ import 'package:autolog/features/settings/settings_screen.dart';
 import 'package:autolog/features/trips/trip_detail_screen.dart';
 import 'package:autolog/features/trips/trip_form_screen.dart';
 import 'package:autolog/features/trips/trips_list_screen.dart';
+import 'package:autolog/features/vehicles/share_vehicle_screen.dart';
 import 'package:autolog/features/vehicles/vehicle_form_screen.dart';
 import 'package:autolog/features/vehicles/vehicles_list_screen.dart';
 import 'package:flutter/material.dart';
@@ -347,6 +348,17 @@ final List<RouteBase> appRoutes = [
       child: _ReminderEditLoader(
         vehicleId: state.pathParameters['vehicleId']!,
         reminderId: state.pathParameters['reminderId']!,
+      ),
+    ),
+  ),
+
+  // Tela de compartilhamento de veículo.
+  GoRoute(
+    path: '/vehicles/:vehicleId/share',
+    pageBuilder: (context, state) => appTransitionPage(
+      state: state,
+      child: _VehicleShareLoader(
+        vehicleId: state.pathParameters['vehicleId']!,
       ),
     ),
   ),
@@ -1338,6 +1350,43 @@ class _TripEditLoader extends ConsumerWidget {
           );
         }
         return TripFormScreen(vehicle: vehicle, initial: trip);
+      },
+    );
+  }
+}
+
+/// Carrega o [Vehicle] e abre a tela de compartilhamento.
+///
+/// Redireciona para /vehicles se o veículo não existir.
+class _VehicleShareLoader extends ConsumerWidget {
+  const _VehicleShareLoader({required this.vehicleId});
+
+  final String vehicleId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final future = Future(() async {
+      final repo = ref.read(vehicleRepositoryProvider);
+      return repo.getById(vehicleId);
+    });
+
+    return FutureBuilder(
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snapshot.hasError || snapshot.data == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) context.go('/vehicles');
+          });
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        return ShareVehicleScreen(vehicle: snapshot.data!);
       },
     );
   }

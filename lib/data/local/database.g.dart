@@ -8482,6 +8482,316 @@ class TripsCompanion extends UpdateCompanion<TripRow> {
   }
 }
 
+class $VehicleMembersTable extends VehicleMembers
+    with TableInfo<$VehicleMembersTable, VehicleMemberRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $VehicleMembersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _vehicleIdMeta = const VerificationMeta(
+    'vehicleId',
+  );
+  @override
+  late final GeneratedColumn<String> vehicleId = GeneratedColumn<String>(
+    'vehicle_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _roleMeta = const VerificationMeta('role');
+  @override
+  late final GeneratedColumn<String> role = GeneratedColumn<String>(
+    'role',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('member'),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [vehicleId, userId, role, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'vehicle_members';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<VehicleMemberRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('vehicle_id')) {
+      context.handle(
+        _vehicleIdMeta,
+        vehicleId.isAcceptableOrUnknown(data['vehicle_id']!, _vehicleIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_vehicleIdMeta);
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('role')) {
+      context.handle(
+        _roleMeta,
+        role.isAcceptableOrUnknown(data['role']!, _roleMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {vehicleId, userId};
+  @override
+  VehicleMemberRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return VehicleMemberRow(
+      vehicleId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}vehicle_id'],
+      )!,
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+      role: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}role'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $VehicleMembersTable createAlias(String alias) {
+    return $VehicleMembersTable(attachedDatabase, alias);
+  }
+}
+
+class VehicleMemberRow extends DataClass
+    implements Insertable<VehicleMemberRow> {
+  final String vehicleId;
+  final String userId;
+  final String role;
+  final DateTime createdAt;
+  const VehicleMemberRow({
+    required this.vehicleId,
+    required this.userId,
+    required this.role,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['vehicle_id'] = Variable<String>(vehicleId);
+    map['user_id'] = Variable<String>(userId);
+    map['role'] = Variable<String>(role);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  VehicleMembersCompanion toCompanion(bool nullToAbsent) {
+    return VehicleMembersCompanion(
+      vehicleId: Value(vehicleId),
+      userId: Value(userId),
+      role: Value(role),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory VehicleMemberRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return VehicleMemberRow(
+      vehicleId: serializer.fromJson<String>(json['vehicleId']),
+      userId: serializer.fromJson<String>(json['userId']),
+      role: serializer.fromJson<String>(json['role']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'vehicleId': serializer.toJson<String>(vehicleId),
+      'userId': serializer.toJson<String>(userId),
+      'role': serializer.toJson<String>(role),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  VehicleMemberRow copyWith({
+    String? vehicleId,
+    String? userId,
+    String? role,
+    DateTime? createdAt,
+  }) => VehicleMemberRow(
+    vehicleId: vehicleId ?? this.vehicleId,
+    userId: userId ?? this.userId,
+    role: role ?? this.role,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  VehicleMemberRow copyWithCompanion(VehicleMembersCompanion data) {
+    return VehicleMemberRow(
+      vehicleId: data.vehicleId.present ? data.vehicleId.value : this.vehicleId,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      role: data.role.present ? data.role.value : this.role,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VehicleMemberRow(')
+          ..write('vehicleId: $vehicleId, ')
+          ..write('userId: $userId, ')
+          ..write('role: $role, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(vehicleId, userId, role, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is VehicleMemberRow &&
+          other.vehicleId == this.vehicleId &&
+          other.userId == this.userId &&
+          other.role == this.role &&
+          other.createdAt == this.createdAt);
+}
+
+class VehicleMembersCompanion extends UpdateCompanion<VehicleMemberRow> {
+  final Value<String> vehicleId;
+  final Value<String> userId;
+  final Value<String> role;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const VehicleMembersCompanion({
+    this.vehicleId = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.role = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  VehicleMembersCompanion.insert({
+    required String vehicleId,
+    required String userId,
+    this.role = const Value.absent(),
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : vehicleId = Value(vehicleId),
+       userId = Value(userId),
+       createdAt = Value(createdAt);
+  static Insertable<VehicleMemberRow> custom({
+    Expression<String>? vehicleId,
+    Expression<String>? userId,
+    Expression<String>? role,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (vehicleId != null) 'vehicle_id': vehicleId,
+      if (userId != null) 'user_id': userId,
+      if (role != null) 'role': role,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  VehicleMembersCompanion copyWith({
+    Value<String>? vehicleId,
+    Value<String>? userId,
+    Value<String>? role,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return VehicleMembersCompanion(
+      vehicleId: vehicleId ?? this.vehicleId,
+      userId: userId ?? this.userId,
+      role: role ?? this.role,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (vehicleId.present) {
+      map['vehicle_id'] = Variable<String>(vehicleId.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (role.present) {
+      map['role'] = Variable<String>(role.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VehicleMembersCompanion(')
+          ..write('vehicleId: $vehicleId, ')
+          ..write('userId: $userId, ')
+          ..write('role: $role, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -8503,6 +8813,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $FiscalLookupCacheTable(this);
   late final $UserSettingsTable userSettings = $UserSettingsTable(this);
   late final $TripsTable trips = $TripsTable(this);
+  late final $VehicleMembersTable vehicleMembers = $VehicleMembersTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -8523,6 +8834,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     fiscalLookupCache,
     userSettings,
     trips,
+    vehicleMembers,
   ];
 }
 
@@ -12755,6 +13067,193 @@ typedef $$TripsTableProcessedTableManager =
       TripRow,
       PrefetchHooks Function()
     >;
+typedef $$VehicleMembersTableCreateCompanionBuilder =
+    VehicleMembersCompanion Function({
+      required String vehicleId,
+      required String userId,
+      Value<String> role,
+      required DateTime createdAt,
+      Value<int> rowid,
+    });
+typedef $$VehicleMembersTableUpdateCompanionBuilder =
+    VehicleMembersCompanion Function({
+      Value<String> vehicleId,
+      Value<String> userId,
+      Value<String> role,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$VehicleMembersTableFilterComposer
+    extends Composer<_$AppDatabase, $VehicleMembersTable> {
+  $$VehicleMembersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get vehicleId => $composableBuilder(
+    column: $table.vehicleId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get role => $composableBuilder(
+    column: $table.role,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$VehicleMembersTableOrderingComposer
+    extends Composer<_$AppDatabase, $VehicleMembersTable> {
+  $$VehicleMembersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get vehicleId => $composableBuilder(
+    column: $table.vehicleId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get role => $composableBuilder(
+    column: $table.role,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$VehicleMembersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $VehicleMembersTable> {
+  $$VehicleMembersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get vehicleId =>
+      $composableBuilder(column: $table.vehicleId, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get role =>
+      $composableBuilder(column: $table.role, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$VehicleMembersTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $VehicleMembersTable,
+          VehicleMemberRow,
+          $$VehicleMembersTableFilterComposer,
+          $$VehicleMembersTableOrderingComposer,
+          $$VehicleMembersTableAnnotationComposer,
+          $$VehicleMembersTableCreateCompanionBuilder,
+          $$VehicleMembersTableUpdateCompanionBuilder,
+          (
+            VehicleMemberRow,
+            BaseReferences<
+              _$AppDatabase,
+              $VehicleMembersTable,
+              VehicleMemberRow
+            >,
+          ),
+          VehicleMemberRow,
+          PrefetchHooks Function()
+        > {
+  $$VehicleMembersTableTableManager(
+    _$AppDatabase db,
+    $VehicleMembersTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$VehicleMembersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$VehicleMembersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$VehicleMembersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> vehicleId = const Value.absent(),
+                Value<String> userId = const Value.absent(),
+                Value<String> role = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VehicleMembersCompanion(
+                vehicleId: vehicleId,
+                userId: userId,
+                role: role,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String vehicleId,
+                required String userId,
+                Value<String> role = const Value.absent(),
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => VehicleMembersCompanion.insert(
+                vehicleId: vehicleId,
+                userId: userId,
+                role: role,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$VehicleMembersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $VehicleMembersTable,
+      VehicleMemberRow,
+      $$VehicleMembersTableFilterComposer,
+      $$VehicleMembersTableOrderingComposer,
+      $$VehicleMembersTableAnnotationComposer,
+      $$VehicleMembersTableCreateCompanionBuilder,
+      $$VehicleMembersTableUpdateCompanionBuilder,
+      (
+        VehicleMemberRow,
+        BaseReferences<_$AppDatabase, $VehicleMembersTable, VehicleMemberRow>,
+      ),
+      VehicleMemberRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -12789,4 +13288,6 @@ class $AppDatabaseManager {
       $$UserSettingsTableTableManager(_db, _db.userSettings);
   $$TripsTableTableManager get trips =>
       $$TripsTableTableManager(_db, _db.trips);
+  $$VehicleMembersTableTableManager get vehicleMembers =>
+      $$VehicleMembersTableTableManager(_db, _db.vehicleMembers);
 }
