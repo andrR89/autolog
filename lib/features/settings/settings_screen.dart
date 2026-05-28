@@ -4,6 +4,7 @@ import 'package:autolog/features/calendar/google_calendar_service.dart';
 import 'package:autolog/features/settings/notif_prefs_providers.dart';
 import 'package:autolog/features/settings/theme_mode_providers.dart';
 import 'package:autolog/features/vehicles/vehicles_provider.dart';
+import 'package:autolog/features/whatsapp/whatsapp_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -44,6 +45,8 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           const _GoogleCalendarCard(),
+          const SizedBox(height: 8),
+          const _WhatsAppCard(),
         ],
       ),
     );
@@ -289,6 +292,204 @@ class _GoogleCalendarCardState extends ConsumerState<_GoogleCalendarCard> {
                   onPressed: _connect,
                   icon: const Icon(Icons.calendar_today, size: 18),
                   label: const Text('Conectar Google Calendar'),
+                ),
+              ),
+            const SizedBox(height: 4),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _WhatsAppCard
+// ---------------------------------------------------------------------------
+
+/// Card de integração com bot WhatsApp via Twilio.
+/// Com Mock ativo: toggle "Conectar" mostra a UX de conectado/desconectado.
+/// Com serviço real configurado: gera código de pareamento e exibe instrução.
+class _WhatsAppCard extends ConsumerStatefulWidget {
+  const _WhatsAppCard();
+
+  @override
+  ConsumerState<_WhatsAppCard> createState() => _WhatsAppCardState();
+}
+
+class _WhatsAppCardState extends ConsumerState<_WhatsAppCard> {
+  bool _loading = false;
+  bool _paired = false;
+  String? _phone;
+
+  static const _twilioNumber = '+14155238886';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadState();
+  }
+
+  Future<void> _loadState() async {
+    final svc = ref.read(whatsAppServiceProvider);
+    final paired = await svc.isPaired();
+    final phone = paired ? await svc.pairedPhoneNumber() : null;
+    if (mounted) {
+      setState(() {
+        _paired = paired;
+        _phone = phone;
+      });
+    }
+  }
+
+  Future<void> _generateCode() async {
+    setState(() => _loading = true);
+    try {
+      final svc = ref.read(whatsAppServiceProvider);
+      final code = await svc.generatePairingCode();
+      if (mounted) {
+        _showPairingDialog(code);
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Erro ao gerar código. Tente novamente.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  void _showPairingDialog(String code) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Conectar WhatsApp'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Envie a mensagem abaixo para o nosso número no WhatsApp:'),
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(ctx).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'AUTOLOG $code',
+                style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
+                      fontFamily: 'monospace',
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Número: $_twilioNumber',
+              style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'O código expira quando você gerar um novo.',
+              style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              _loadState();
+            },
+            child: const Text('Já enviei'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Fechar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _unpair() async {
+    setState(() => _loading = true);
+    try {
+      final svc = ref.read(whatsAppServiceProvider);
+      await svc.unpair();
+      await _loadState();
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                'WhatsApp',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                'Registre abastecimentos enviando uma mensagem de texto para o bot.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            if (_loading)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: LinearProgressIndicator(),
+              )
+            else if (_paired)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.check_circle, color: Colors.green),
+                    title: const Text('Conectado'),
+                    subtitle: Text(_phone ?? 'WhatsApp pareado'),
+                  ),
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    child: OutlinedButton.icon(
+                      onPressed: _unpair,
+                      icon: const Icon(Icons.link_off, size: 18),
+                      label: const Text('Desconectar'),
+                    ),
+                  ),
+                ],
+              )
+            else
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: ElevatedButton.icon(
+                  onPressed: _generateCode,
+                  icon: const Icon(Icons.chat, size: 18),
+                  label: const Text('Conectar WhatsApp'),
                 ),
               ),
             const SizedBox(height: 4),
