@@ -36,7 +36,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -89,6 +89,12 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 13) {
         await m.createTable(trips);
+      }
+      if (from < 14) {
+        await m.addColumn(userSettings, userSettings.notifConsumptionDrop);
+        await m.addColumn(userSettings, userSettings.notifCnh);
+        await m.addColumn(userSettings, userSettings.notifFiscal);
+        await m.addColumn(userSettings, userSettings.notifRecapReady);
       }
     },
   );

@@ -76,6 +76,81 @@ class DriftUserSettingsRepository implements UserSettingsRepository {
         .watchSingleOrNull()
         .map((row) => _fromString(row?.themePref));
   }
+
+  // ---------------------------------------------------------------------------
+  // NotificationPreferences
+  // ---------------------------------------------------------------------------
+
+  /// Garante que o registro do userId existe e retorna o row.
+  Future<UserSettingsRow> _getOrCreate(String userId) async {
+    final row = await (_db.select(_db.userSettings)
+          ..where((t) => t.userId.equals(userId)))
+        .getSingleOrNull();
+    if (row != null) return row;
+
+    // Cria com todos os defaults.
+    await _db.into(_db.userSettings).insertOnConflictUpdate(
+          UserSettingsCompanion.insert(userId: userId),
+        );
+    return (_db.select(_db.userSettings)
+          ..where((t) => t.userId.equals(userId)))
+        .getSingle();
+  }
+
+  NotificationPreferences _rowToPrefs(UserSettingsRow row) =>
+      NotificationPreferences(
+        consumptionDrop: row.notifConsumptionDrop,
+        cnh: row.notifCnh,
+        fiscal: row.notifFiscal,
+        recapReady: row.notifRecapReady,
+      );
+
+  @override
+  Future<NotificationPreferences> getNotifPrefs(String userId) async {
+    final row = await _getOrCreate(userId);
+    return _rowToPrefs(row);
+  }
+
+  @override
+  Future<void> setNotifPref(
+    String userId,
+    String category,
+    bool enabled,
+  ) async {
+    // Lê row atual (cria se não existir) pra não sobrescrever os outros campos.
+    final row = await _getOrCreate(userId);
+
+    final companion = UserSettingsCompanion.insert(
+      userId: userId,
+      themePref: Value(row.themePref),
+      notifConsumptionDrop: Value(
+        category == 'consumption_drop' ? enabled : row.notifConsumptionDrop,
+      ),
+      notifCnh: Value(
+        category == 'cnh' ? enabled : row.notifCnh,
+      ),
+      notifFiscal: Value(
+        category == 'fiscal' ? enabled : row.notifFiscal,
+      ),
+      notifRecapReady: Value(
+        category == 'recap_ready' ? enabled : row.notifRecapReady,
+      ),
+    );
+
+    await _db.into(_db.userSettings).insertOnConflictUpdate(companion);
+  }
+
+  @override
+  Stream<NotificationPreferences> watchNotifPrefs(String userId) {
+    return (_db.select(_db.userSettings)
+          ..where((t) => t.userId.equals(userId)))
+        .watchSingleOrNull()
+        .map(
+          (row) => row != null
+              ? _rowToPrefs(row)
+              : const NotificationPreferences(),
+        );
+  }
 }
 
 // ---------------------------------------------------------------------------

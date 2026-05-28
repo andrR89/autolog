@@ -13,7 +13,7 @@ void main() {
   group('Vehicles schema v2', () {
     test('schemaVersion bumped to 3', () {
       final db = AppDatabase(NativeDatabase.memory());
-      expect(db.schemaVersion, 13); // v13 com trips (Sprint 6.X)
+      expect(db.schemaVersion, 14); // v14 com notif prefs (Sprint 6.W.4)
       db.close();
     });
 

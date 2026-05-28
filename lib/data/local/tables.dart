@@ -296,6 +296,14 @@ class UserSettings extends Table {
   // Nota: 'themeMode' é reservado internamente pelo Drift; usar 'themePref'.
   TextColumn get themePref => text().withDefault(const Constant('system'))();
 
+  // Preferências de notificações proativas (Sprint 6.W.4). Todas true = opt-out.
+  BoolColumn get notifConsumptionDrop =>
+      boolean().withDefault(const Constant(true))();
+  BoolColumn get notifCnh => boolean().withDefault(const Constant(true))();
+  BoolColumn get notifFiscal => boolean().withDefault(const Constant(true))();
+  BoolColumn get notifRecapReady =>
+      boolean().withDefault(const Constant(true))();
+
   @override
   Set<Column> get primaryKey => {userId};
 }

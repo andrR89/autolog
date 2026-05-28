@@ -7512,8 +7512,74 @@ class $UserSettingsTable extends UserSettings
     requiredDuringInsert: false,
     defaultValue: const Constant('system'),
   );
+  static const VerificationMeta _notifConsumptionDropMeta =
+      const VerificationMeta('notifConsumptionDrop');
   @override
-  List<GeneratedColumn> get $columns => [userId, themePref];
+  late final GeneratedColumn<bool> notifConsumptionDrop = GeneratedColumn<bool>(
+    'notif_consumption_drop',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("notif_consumption_drop" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _notifCnhMeta = const VerificationMeta(
+    'notifCnh',
+  );
+  @override
+  late final GeneratedColumn<bool> notifCnh = GeneratedColumn<bool>(
+    'notif_cnh',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("notif_cnh" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _notifFiscalMeta = const VerificationMeta(
+    'notifFiscal',
+  );
+  @override
+  late final GeneratedColumn<bool> notifFiscal = GeneratedColumn<bool>(
+    'notif_fiscal',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("notif_fiscal" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _notifRecapReadyMeta = const VerificationMeta(
+    'notifRecapReady',
+  );
+  @override
+  late final GeneratedColumn<bool> notifRecapReady = GeneratedColumn<bool>(
+    'notif_recap_ready',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("notif_recap_ready" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    userId,
+    themePref,
+    notifConsumptionDrop,
+    notifCnh,
+    notifFiscal,
+    notifRecapReady,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -7540,6 +7606,39 @@ class $UserSettingsTable extends UserSettings
         themePref.isAcceptableOrUnknown(data['theme_pref']!, _themePrefMeta),
       );
     }
+    if (data.containsKey('notif_consumption_drop')) {
+      context.handle(
+        _notifConsumptionDropMeta,
+        notifConsumptionDrop.isAcceptableOrUnknown(
+          data['notif_consumption_drop']!,
+          _notifConsumptionDropMeta,
+        ),
+      );
+    }
+    if (data.containsKey('notif_cnh')) {
+      context.handle(
+        _notifCnhMeta,
+        notifCnh.isAcceptableOrUnknown(data['notif_cnh']!, _notifCnhMeta),
+      );
+    }
+    if (data.containsKey('notif_fiscal')) {
+      context.handle(
+        _notifFiscalMeta,
+        notifFiscal.isAcceptableOrUnknown(
+          data['notif_fiscal']!,
+          _notifFiscalMeta,
+        ),
+      );
+    }
+    if (data.containsKey('notif_recap_ready')) {
+      context.handle(
+        _notifRecapReadyMeta,
+        notifRecapReady.isAcceptableOrUnknown(
+          data['notif_recap_ready']!,
+          _notifRecapReadyMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -7557,6 +7656,22 @@ class $UserSettingsTable extends UserSettings
         DriftSqlType.string,
         data['${effectivePrefix}theme_pref'],
       )!,
+      notifConsumptionDrop: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}notif_consumption_drop'],
+      )!,
+      notifCnh: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}notif_cnh'],
+      )!,
+      notifFiscal: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}notif_fiscal'],
+      )!,
+      notifRecapReady: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}notif_recap_ready'],
+      )!,
     );
   }
 
@@ -7569,12 +7684,27 @@ class $UserSettingsTable extends UserSettings
 class UserSettingsRow extends DataClass implements Insertable<UserSettingsRow> {
   final String userId;
   final String themePref;
-  const UserSettingsRow({required this.userId, required this.themePref});
+  final bool notifConsumptionDrop;
+  final bool notifCnh;
+  final bool notifFiscal;
+  final bool notifRecapReady;
+  const UserSettingsRow({
+    required this.userId,
+    required this.themePref,
+    required this.notifConsumptionDrop,
+    required this.notifCnh,
+    required this.notifFiscal,
+    required this.notifRecapReady,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['user_id'] = Variable<String>(userId);
     map['theme_pref'] = Variable<String>(themePref);
+    map['notif_consumption_drop'] = Variable<bool>(notifConsumptionDrop);
+    map['notif_cnh'] = Variable<bool>(notifCnh);
+    map['notif_fiscal'] = Variable<bool>(notifFiscal);
+    map['notif_recap_ready'] = Variable<bool>(notifRecapReady);
     return map;
   }
 
@@ -7582,6 +7712,10 @@ class UserSettingsRow extends DataClass implements Insertable<UserSettingsRow> {
     return UserSettingsCompanion(
       userId: Value(userId),
       themePref: Value(themePref),
+      notifConsumptionDrop: Value(notifConsumptionDrop),
+      notifCnh: Value(notifCnh),
+      notifFiscal: Value(notifFiscal),
+      notifRecapReady: Value(notifRecapReady),
     );
   }
 
@@ -7593,6 +7727,12 @@ class UserSettingsRow extends DataClass implements Insertable<UserSettingsRow> {
     return UserSettingsRow(
       userId: serializer.fromJson<String>(json['userId']),
       themePref: serializer.fromJson<String>(json['themePref']),
+      notifConsumptionDrop: serializer.fromJson<bool>(
+        json['notifConsumptionDrop'],
+      ),
+      notifCnh: serializer.fromJson<bool>(json['notifCnh']),
+      notifFiscal: serializer.fromJson<bool>(json['notifFiscal']),
+      notifRecapReady: serializer.fromJson<bool>(json['notifRecapReady']),
     );
   }
   @override
@@ -7601,18 +7741,42 @@ class UserSettingsRow extends DataClass implements Insertable<UserSettingsRow> {
     return <String, dynamic>{
       'userId': serializer.toJson<String>(userId),
       'themePref': serializer.toJson<String>(themePref),
+      'notifConsumptionDrop': serializer.toJson<bool>(notifConsumptionDrop),
+      'notifCnh': serializer.toJson<bool>(notifCnh),
+      'notifFiscal': serializer.toJson<bool>(notifFiscal),
+      'notifRecapReady': serializer.toJson<bool>(notifRecapReady),
     };
   }
 
-  UserSettingsRow copyWith({String? userId, String? themePref}) =>
-      UserSettingsRow(
-        userId: userId ?? this.userId,
-        themePref: themePref ?? this.themePref,
-      );
+  UserSettingsRow copyWith({
+    String? userId,
+    String? themePref,
+    bool? notifConsumptionDrop,
+    bool? notifCnh,
+    bool? notifFiscal,
+    bool? notifRecapReady,
+  }) => UserSettingsRow(
+    userId: userId ?? this.userId,
+    themePref: themePref ?? this.themePref,
+    notifConsumptionDrop: notifConsumptionDrop ?? this.notifConsumptionDrop,
+    notifCnh: notifCnh ?? this.notifCnh,
+    notifFiscal: notifFiscal ?? this.notifFiscal,
+    notifRecapReady: notifRecapReady ?? this.notifRecapReady,
+  );
   UserSettingsRow copyWithCompanion(UserSettingsCompanion data) {
     return UserSettingsRow(
       userId: data.userId.present ? data.userId.value : this.userId,
       themePref: data.themePref.present ? data.themePref.value : this.themePref,
+      notifConsumptionDrop: data.notifConsumptionDrop.present
+          ? data.notifConsumptionDrop.value
+          : this.notifConsumptionDrop,
+      notifCnh: data.notifCnh.present ? data.notifCnh.value : this.notifCnh,
+      notifFiscal: data.notifFiscal.present
+          ? data.notifFiscal.value
+          : this.notifFiscal,
+      notifRecapReady: data.notifRecapReady.present
+          ? data.notifRecapReady.value
+          : this.notifRecapReady,
     );
   }
 
@@ -7620,43 +7784,79 @@ class UserSettingsRow extends DataClass implements Insertable<UserSettingsRow> {
   String toString() {
     return (StringBuffer('UserSettingsRow(')
           ..write('userId: $userId, ')
-          ..write('themePref: $themePref')
+          ..write('themePref: $themePref, ')
+          ..write('notifConsumptionDrop: $notifConsumptionDrop, ')
+          ..write('notifCnh: $notifCnh, ')
+          ..write('notifFiscal: $notifFiscal, ')
+          ..write('notifRecapReady: $notifRecapReady')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(userId, themePref);
+  int get hashCode => Object.hash(
+    userId,
+    themePref,
+    notifConsumptionDrop,
+    notifCnh,
+    notifFiscal,
+    notifRecapReady,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is UserSettingsRow &&
           other.userId == this.userId &&
-          other.themePref == this.themePref);
+          other.themePref == this.themePref &&
+          other.notifConsumptionDrop == this.notifConsumptionDrop &&
+          other.notifCnh == this.notifCnh &&
+          other.notifFiscal == this.notifFiscal &&
+          other.notifRecapReady == this.notifRecapReady);
 }
 
 class UserSettingsCompanion extends UpdateCompanion<UserSettingsRow> {
   final Value<String> userId;
   final Value<String> themePref;
+  final Value<bool> notifConsumptionDrop;
+  final Value<bool> notifCnh;
+  final Value<bool> notifFiscal;
+  final Value<bool> notifRecapReady;
   final Value<int> rowid;
   const UserSettingsCompanion({
     this.userId = const Value.absent(),
     this.themePref = const Value.absent(),
+    this.notifConsumptionDrop = const Value.absent(),
+    this.notifCnh = const Value.absent(),
+    this.notifFiscal = const Value.absent(),
+    this.notifRecapReady = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   UserSettingsCompanion.insert({
     required String userId,
     this.themePref = const Value.absent(),
+    this.notifConsumptionDrop = const Value.absent(),
+    this.notifCnh = const Value.absent(),
+    this.notifFiscal = const Value.absent(),
+    this.notifRecapReady = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : userId = Value(userId);
   static Insertable<UserSettingsRow> custom({
     Expression<String>? userId,
     Expression<String>? themePref,
+    Expression<bool>? notifConsumptionDrop,
+    Expression<bool>? notifCnh,
+    Expression<bool>? notifFiscal,
+    Expression<bool>? notifRecapReady,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (userId != null) 'user_id': userId,
       if (themePref != null) 'theme_pref': themePref,
+      if (notifConsumptionDrop != null)
+        'notif_consumption_drop': notifConsumptionDrop,
+      if (notifCnh != null) 'notif_cnh': notifCnh,
+      if (notifFiscal != null) 'notif_fiscal': notifFiscal,
+      if (notifRecapReady != null) 'notif_recap_ready': notifRecapReady,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -7664,11 +7864,19 @@ class UserSettingsCompanion extends UpdateCompanion<UserSettingsRow> {
   UserSettingsCompanion copyWith({
     Value<String>? userId,
     Value<String>? themePref,
+    Value<bool>? notifConsumptionDrop,
+    Value<bool>? notifCnh,
+    Value<bool>? notifFiscal,
+    Value<bool>? notifRecapReady,
     Value<int>? rowid,
   }) {
     return UserSettingsCompanion(
       userId: userId ?? this.userId,
       themePref: themePref ?? this.themePref,
+      notifConsumptionDrop: notifConsumptionDrop ?? this.notifConsumptionDrop,
+      notifCnh: notifCnh ?? this.notifCnh,
+      notifFiscal: notifFiscal ?? this.notifFiscal,
+      notifRecapReady: notifRecapReady ?? this.notifRecapReady,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -7682,6 +7890,20 @@ class UserSettingsCompanion extends UpdateCompanion<UserSettingsRow> {
     if (themePref.present) {
       map['theme_pref'] = Variable<String>(themePref.value);
     }
+    if (notifConsumptionDrop.present) {
+      map['notif_consumption_drop'] = Variable<bool>(
+        notifConsumptionDrop.value,
+      );
+    }
+    if (notifCnh.present) {
+      map['notif_cnh'] = Variable<bool>(notifCnh.value);
+    }
+    if (notifFiscal.present) {
+      map['notif_fiscal'] = Variable<bool>(notifFiscal.value);
+    }
+    if (notifRecapReady.present) {
+      map['notif_recap_ready'] = Variable<bool>(notifRecapReady.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -7693,6 +7915,10 @@ class UserSettingsCompanion extends UpdateCompanion<UserSettingsRow> {
     return (StringBuffer('UserSettingsCompanion(')
           ..write('userId: $userId, ')
           ..write('themePref: $themePref, ')
+          ..write('notifConsumptionDrop: $notifConsumptionDrop, ')
+          ..write('notifCnh: $notifCnh, ')
+          ..write('notifFiscal: $notifFiscal, ')
+          ..write('notifRecapReady: $notifRecapReady, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -12039,12 +12265,20 @@ typedef $$UserSettingsTableCreateCompanionBuilder =
     UserSettingsCompanion Function({
       required String userId,
       Value<String> themePref,
+      Value<bool> notifConsumptionDrop,
+      Value<bool> notifCnh,
+      Value<bool> notifFiscal,
+      Value<bool> notifRecapReady,
       Value<int> rowid,
     });
 typedef $$UserSettingsTableUpdateCompanionBuilder =
     UserSettingsCompanion Function({
       Value<String> userId,
       Value<String> themePref,
+      Value<bool> notifConsumptionDrop,
+      Value<bool> notifCnh,
+      Value<bool> notifFiscal,
+      Value<bool> notifRecapReady,
       Value<int> rowid,
     });
 
@@ -12064,6 +12298,26 @@ class $$UserSettingsTableFilterComposer
 
   ColumnFilters<String> get themePref => $composableBuilder(
     column: $table.themePref,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get notifConsumptionDrop => $composableBuilder(
+    column: $table.notifConsumptionDrop,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get notifCnh => $composableBuilder(
+    column: $table.notifCnh,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get notifFiscal => $composableBuilder(
+    column: $table.notifFiscal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get notifRecapReady => $composableBuilder(
+    column: $table.notifRecapReady,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -12086,6 +12340,26 @@ class $$UserSettingsTableOrderingComposer
     column: $table.themePref,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get notifConsumptionDrop => $composableBuilder(
+    column: $table.notifConsumptionDrop,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get notifCnh => $composableBuilder(
+    column: $table.notifCnh,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get notifFiscal => $composableBuilder(
+    column: $table.notifFiscal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get notifRecapReady => $composableBuilder(
+    column: $table.notifRecapReady,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$UserSettingsTableAnnotationComposer
@@ -12102,6 +12376,24 @@ class $$UserSettingsTableAnnotationComposer
 
   GeneratedColumn<String> get themePref =>
       $composableBuilder(column: $table.themePref, builder: (column) => column);
+
+  GeneratedColumn<bool> get notifConsumptionDrop => $composableBuilder(
+    column: $table.notifConsumptionDrop,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get notifCnh =>
+      $composableBuilder(column: $table.notifCnh, builder: (column) => column);
+
+  GeneratedColumn<bool> get notifFiscal => $composableBuilder(
+    column: $table.notifFiscal,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get notifRecapReady => $composableBuilder(
+    column: $table.notifRecapReady,
+    builder: (column) => column,
+  );
 }
 
 class $$UserSettingsTableTableManager
@@ -12137,20 +12429,36 @@ class $$UserSettingsTableTableManager
               ({
                 Value<String> userId = const Value.absent(),
                 Value<String> themePref = const Value.absent(),
+                Value<bool> notifConsumptionDrop = const Value.absent(),
+                Value<bool> notifCnh = const Value.absent(),
+                Value<bool> notifFiscal = const Value.absent(),
+                Value<bool> notifRecapReady = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => UserSettingsCompanion(
                 userId: userId,
                 themePref: themePref,
+                notifConsumptionDrop: notifConsumptionDrop,
+                notifCnh: notifCnh,
+                notifFiscal: notifFiscal,
+                notifRecapReady: notifRecapReady,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
                 required String userId,
                 Value<String> themePref = const Value.absent(),
+                Value<bool> notifConsumptionDrop = const Value.absent(),
+                Value<bool> notifCnh = const Value.absent(),
+                Value<bool> notifFiscal = const Value.absent(),
+                Value<bool> notifRecapReady = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => UserSettingsCompanion.insert(
                 userId: userId,
                 themePref: themePref,
+                notifConsumptionDrop: notifConsumptionDrop,
+                notifCnh: notifCnh,
+                notifFiscal: notifFiscal,
+                notifRecapReady: notifRecapReady,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

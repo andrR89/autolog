@@ -16,9 +16,9 @@ void main() {
   tearDown(() => db.close());
 
   group('schema', () {
-    test('abre com schemaVersion 13 e expõe exatamente 15 tabelas', () {
-      expect(db.schemaVersion, 13); // v13 com trips (Sprint 6.X)
-      expect(db.allTables.length, 15); // +Trips
+    test('abre com schemaVersion 14 e expõe exatamente 15 tabelas', () {
+      expect(db.schemaVersion, 14); // v14 com notif prefs (Sprint 6.W.4)
+      expect(db.allTables.length, 15);
     });
   });
 

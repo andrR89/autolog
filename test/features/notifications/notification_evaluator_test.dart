@@ -2,6 +2,7 @@ import 'package:autolog/data/local/database.dart';
 import 'package:autolog/domain/models/enums.dart';
 import 'package:autolog/domain/models/fuel_entry.dart';
 import 'package:autolog/domain/models/user_profile.dart';
+import 'package:autolog/domain/repositories/user_settings_repository.dart';
 import 'package:autolog/features/notifications/notification_evaluator.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -325,6 +326,89 @@ void main() {
       );
       expect(r, isNotNull);
       expect(r!.category, 'consumption_drop');
+    });
+  });
+
+  group('prefs filtram categorias', () {
+    // Entradas com consumo piorando >10% (usado em vários testes abaixo).
+    List<FuelEntry> consumptionDropEntries() => [
+          _f(id: 'p1', odometer: 0, liters: '50',
+              date: now.subtract(const Duration(days: 170))),
+          _f(id: 'p2', odometer: 600, liters: '50',
+              date: now.subtract(const Duration(days: 130))),
+          _f(id: 'c1', odometer: 5000, liters: '50',
+              date: now.subtract(const Duration(days: 70))),
+          _f(id: 'c2', odometer: 5500, liters: '50',
+              date: now.subtract(const Duration(days: 30))),
+        ];
+
+    test('consumption_drop desligada → consumo piora mas não notifica', () {
+      const prefs = NotificationPreferences(consumptionDrop: false);
+      final r = evaluateNotifications(
+        fuelEntries: consumptionDropEntries(),
+        userProfile: null,
+        recentLog: const [],
+        now: now,
+        vehicleId: 'v1',
+        vehicleUf: null,
+        vehiclePlate: null,
+        preferences: prefs,
+      );
+      expect(r, isNull);
+    });
+
+    test('cnh desligada → CNH vence em 20 dias mas não notifica', () {
+      const prefs = NotificationPreferences(cnh: false);
+      final r = evaluateNotifications(
+        fuelEntries: const [],
+        userProfile: _profile(cnhExpires: now.add(const Duration(days: 20))),
+        recentLog: const [],
+        now: now,
+        vehicleId: 'v1',
+        vehicleUf: null,
+        vehiclePlate: null,
+        preferences: prefs,
+      );
+      expect(r, isNull);
+    });
+
+    test('fiscal desligada → fiscal urgente é pulado, cnh notificada', () {
+      // nowLocal onde fiscal seria ativado; CNH também urgente.
+      final nowLocal = DateTime.utc(2025, 12, 13);
+      const prefs = NotificationPreferences(fiscal: false);
+      final r = evaluateNotifications(
+        fuelEntries: const [],
+        userProfile: _profile(cnhExpires: nowLocal.add(const Duration(days: 20))),
+        recentLog: const [],
+        now: nowLocal,
+        vehicleId: 'v1',
+        vehicleUf: 'XX',
+        vehiclePlate: 'ABC1230', // final 0 → fiscal acionaria
+        preferences: prefs,
+      );
+      // Fiscal pulado → deve notificar CNH.
+      expect(r, isNotNull);
+      expect(r!.category, 'cnh');
+    });
+
+    test('recap_ready desligada → dia 2 do mês com entries suficientes mas não notifica', () {
+      final nowLocal = DateTime.utc(2026, 6, 2);
+      const prefs = NotificationPreferences(recapReady: false);
+      final r = evaluateNotifications(
+        fuelEntries: [
+          for (var d = 1; d <= 4; d++)
+            _f(id: 'e$d', odometer: 100 + d * 100, liters: '40',
+                date: DateTime.utc(2026, 5, 5 + d)),
+        ],
+        userProfile: null,
+        recentLog: const [],
+        now: nowLocal,
+        vehicleId: 'v1',
+        vehicleUf: null,
+        vehiclePlate: null,
+        preferences: prefs,
+      );
+      expect(r, isNull);
     });
   });
 }

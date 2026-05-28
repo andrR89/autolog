@@ -7,7 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('Schema v12', () {
-    test('schemaVersion is at least 12 (now 13 with trips)', () {
+    test('schemaVersion is at least 12 (now 14 with notif prefs)', () {
       final db = AppDatabase(NativeDatabase.memory());
       expect(db.schemaVersion, greaterThanOrEqualTo(12));
       db.close();
