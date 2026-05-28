@@ -16,6 +16,8 @@ import 'package:autolog/data/repositories/vehicle_repository.dart';
 import 'package:autolog/domain/models/expense.dart';
 import 'package:autolog/domain/models/fuel_entry.dart';
 import 'package:autolog/features/recap/recap_data.dart';
+import 'package:autolog/features/tts/insight_narrator.dart';
+import 'package:autolog/features/tts/widgets/tts_button.dart';
 import 'package:autolog/features/vehicles/vehicles_provider.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
@@ -68,6 +70,9 @@ class _RecapScreenState extends ConsumerState<RecapScreen> {
   final _controller = PageController();
   Timer? _autoAdvance;
   int _currentPage = 0;
+
+  /// Dados do recap — disponível após o primeiro carregamento.
+  RecapData? _recapData;
 
   @override
   void dispose() {
@@ -158,6 +163,13 @@ class _RecapScreenState extends ConsumerState<RecapScreen> {
           icon: const Icon(Icons.close, color: AppColors.brandInk),
           onPressed: () => Navigator.of(context).pop(),
         ),
+        actions: [
+          if (_recapData != null)
+            TtsButton(
+              textBuilder: () =>
+                  narrateRecapSlide(_currentPage, _recapData!),
+            ),
+        ],
       ),
       body: entriesAsync.when(
         loading: () => const Center(
@@ -176,6 +188,8 @@ class _RecapScreenState extends ConsumerState<RecapScreen> {
             fuels: entries.fuels,
             expenses: entries.expenses,
           );
+          // Stash para TtsButton no AppBar (sem rebuild).
+          _recapData = data;
           final slides = _buildSlides(data);
 
           // Inicia auto-avanço após o primeiro build com dados.

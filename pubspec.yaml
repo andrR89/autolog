@@ -61,6 +61,9 @@ dependencies:
   # Home widget (iOS WidgetKit / Android AppWidget bridge)
   home_widget: ^0.7.0
 
+  # TTS — leitura de insights, recap e lembretes fiscais em PT-BR.
+  flutter_tts: ^4.2.0
+
   # Design system — tipografia (Bricolage Grotesque display + Manrope body).
   # Justificativa: identidade visual distinta vs. fonte do sistema. Carrega
   # sob demanda e faz cache local; impacto runtime irrisório no primeiro start.

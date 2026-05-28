@@ -21,6 +21,8 @@ import 'package:autolog/features/insights/dedupe.dart';
 import 'package:autolog/features/insights/history_insights.dart';
 import 'package:autolog/features/insights/insights_service.dart';
 import 'package:autolog/features/scan/scan_service.dart';
+import 'package:autolog/features/tts/insight_narrator.dart';
+import 'package:autolog/features/tts/widgets/tts_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -185,6 +187,12 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
           statusBarIconBrightness: Brightness.light,
           statusBarBrightness: Brightness.dark,
         ),
+        actions: [
+          if (_result != null)
+            TtsButton(
+              textBuilder: () => narrateInsights(_result!),
+            ),
+        ],
       ),
       body: switch (_state) {
         _ScreenState.empty => _EmptyState(

@@ -17,6 +17,8 @@ import 'package:autolog/features/insights/fiscal_calendar.dart';
 import 'package:autolog/features/insights/fiscal_lookup_result.dart';
 import 'package:autolog/features/insights/fiscal_lookup_service.dart';
 import 'package:autolog/features/insights/history_insights.dart';
+import 'package:autolog/features/tts/insight_narrator.dart';
+import 'package:autolog/features/tts/widgets/tts_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -90,6 +92,9 @@ class FiscalPlanScreen extends ConsumerStatefulWidget {
 
 class _FiscalPlanScreenState extends ConsumerState<FiscalPlanScreen> {
   final Set<String> _ignoredTitles = {};
+
+  /// Última lista de propostas visíveis — usada pelo TtsButton.
+  List<ProposedReminder> _visibleProposals = [];
 
   /// Constrói propostas a partir do resultado do lookup fiscal.
   List<_FiscalProposal> _buildProposals(
@@ -258,6 +263,9 @@ class _FiscalPlanScreenState extends ConsumerState<FiscalPlanScreen> {
           statusBarBrightness: Brightness.dark,
         ),
         actions: [
+          TtsButton(
+            textBuilder: () => narrateFiscal(_visibleProposals),
+          ),
           if (_ignoredTitles.isNotEmpty)
             IconButton(
               tooltip: 'Mostrar propostas ignoradas',
@@ -333,6 +341,9 @@ class _FiscalPlanScreenState extends ConsumerState<FiscalPlanScreen> {
 
     final activeReminders = remindersAsync.valueOrNull ?? const [];
     final proposals = _buildProposals(result, activeReminders);
+
+    // Armazena para o TtsButton sem disparar rebuild.
+    _visibleProposals = proposals.map((p) => p.reminder).toList();
 
     if (proposals.isEmpty) {
       return _EmptyState(
