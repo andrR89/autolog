@@ -1,5 +1,6 @@
 import 'package:autolog/data/repositories/user_settings_repository.dart';
 import 'package:autolog/domain/repositories/user_settings_repository.dart';
+import 'package:autolog/features/calendar/google_calendar_service.dart';
 import 'package:autolog/features/settings/notif_prefs_providers.dart';
 import 'package:autolog/features/settings/theme_mode_providers.dart';
 import 'package:autolog/features/vehicles/vehicles_provider.dart';
@@ -41,6 +42,8 @@ class SettingsScreen extends ConsumerWidget {
             repo: repo,
             prefs: prefs,
           ),
+          const SizedBox(height: 8),
+          const _GoogleCalendarCard(),
         ],
       ),
     );
@@ -159,6 +162,136 @@ class _NotificationsCard extends StatelessWidget {
               value: prefs.recapReady,
               onChanged: (v) => repo.setNotifPref(userId, 'recap_ready', v),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _GoogleCalendarCard
+// ---------------------------------------------------------------------------
+
+/// Card de integração com Google Calendar.
+/// Com Mock ativo: toggle "Conectar" mostra a UX de conectado/desconectado.
+/// Com OAuth real configurado: dispara o fluxo de autenticação do Google.
+class _GoogleCalendarCard extends ConsumerStatefulWidget {
+  const _GoogleCalendarCard();
+
+  @override
+  ConsumerState<_GoogleCalendarCard> createState() =>
+      _GoogleCalendarCardState();
+}
+
+class _GoogleCalendarCardState extends ConsumerState<_GoogleCalendarCard> {
+  bool _loading = false;
+  bool _connected = false;
+  String? _email;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadState();
+  }
+
+  Future<void> _loadState() async {
+    final svc = ref.read(googleCalendarServiceProvider);
+    final connected = await svc.isConnected();
+    final email = connected ? await svc.connectedEmail() : null;
+    if (mounted) {
+      setState(() {
+        _connected = connected;
+        _email = email;
+      });
+    }
+  }
+
+  Future<void> _connect() async {
+    setState(() => _loading = true);
+    try {
+      final svc = ref.read(googleCalendarServiceProvider);
+      await svc.connect();
+      await _loadState();
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _disconnect() async {
+    setState(() => _loading = true);
+    try {
+      final svc = ref.read(googleCalendarServiceProvider);
+      await svc.disconnect();
+      await _loadState();
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                'Google Calendar',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                'Lembretes criados aqui aparecem no seu Google Calendar.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            if (_loading)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: LinearProgressIndicator(),
+              )
+            else if (_connected)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.check_circle, color: Colors.green),
+                    title: const Text('Conectado'),
+                    subtitle: Text(_email ?? 'Google Calendar'),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 4),
+                    child: OutlinedButton.icon(
+                      onPressed: _disconnect,
+                      icon: const Icon(Icons.logout, size: 18),
+                      label: const Text('Desconectar'),
+                    ),
+                  ),
+                ],
+              )
+            else
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: ElevatedButton.icon(
+                  onPressed: _connect,
+                  icon: const Icon(Icons.calendar_today, size: 18),
+                  label: const Text('Conectar Google Calendar'),
+                ),
+              ),
+            const SizedBox(height: 4),
           ],
         ),
       ),

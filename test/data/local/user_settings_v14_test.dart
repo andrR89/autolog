@@ -7,15 +7,15 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('Schema v14', () {
-    test('schemaVersion bumped to 15 (inclui vehicle_members, Sprint 6.Y)', () {
+    test('schemaVersion bumped to 16 (inclui calendar_event_links, Sprint 6.EE)', () {
       final db = AppDatabase(NativeDatabase.memory());
-      expect(db.schemaVersion, 15);
+      expect(db.schemaVersion, 16);
       db.close();
     });
 
-    test('allTables contém 16 tabelas', () {
+    test('allTables contém 17 tabelas', () {
       final db = AppDatabase(NativeDatabase.memory());
-      expect(db.allTables.length, 16);
+      expect(db.allTables.length, 17);
       db.close();
     });
 

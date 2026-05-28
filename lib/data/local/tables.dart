@@ -348,6 +348,21 @@ class VehicleMembers extends Table {
 }
 
 // ---------------------------------------------------------------------------
+// calendar_event_links — mapeamento local reminder → Google Calendar event.
+// Local-only; NÃO sincroniza com Supabase.
+// ---------------------------------------------------------------------------
+
+@DataClassName('CalendarEventLinkRow')
+class CalendarEventLinks extends Table {
+  TextColumn get reminderId => text()();
+  TextColumn get calendarEventId => text()();
+  DateTimeColumn get syncedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {reminderId};
+}
+
+// ---------------------------------------------------------------------------
 // usage_quota — sem campos de sync (ver ARCHITECTURE §3 e spec §4)
 // ---------------------------------------------------------------------------
 

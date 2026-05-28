@@ -16,7 +16,7 @@ void main() {
   group('FuelEntries schema v8', () {
     test('schemaVersion bumped to 8', () {
       final db = AppDatabase(NativeDatabase.memory());
-      expect(db.schemaVersion, 15); // v15 com vehicle_members (Sprint 6.Y)
+      expect(db.schemaVersion, 16); // v16 com calendar_event_links (Sprint 6.EE)
       db.close();
     });
 

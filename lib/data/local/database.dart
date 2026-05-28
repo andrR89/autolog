@@ -29,6 +29,7 @@ part 'database.g.dart';
   UserSettings,
   Trips,
   VehicleMembers,
+  CalendarEventLinks,
 ])
 class AppDatabase extends _$AppDatabase {
   /// Construtor testável: aceita qualquer [QueryExecutor].
@@ -37,7 +38,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 16;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -99,6 +100,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 15) {
         await m.createTable(vehicleMembers);
+      }
+      if (from < 16) {
+        await m.createTable(calendarEventLinks);
       }
     },
   );

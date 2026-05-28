@@ -7,15 +7,15 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('Schema v15', () {
-    test('schemaVersion é 15', () {
+    test('schemaVersion é 16', () {
       final db = AppDatabase(NativeDatabase.memory());
-      expect(db.schemaVersion, 15);
+      expect(db.schemaVersion, 16);
       db.close();
     });
 
-    test('allTables contém 16 tabelas', () {
+    test('allTables contém 17 tabelas', () {
       final db = AppDatabase(NativeDatabase.memory());
-      expect(db.allTables.length, 16);
+      expect(db.allTables.length, 17);
       db.close();
     });
 

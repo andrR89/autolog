@@ -69,6 +69,12 @@ dependencies:
   # sob demanda e faz cache local; impacto runtime irrisório no primeiro start.
   google_fonts: ^6.2.1
 
+  # Google Calendar integration (Sprint 6.EE).
+  # Mock é o default até o OAuth estar configurado (docs/google-calendar-setup.md).
+  google_sign_in: ^7.0.0
+  googleapis: ^14.0.0
+  googleapis_auth: ^2.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

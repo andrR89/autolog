@@ -8792,6 +8792,284 @@ class VehicleMembersCompanion extends UpdateCompanion<VehicleMemberRow> {
   }
 }
 
+class $CalendarEventLinksTable extends CalendarEventLinks
+    with TableInfo<$CalendarEventLinksTable, CalendarEventLinkRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CalendarEventLinksTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _reminderIdMeta = const VerificationMeta(
+    'reminderId',
+  );
+  @override
+  late final GeneratedColumn<String> reminderId = GeneratedColumn<String>(
+    'reminder_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _calendarEventIdMeta = const VerificationMeta(
+    'calendarEventId',
+  );
+  @override
+  late final GeneratedColumn<String> calendarEventId = GeneratedColumn<String>(
+    'calendar_event_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> syncedAt = GeneratedColumn<DateTime>(
+    'synced_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [reminderId, calendarEventId, syncedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'calendar_event_links';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CalendarEventLinkRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('reminder_id')) {
+      context.handle(
+        _reminderIdMeta,
+        reminderId.isAcceptableOrUnknown(data['reminder_id']!, _reminderIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_reminderIdMeta);
+    }
+    if (data.containsKey('calendar_event_id')) {
+      context.handle(
+        _calendarEventIdMeta,
+        calendarEventId.isAcceptableOrUnknown(
+          data['calendar_event_id']!,
+          _calendarEventIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_calendarEventIdMeta);
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_syncedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {reminderId};
+  @override
+  CalendarEventLinkRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CalendarEventLinkRow(
+      reminderId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reminder_id'],
+      )!,
+      calendarEventId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}calendar_event_id'],
+      )!,
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}synced_at'],
+      )!,
+    );
+  }
+
+  @override
+  $CalendarEventLinksTable createAlias(String alias) {
+    return $CalendarEventLinksTable(attachedDatabase, alias);
+  }
+}
+
+class CalendarEventLinkRow extends DataClass
+    implements Insertable<CalendarEventLinkRow> {
+  final String reminderId;
+  final String calendarEventId;
+  final DateTime syncedAt;
+  const CalendarEventLinkRow({
+    required this.reminderId,
+    required this.calendarEventId,
+    required this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['reminder_id'] = Variable<String>(reminderId);
+    map['calendar_event_id'] = Variable<String>(calendarEventId);
+    map['synced_at'] = Variable<DateTime>(syncedAt);
+    return map;
+  }
+
+  CalendarEventLinksCompanion toCompanion(bool nullToAbsent) {
+    return CalendarEventLinksCompanion(
+      reminderId: Value(reminderId),
+      calendarEventId: Value(calendarEventId),
+      syncedAt: Value(syncedAt),
+    );
+  }
+
+  factory CalendarEventLinkRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CalendarEventLinkRow(
+      reminderId: serializer.fromJson<String>(json['reminderId']),
+      calendarEventId: serializer.fromJson<String>(json['calendarEventId']),
+      syncedAt: serializer.fromJson<DateTime>(json['syncedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'reminderId': serializer.toJson<String>(reminderId),
+      'calendarEventId': serializer.toJson<String>(calendarEventId),
+      'syncedAt': serializer.toJson<DateTime>(syncedAt),
+    };
+  }
+
+  CalendarEventLinkRow copyWith({
+    String? reminderId,
+    String? calendarEventId,
+    DateTime? syncedAt,
+  }) => CalendarEventLinkRow(
+    reminderId: reminderId ?? this.reminderId,
+    calendarEventId: calendarEventId ?? this.calendarEventId,
+    syncedAt: syncedAt ?? this.syncedAt,
+  );
+  CalendarEventLinkRow copyWithCompanion(CalendarEventLinksCompanion data) {
+    return CalendarEventLinkRow(
+      reminderId: data.reminderId.present
+          ? data.reminderId.value
+          : this.reminderId,
+      calendarEventId: data.calendarEventId.present
+          ? data.calendarEventId.value
+          : this.calendarEventId,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CalendarEventLinkRow(')
+          ..write('reminderId: $reminderId, ')
+          ..write('calendarEventId: $calendarEventId, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(reminderId, calendarEventId, syncedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CalendarEventLinkRow &&
+          other.reminderId == this.reminderId &&
+          other.calendarEventId == this.calendarEventId &&
+          other.syncedAt == this.syncedAt);
+}
+
+class CalendarEventLinksCompanion
+    extends UpdateCompanion<CalendarEventLinkRow> {
+  final Value<String> reminderId;
+  final Value<String> calendarEventId;
+  final Value<DateTime> syncedAt;
+  final Value<int> rowid;
+  const CalendarEventLinksCompanion({
+    this.reminderId = const Value.absent(),
+    this.calendarEventId = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CalendarEventLinksCompanion.insert({
+    required String reminderId,
+    required String calendarEventId,
+    required DateTime syncedAt,
+    this.rowid = const Value.absent(),
+  }) : reminderId = Value(reminderId),
+       calendarEventId = Value(calendarEventId),
+       syncedAt = Value(syncedAt);
+  static Insertable<CalendarEventLinkRow> custom({
+    Expression<String>? reminderId,
+    Expression<String>? calendarEventId,
+    Expression<DateTime>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (reminderId != null) 'reminder_id': reminderId,
+      if (calendarEventId != null) 'calendar_event_id': calendarEventId,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CalendarEventLinksCompanion copyWith({
+    Value<String>? reminderId,
+    Value<String>? calendarEventId,
+    Value<DateTime>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return CalendarEventLinksCompanion(
+      reminderId: reminderId ?? this.reminderId,
+      calendarEventId: calendarEventId ?? this.calendarEventId,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (reminderId.present) {
+      map['reminder_id'] = Variable<String>(reminderId.value);
+    }
+    if (calendarEventId.present) {
+      map['calendar_event_id'] = Variable<String>(calendarEventId.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<DateTime>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CalendarEventLinksCompanion(')
+          ..write('reminderId: $reminderId, ')
+          ..write('calendarEventId: $calendarEventId, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -8814,6 +9092,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $UserSettingsTable userSettings = $UserSettingsTable(this);
   late final $TripsTable trips = $TripsTable(this);
   late final $VehicleMembersTable vehicleMembers = $VehicleMembersTable(this);
+  late final $CalendarEventLinksTable calendarEventLinks =
+      $CalendarEventLinksTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -8835,6 +9115,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     userSettings,
     trips,
     vehicleMembers,
+    calendarEventLinks,
   ];
 }
 
@@ -13254,6 +13535,185 @@ typedef $$VehicleMembersTableProcessedTableManager =
       VehicleMemberRow,
       PrefetchHooks Function()
     >;
+typedef $$CalendarEventLinksTableCreateCompanionBuilder =
+    CalendarEventLinksCompanion Function({
+      required String reminderId,
+      required String calendarEventId,
+      required DateTime syncedAt,
+      Value<int> rowid,
+    });
+typedef $$CalendarEventLinksTableUpdateCompanionBuilder =
+    CalendarEventLinksCompanion Function({
+      Value<String> reminderId,
+      Value<String> calendarEventId,
+      Value<DateTime> syncedAt,
+      Value<int> rowid,
+    });
+
+class $$CalendarEventLinksTableFilterComposer
+    extends Composer<_$AppDatabase, $CalendarEventLinksTable> {
+  $$CalendarEventLinksTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get reminderId => $composableBuilder(
+    column: $table.reminderId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get calendarEventId => $composableBuilder(
+    column: $table.calendarEventId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CalendarEventLinksTableOrderingComposer
+    extends Composer<_$AppDatabase, $CalendarEventLinksTable> {
+  $$CalendarEventLinksTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get reminderId => $composableBuilder(
+    column: $table.reminderId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get calendarEventId => $composableBuilder(
+    column: $table.calendarEventId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CalendarEventLinksTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CalendarEventLinksTable> {
+  $$CalendarEventLinksTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get reminderId => $composableBuilder(
+    column: $table.reminderId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get calendarEventId => $composableBuilder(
+    column: $table.calendarEventId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $$CalendarEventLinksTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CalendarEventLinksTable,
+          CalendarEventLinkRow,
+          $$CalendarEventLinksTableFilterComposer,
+          $$CalendarEventLinksTableOrderingComposer,
+          $$CalendarEventLinksTableAnnotationComposer,
+          $$CalendarEventLinksTableCreateCompanionBuilder,
+          $$CalendarEventLinksTableUpdateCompanionBuilder,
+          (
+            CalendarEventLinkRow,
+            BaseReferences<
+              _$AppDatabase,
+              $CalendarEventLinksTable,
+              CalendarEventLinkRow
+            >,
+          ),
+          CalendarEventLinkRow,
+          PrefetchHooks Function()
+        > {
+  $$CalendarEventLinksTableTableManager(
+    _$AppDatabase db,
+    $CalendarEventLinksTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CalendarEventLinksTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CalendarEventLinksTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CalendarEventLinksTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> reminderId = const Value.absent(),
+                Value<String> calendarEventId = const Value.absent(),
+                Value<DateTime> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CalendarEventLinksCompanion(
+                reminderId: reminderId,
+                calendarEventId: calendarEventId,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String reminderId,
+                required String calendarEventId,
+                required DateTime syncedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => CalendarEventLinksCompanion.insert(
+                reminderId: reminderId,
+                calendarEventId: calendarEventId,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CalendarEventLinksTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CalendarEventLinksTable,
+      CalendarEventLinkRow,
+      $$CalendarEventLinksTableFilterComposer,
+      $$CalendarEventLinksTableOrderingComposer,
+      $$CalendarEventLinksTableAnnotationComposer,
+      $$CalendarEventLinksTableCreateCompanionBuilder,
+      $$CalendarEventLinksTableUpdateCompanionBuilder,
+      (
+        CalendarEventLinkRow,
+        BaseReferences<
+          _$AppDatabase,
+          $CalendarEventLinksTable,
+          CalendarEventLinkRow
+        >,
+      ),
+      CalendarEventLinkRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -13290,4 +13750,6 @@ class $AppDatabaseManager {
       $$TripsTableTableManager(_db, _db.trips);
   $$VehicleMembersTableTableManager get vehicleMembers =>
       $$VehicleMembersTableTableManager(_db, _db.vehicleMembers);
+  $$CalendarEventLinksTableTableManager get calendarEventLinks =>
+      $$CalendarEventLinksTableTableManager(_db, _db.calendarEventLinks);
 }
