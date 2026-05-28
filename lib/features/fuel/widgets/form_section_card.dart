@@ -9,6 +9,7 @@
 // referencia revistas editoriais. Sem ícone, sem subtítulo — o título já
 // faz o trabalho. Padding interno generoso (xl) pra inputs respirarem.
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:flutter/material.dart';
 
@@ -41,9 +42,9 @@ class FormSectionCard extends StatelessWidget {
         AppSpacing.md,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surfaceRaised,
+        color: context.surfaceRaised,
         borderRadius: AppRadius.allMd,
-        border: Border.all(color: AppColors.hairline, width: 1),
+        border: Border.all(color: context.hairline, width: 1),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
@@ -61,7 +62,7 @@ class FormSectionCard extends StatelessWidget {
                   child: Text(
                     eyebrow.toUpperCase(),
                     style: textTheme.labelSmall?.copyWith(
-                      color: AppColors.inkMuted,
+                      color: context.inkMuted,
                       letterSpacing: 1.6,
                       fontWeight: FontWeight.w700,
                     ),

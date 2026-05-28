@@ -5,6 +5,7 @@
 //
 // Disclaimer obrigatório: "Confira com seu Detran".
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/data/repositories/reminder_repository.dart';
@@ -61,16 +62,17 @@ class _FiscalLookupParams {
 }
 
 final _fiscalLookupProvider =
-    FutureProvider.family<FiscalLookupResult, _FiscalLookupParams>(
-      (ref, params) {
-        final service = ref.watch(fiscalLookupServiceProvider);
-        return service.lookup(
-          uf: params.uf,
-          plateLastDigit: params.plateLastDigit,
-          year: params.year,
-        );
-      },
-    );
+    FutureProvider.family<FiscalLookupResult, _FiscalLookupParams>((
+      ref,
+      params,
+    ) {
+      final service = ref.watch(fiscalLookupServiceProvider);
+      return service.lookup(
+        uf: params.uf,
+        plateLastDigit: params.plateLastDigit,
+        year: params.year,
+      );
+    });
 
 // ---------------------------------------------------------------------------
 // Tela principal
@@ -97,19 +99,35 @@ class _FiscalPlanScreenState extends ConsumerState<FiscalPlanScreen> {
     final v = widget.vehicle;
     final year = DateTime.now().year;
 
-    final ipvaDate = DateTime.utc(year, result.ipva.month, result.ipva.day ?? 1);
-    final licDate = DateTime.utc(year, result.licensing.month, result.licensing.day ?? 1);
+    final ipvaDate = DateTime.utc(
+      year,
+      result.ipva.month,
+      result.ipva.day ?? 1,
+    );
+    final licDate = DateTime.utc(
+      year,
+      result.licensing.month,
+      result.licensing.day ?? 1,
+    );
 
     final proposed = [
       ProposedReminder(
         title: 'IPVA $year',
         dueDate: ipvaDate,
-        rationale: _buildRationale(v.uf, result.source, result.ipva.sourceCitation),
+        rationale: _buildRationale(
+          v.uf,
+          result.source,
+          result.ipva.sourceCitation,
+        ),
       ),
       ProposedReminder(
         title: 'Licenciamento $year',
         dueDate: licDate,
-        rationale: _buildRationale(v.uf, result.source, result.licensing.sourceCitation),
+        rationale: _buildRationale(
+          v.uf,
+          result.source,
+          result.licensing.sourceCitation,
+        ),
       ),
     ];
 
@@ -217,8 +235,9 @@ class _FiscalPlanScreenState extends ConsumerState<FiscalPlanScreen> {
           )
         : null;
 
-    final remindersAsync =
-        ref.watch(_fiscalActiveRemindersProvider(widget.vehicle.id));
+    final remindersAsync = ref.watch(
+      _fiscalActiveRemindersProvider(widget.vehicle.id),
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -252,9 +271,7 @@ class _FiscalPlanScreenState extends ConsumerState<FiscalPlanScreen> {
         children: [
           _DisclaimerBanner(),
           _VehicleContextStrip(vehicle: widget.vehicle),
-          Expanded(
-            child: _buildBody(lookupAsync, remindersAsync),
-          ),
+          Expanded(child: _buildBody(lookupAsync, remindersAsync)),
         ],
       ),
     );
@@ -269,7 +286,11 @@ class _FiscalPlanScreenState extends ConsumerState<FiscalPlanScreen> {
       final v = widget.vehicle;
       final year = DateTime.now().year;
       final digit = lastDigitOfPlate(v.plate) ?? 0;
-      final fallback = const FallbackComputer().compute(v.uf ?? '', digit, year);
+      final fallback = const FallbackComputer().compute(
+        v.uf ?? '',
+        digit,
+        year,
+      );
       return _buildWithResult(fallback, remindersAsync);
     }
 
@@ -384,7 +405,7 @@ class _DisclaimerBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     return Container(
-      color: AppColors.surfaceSunken,
+      color: context.surfaceSunken,
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
         vertical: AppSpacing.md,
@@ -392,7 +413,7 @@ class _DisclaimerBanner extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.info_outline, size: 16, color: AppColors.inkSoft),
+          Icon(Icons.info_outline, size: 16, color: context.inkSoft),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text.rich(
@@ -401,20 +422,20 @@ class _DisclaimerBanner extends StatelessWidget {
                   TextSpan(
                     text: 'Datas baseadas em calendário típico. ',
                     style: textTheme.bodySmall?.copyWith(
-                      color: AppColors.inkMuted,
+                      color: context.inkMuted,
                     ),
                   ),
                   TextSpan(
                     text: 'Confira com seu Detran',
                     style: textTheme.bodySmall?.copyWith(
-                      color: AppColors.inkMuted,
+                      color: context.inkMuted,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   TextSpan(
                     text: ' — datas variam por ano e por dígito da placa.',
                     style: textTheme.bodySmall?.copyWith(
-                      color: AppColors.inkMuted,
+                      color: context.inkMuted,
                     ),
                   ),
                 ],
@@ -464,14 +485,14 @@ class _VehicleContextStrip extends StatelessWidget {
                 ? Icons.two_wheeler
                 : Icons.directions_car,
             size: 18,
-            color: AppColors.inkMuted,
+            color: context.inkMuted,
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
               parts.join(' · '),
               style: textTheme.labelMedium?.copyWith(
-                color: AppColors.inkMuted,
+                color: context.inkMuted,
                 fontWeight: FontWeight.w500,
               ),
               maxLines: 1,
@@ -503,19 +524,15 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.check_circle_outline,
-              size: 48,
-              color: AppColors.inkSoft,
-            ),
+            Icon(Icons.check_circle_outline, size: 48, color: context.inkSoft),
             const SizedBox(height: AppSpacing.lg),
             Text(
               hasIgnored
                   ? 'Você ignorou todas as propostas nesta sessão.'
                   : 'Lembretes já criados — você está em dia.\n'
-                      'Para ver de novo, exclua um lembrete na aba '
-                      '"Lembretes" e volte aqui.',
-              style: textTheme.bodyMedium?.copyWith(color: AppColors.inkMuted),
+                        'Para ver de novo, exclua um lembrete na aba '
+                        '"Lembretes" e volte aqui.',
+              style: textTheme.bodyMedium?.copyWith(color: context.inkMuted),
               textAlign: TextAlign.center,
             ),
             if (hasIgnored && onResetIgnored != null) ...[
@@ -555,8 +572,18 @@ class _FiscalItemCard extends StatelessWidget {
   String _formatDueDate(DateTime? date) {
     if (date == null) return '';
     const months = [
-      'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
-      'jul', 'ago', 'set', 'out', 'nov', 'dez',
+      'jan',
+      'fev',
+      'mar',
+      'abr',
+      'mai',
+      'jun',
+      'jul',
+      'ago',
+      'set',
+      'out',
+      'nov',
+      'dez',
     ];
     final mon = months[date.month - 1];
     final yr = date.year.toString().substring(2);
@@ -581,9 +608,9 @@ class _FiscalItemCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceRaised,
+        color: context.surfaceRaised,
         borderRadius: AppRadius.allMd,
-        border: Border.all(color: AppColors.hairline),
+        border: Border.all(color: context.hairline),
       ),
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
@@ -594,24 +621,22 @@ class _FiscalItemCard extends StatelessWidget {
             style: AppTypography.body(
               15,
               weight: FontWeight.w600,
-              color: AppColors.ink,
+              color: context.ink,
             ),
           ),
           if (dueLabel.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.xs),
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.calendar_today_outlined,
                   size: 14,
-                  color: AppColors.inkSoft,
+                  color: context.inkSoft,
                 ),
                 const SizedBox(width: AppSpacing.xs),
                 Text(
                   dueLabel,
-                  style: textTheme.bodySmall?.copyWith(
-                    color: AppColors.inkMuted,
-                  ),
+                  style: textTheme.bodySmall?.copyWith(color: context.inkMuted),
                 ),
               ],
             ),
@@ -620,7 +645,7 @@ class _FiscalItemCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.xs),
             Text(
               proposal.reminder.rationale,
-              style: textTheme.bodySmall?.copyWith(color: AppColors.inkSoft),
+              style: textTheme.bodySmall?.copyWith(color: context.inkSoft),
             ),
           ],
           const SizedBox(height: AppSpacing.sm),
@@ -630,12 +655,12 @@ class _FiscalItemCard extends StatelessWidget {
               sourceLabel,
               style: textTheme.labelSmall?.copyWith(
                 color: proposal.source == FiscalLookupSource.localFallback
-                    ? AppColors.inkSoft
+                    ? context.inkSoft
                     : AppColors.brand,
               ),
             ),
             backgroundColor: proposal.source == FiscalLookupSource.localFallback
-                ? AppColors.surfaceSunken
+                ? context.surfaceSunken
                 : AppColors.brand.withValues(alpha: 0.08),
             padding: EdgeInsets.zero,
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,

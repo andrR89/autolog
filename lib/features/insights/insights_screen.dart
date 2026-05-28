@@ -10,6 +10,7 @@
 // Lembretes sugeridos passam por dedupeProposed antes de serem exibidos.
 // Criar lembrete: ReminderRepository.create() + remoção otimista da lista.
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/data/repositories/reminder_repository.dart';
@@ -189,9 +190,8 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
         _ScreenState.empty => _EmptyState(
           vehicle: widget.vehicle,
           onAnalyze: _analyze,
-          onOpenChat: () => context.push(
-            '/vehicles/${widget.vehicle.id}/insights/chat',
-          ),
+          onOpenChat: () =>
+              context.push('/vehicles/${widget.vehicle.id}/insights/chat'),
         ),
         _ScreenState.loading => const _LoadingState(),
         _ScreenState.success => _SuccessBody(
@@ -206,9 +206,8 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
           ),
           onOpenFiscalPlan: () =>
               context.push('/vehicles/${widget.vehicle.id}/insights/fiscal'),
-          onOpenChat: () => context.push(
-            '/vehicles/${widget.vehicle.id}/insights/chat',
-          ),
+          onOpenChat: () =>
+              context.push('/vehicles/${widget.vehicle.id}/insights/chat'),
         ),
         _ScreenState.quotaError => _QuotaBannerState(
           vehicle: widget.vehicle,
@@ -217,9 +216,8 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
         _ScreenState.genericError => _EmptyState(
           vehicle: widget.vehicle,
           onAnalyze: _analyze,
-          onOpenChat: () => context.push(
-            '/vehicles/${widget.vehicle.id}/insights/chat',
-          ),
+          onOpenChat: () =>
+              context.push('/vehicles/${widget.vehicle.id}/insights/chat'),
         ),
       },
     );
@@ -256,14 +254,14 @@ class _EmptyState extends StatelessWidget {
               Container(
                 width: 72,
                 height: 72,
-                decoration: const BoxDecoration(
-                  color: AppColors.surfaceSunken,
+                decoration: BoxDecoration(
+                  color: context.surfaceSunken,
                   borderRadius: AppRadius.allLg,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.auto_awesome_outlined,
                   size: 32,
-                  color: AppColors.inkMuted,
+                  color: context.inkMuted,
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -280,15 +278,13 @@ class _EmptyState extends StatelessWidget {
               Text(
                 'A IA analisa seus abastecimentos e despesas dos últimos 3 anos '
                 'e sugere padrões e lembretes proativos.',
-                style: textTheme.bodyMedium?.copyWith(
-                  color: AppColors.inkMuted,
-                ),
+                style: textTheme.bodyMedium?.copyWith(color: context.inkMuted),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.xl),
               Text(
                 'Cota: 3 análises/mês no plano gratuito.',
-                style: textTheme.bodySmall?.copyWith(color: AppColors.inkSoft),
+                style: textTheme.bodySmall?.copyWith(color: context.inkSoft),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.xxl),
@@ -332,7 +328,7 @@ class _EmptyState extends StatelessWidget {
               Text(
                 'ASSISTENTE',
                 style: textTheme.labelSmall?.copyWith(
-                  color: AppColors.inkMuted,
+                  color: context.inkMuted,
                   letterSpacing: 1.6,
                 ),
               ),
@@ -371,7 +367,7 @@ class _LoadingState extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
           Text(
             'Analisando histórico...',
-            style: textTheme.bodyMedium?.copyWith(color: AppColors.inkMuted),
+            style: textTheme.bodyMedium?.copyWith(color: context.inkMuted),
           ),
         ],
       ),
@@ -599,14 +595,16 @@ class _SectionHeader extends StatelessWidget {
               horizontal: AppSpacing.sm,
               vertical: 1,
             ),
-            decoration: const BoxDecoration(
-              color: AppColors.surfaceSunken,
-              borderRadius: BorderRadius.all(Radius.circular(AppRadius.pill)),
+            decoration: BoxDecoration(
+              color: context.surfaceSunken,
+              borderRadius: const BorderRadius.all(
+                Radius.circular(AppRadius.pill),
+              ),
             ),
             child: Text(
               '$count',
               style: textTheme.labelSmall?.copyWith(
-                color: AppColors.inkSoft,
+                color: context.inkSoft,
                 letterSpacing: 0.2,
               ),
             ),
@@ -639,9 +637,9 @@ class _PatternCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceRaised,
+        color: context.surfaceRaised,
         borderRadius: AppRadius.allMd,
-        border: Border.all(color: AppColors.hairline),
+        border: Border.all(color: context.hairline),
       ),
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
@@ -655,7 +653,7 @@ class _PatternCard extends StatelessWidget {
                   style: AppTypography.body(
                     15,
                     weight: FontWeight.w600,
-                    color: AppColors.ink,
+                    color: context.ink,
                   ),
                 ),
               ),
@@ -664,14 +662,14 @@ class _PatternCard extends StatelessWidget {
                   horizontal: AppSpacing.sm,
                   vertical: 2,
                 ),
-                decoration: const BoxDecoration(
-                  color: AppColors.surfaceSunken,
+                decoration: BoxDecoration(
+                  color: context.surfaceSunken,
                   borderRadius: AppRadius.allSm,
                 ),
                 child: Text(
                   _cadenceLabel,
                   style: textTheme.labelSmall?.copyWith(
-                    color: AppColors.inkMuted,
+                    color: context.inkMuted,
                   ),
                 ),
               ),
@@ -680,13 +678,13 @@ class _PatternCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           Text(
             'Confiança: $confidencePct%',
-            style: textTheme.bodySmall?.copyWith(color: AppColors.inkSoft),
+            style: textTheme.bodySmall?.copyWith(color: context.inkSoft),
           ),
           if (pattern.rationale != null && pattern.rationale!.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.xs),
             Text(
               pattern.rationale!,
-              style: textTheme.bodySmall?.copyWith(color: AppColors.inkMuted),
+              style: textTheme.bodySmall?.copyWith(color: context.inkMuted),
             ),
           ],
         ],
@@ -728,9 +726,9 @@ class _ProposedReminderCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceRaised,
+        color: context.surfaceRaised,
         borderRadius: AppRadius.allMd,
-        border: Border.all(color: AppColors.hairline),
+        border: Border.all(color: context.hairline),
       ),
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
@@ -741,7 +739,7 @@ class _ProposedReminderCard extends StatelessWidget {
             style: AppTypography.body(
               15,
               weight: FontWeight.w600,
-              color: AppColors.ink,
+              color: context.ink,
             ),
           ),
           if (dueLine != null) ...[
@@ -753,14 +751,12 @@ class _ProposedReminderCard extends StatelessWidget {
                       ? Icons.calendar_today_outlined
                       : Icons.speed_outlined,
                   size: 14,
-                  color: AppColors.inkSoft,
+                  color: context.inkSoft,
                 ),
                 const SizedBox(width: AppSpacing.xs),
                 Text(
                   dueLine,
-                  style: textTheme.bodySmall?.copyWith(
-                    color: AppColors.inkMuted,
-                  ),
+                  style: textTheme.bodySmall?.copyWith(color: context.inkMuted),
                 ),
               ],
             ),
@@ -769,7 +765,7 @@ class _ProposedReminderCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.xs),
             Text(
               proposed.rationale,
-              style: textTheme.bodySmall?.copyWith(color: AppColors.inkSoft),
+              style: textTheme.bodySmall?.copyWith(color: context.inkSoft),
             ),
           ],
           const SizedBox(height: AppSpacing.md),
@@ -808,14 +804,14 @@ class _MaintenancePlanCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceRaised,
+        color: context.surfaceRaised,
         borderRadius: AppRadius.allMd,
-        border: Border.all(color: AppColors.hairline),
+        border: Border.all(color: context.hairline),
       ),
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Row(
         children: [
-          const Icon(Icons.build_outlined, size: 24, color: AppColors.inkMuted),
+          Icon(Icons.build_outlined, size: 24, color: context.inkMuted),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
@@ -826,15 +822,13 @@ class _MaintenancePlanCard extends StatelessWidget {
                   style: AppTypography.body(
                     15,
                     weight: FontWeight.w600,
-                    color: AppColors.ink,
+                    color: context.ink,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   'Veja as manutenções típicas para o seu veículo.',
-                  style: textTheme.bodySmall?.copyWith(
-                    color: AppColors.inkMuted,
-                  ),
+                  style: textTheme.bodySmall?.copyWith(color: context.inkMuted),
                 ),
               ],
             ),
@@ -877,7 +871,7 @@ class _EmptySectionHint extends StatelessWidget {
       ),
       child: Text(
         message,
-        style: textTheme.bodySmall?.copyWith(color: AppColors.inkSoft),
+        style: textTheme.bodySmall?.copyWith(color: context.inkSoft),
       ),
     );
   }
@@ -897,9 +891,9 @@ class _ChatAssistantCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceRaised,
+        color: context.surfaceRaised,
         borderRadius: AppRadius.allMd,
-        border: Border.all(color: AppColors.hairline),
+        border: Border.all(color: context.hairline),
       ),
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Row(
@@ -915,15 +909,13 @@ class _ChatAssistantCard extends StatelessWidget {
                   style: AppTypography.body(
                     15,
                     weight: FontWeight.w600,
-                    color: AppColors.ink,
+                    color: context.ink,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   'Converse com a IA sobre seus gastos e vencimentos.',
-                  style: textTheme.bodySmall?.copyWith(
-                    color: AppColors.inkMuted,
-                  ),
+                  style: textTheme.bodySmall?.copyWith(color: context.inkMuted),
                 ),
               ],
             ),
@@ -961,17 +953,17 @@ class _FiscalPlanCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceRaised,
+        color: context.surfaceRaised,
         borderRadius: AppRadius.allMd,
-        border: Border.all(color: AppColors.hairline),
+        border: Border.all(color: context.hairline),
       ),
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.account_balance_outlined,
             size: 24,
-            color: AppColors.inkMuted,
+            color: context.inkMuted,
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
@@ -983,15 +975,13 @@ class _FiscalPlanCard extends StatelessWidget {
                   style: AppTypography.body(
                     15,
                     weight: FontWeight.w600,
-                    color: AppColors.ink,
+                    color: context.ink,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   'Calendário fiscal por UF e final de placa.',
-                  style: textTheme.bodySmall?.copyWith(
-                    color: AppColors.inkMuted,
-                  ),
+                  style: textTheme.bodySmall?.copyWith(color: context.inkMuted),
                 ),
               ],
             ),

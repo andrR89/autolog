@@ -6,6 +6,7 @@
 // - Multas pendentes (lista por veículo)
 // - Botão "Sugerir lembretes" → modal com propostas
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/data/repositories/fine_repository.dart';
@@ -143,8 +144,7 @@ class _PersonalDocumentsScreenState
               error: (_, st) => const SliverToBoxAdapter(
                 child: _ErrorCard(message: 'Erro ao carregar apólices.'),
               ),
-              data: (vehicles) =>
-                  _InsurancesSliver(vehicles: vehicles),
+              data: (vehicles) => _InsurancesSliver(vehicles: vehicles),
             ),
 
             const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xl)),
@@ -174,9 +174,7 @@ class _PersonalDocumentsScreenState
               data: (vehicles) => _FinesSliver(vehicles: vehicles),
             ),
 
-            const SliverToBoxAdapter(
-              child: SizedBox(height: AppSpacing.huge),
-            ),
+            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.huge)),
           ],
         ),
       ),
@@ -191,6 +189,7 @@ class _PersonalDocumentsScreenState
     // Capture context-dependent objects before first await.
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
+    final sheetBg = context.surfaceRaised;
 
     final userId = ref.read(currentUserIdProvider);
     final profileRepo = ref.read(userProfileRepositoryProvider);
@@ -215,9 +214,7 @@ class _PersonalDocumentsScreenState
 
       final insurances = await insuranceRepo.listByVehicle(v.id);
       allInsurances.addAll(
-        insurances.where(
-          (i) => i.deletedAt == null && i.endsAt.isAfter(now),
-        ),
+        insurances.where((i) => i.deletedAt == null && i.endsAt.isAfter(now)),
       );
 
       final reminders = await reminderRepo.listByVehicle(v.id);
@@ -248,7 +245,7 @@ class _PersonalDocumentsScreenState
     await showModalBottomSheet<void>(
       context: navigator.context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surfaceRaised,
+      backgroundColor: sheetBg,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: AppRadius.rLg),
       ),
@@ -286,7 +283,7 @@ class _SectionHeader extends StatelessWidget {
             child: Text(
               title.toUpperCase(),
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: AppColors.inkMuted,
+                color: context.inkMuted,
                 letterSpacing: 1.6,
                 fontWeight: FontWeight.w700,
               ),
@@ -316,10 +313,7 @@ class _ErrorCard extends StatelessWidget {
         color: AppColors.dangerSoft,
         borderRadius: AppRadius.allMd,
       ),
-      child: Text(
-        message,
-        style: const TextStyle(color: AppColors.danger),
-      ),
+      child: Text(message, style: const TextStyle(color: AppColors.danger)),
     );
   }
 }
@@ -352,7 +346,8 @@ class _CnhCard extends StatelessWidget {
         : null;
 
     // Verifica se está perto de vencer (30 dias)
-    final isExpiringSoon = p.cnhExpiresAt != null &&
+    final isExpiringSoon =
+        p.cnhExpiresAt != null &&
         p.cnhExpiresAt!.difference(DateTime.now()).inDays <= 30;
 
     return GestureDetector(
@@ -364,10 +359,10 @@ class _CnhCard extends StatelessWidget {
         ),
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
-          color: AppColors.surfaceRaised,
+          color: context.surfaceRaised,
           borderRadius: AppRadius.allMd,
           border: Border.all(
-            color: isExpiringSoon ? AppColors.warning : AppColors.hairline,
+            color: isExpiringSoon ? AppColors.warning : context.hairline,
           ),
         ),
         child: Row(
@@ -377,14 +372,13 @@ class _CnhCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isExpiringSoon
                     ? AppColors.warningSoft
-                    : AppColors.surfaceSunken,
+                    : context.surfaceSunken,
                 borderRadius: AppRadius.allSm,
               ),
               child: Icon(
                 Icons.badge_outlined,
                 size: 24,
-                color:
-                    isExpiringSoon ? AppColors.warning : AppColors.inkMuted,
+                color: isExpiringSoon ? AppColors.warning : AppColors.inkMuted,
               ),
             ),
             const SizedBox(width: AppSpacing.md),
@@ -398,13 +392,13 @@ class _CnhCard extends StatelessWidget {
                       style: AppTypography.body(
                         15,
                         weight: FontWeight.w600,
-                        color: AppColors.ink,
+                        color: context.ink,
                       ),
                     ),
                   if (p.cnhCategory != null)
                     Text(
                       'Categoria ${p.cnhCategory}',
-                      style: AppTypography.body(13, color: AppColors.inkMuted),
+                      style: AppTypography.body(13, color: context.inkMuted),
                     ),
                   if (expiresStr != null) ...[
                     Text(
@@ -413,8 +407,10 @@ class _CnhCard extends StatelessWidget {
                         13,
                         color: isExpiringSoon
                             ? AppColors.warning
-                            : AppColors.inkMuted,
-                        weight: isExpiringSoon ? FontWeight.w600 : FontWeight.w400,
+                            : context.inkMuted,
+                        weight: isExpiringSoon
+                            ? FontWeight.w600
+                            : FontWeight.w400,
                       ),
                     ),
                     if (isExpiringSoon)
@@ -466,27 +462,20 @@ class _EmptyCard extends StatelessWidget {
         ),
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
-          color: AppColors.surfaceRaised,
+          color: context.surfaceRaised,
           borderRadius: AppRadius.allMd,
-          border: Border.all(
-            color: AppColors.hairline,
-            style: BorderStyle.solid,
-          ),
+          border: Border.all(color: context.hairline, style: BorderStyle.solid),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 24, color: AppColors.inkSoft),
+            Icon(icon, size: 24, color: context.inkSoft),
             const SizedBox(width: AppSpacing.md),
             Text(
               message,
-              style: AppTypography.body(15, color: AppColors.inkSoft),
+              style: AppTypography.body(15, color: context.inkSoft),
             ),
             const Spacer(),
-            const Icon(
-              Icons.add_rounded,
-              color: AppColors.inkSoft,
-              size: 20,
-            ),
+            Icon(Icons.add_rounded, color: context.inkSoft, size: 20),
           ],
         ),
       ),
@@ -576,8 +565,8 @@ class _AsyncAllInsurancesSliverState
         return _InsuranceCard(
           insurance: insurance,
           vehicleNickname: nickname,
-          onTap: () => context
-              .push('/personal-documents/insurances/${insurance.id}'),
+          onTap: () =>
+              context.push('/personal-documents/insurances/${insurance.id}'),
         );
       },
     );
@@ -607,11 +596,10 @@ class _InsuranceCard extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: AppColors.surfaceRaised,
+          color: context.surfaceRaised,
           borderRadius: AppRadius.allMd,
           border: Border.all(
-            color:
-                isExpiringSoon ? AppColors.warning : AppColors.hairline,
+            color: isExpiringSoon ? AppColors.warning : context.hairline,
           ),
         ),
         child: Row(
@@ -619,7 +607,7 @@ class _InsuranceCard extends StatelessWidget {
             Icon(
               Icons.shield_outlined,
               size: 24,
-              color: isExpiringSoon ? AppColors.warning : AppColors.inkMuted,
+              color: isExpiringSoon ? AppColors.warning : context.inkMuted,
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
@@ -631,21 +619,17 @@ class _InsuranceCard extends StatelessWidget {
                     style: AppTypography.body(
                       14,
                       weight: FontWeight.w600,
-                      color: AppColors.ink,
+                      color: context.ink,
                     ),
                   ),
                   Text(
                     '$vehicleNickname · vence $endStr',
-                    style: AppTypography.body(12, color: AppColors.inkMuted),
+                    style: AppTypography.body(12, color: context.inkMuted),
                   ),
                 ],
               ),
             ),
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: AppColors.inkSoft,
-              size: 18,
-            ),
+            Icon(Icons.chevron_right_rounded, color: context.inkSoft, size: 18),
           ],
         ),
       ),
@@ -719,8 +703,7 @@ class _FinesSliverState extends ConsumerState<_FinesSliver> {
         return _FineCard(
           fine: fine,
           vehicleNickname: nickname,
-          onTap: () =>
-              context.push('/personal-documents/fines/${fine.id}'),
+          onTap: () => context.push('/personal-documents/fines/${fine.id}'),
         );
       },
     );
@@ -753,10 +736,10 @@ class _FineCard extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: AppColors.surfaceRaised,
+          color: context.surfaceRaised,
           borderRadius: AppRadius.allMd,
           border: Border.all(
-            color: isUrgent ? AppColors.danger : AppColors.hairline,
+            color: isUrgent ? AppColors.danger : context.hairline,
           ),
         ),
         child: Row(
@@ -776,14 +759,14 @@ class _FineCard extends StatelessWidget {
                     style: AppTypography.body(
                       14,
                       weight: FontWeight.w600,
-                      color: AppColors.ink,
+                      color: context.ink,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
                     '$vehicleNickname · R\$ ${fine.amount}',
-                    style: AppTypography.body(12, color: AppColors.inkMuted),
+                    style: AppTypography.body(12, color: context.inkMuted),
                   ),
                   if (dueStr != null)
                     Text(
@@ -797,11 +780,7 @@ class _FineCard extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: AppColors.inkSoft,
-              size: 18,
-            ),
+            Icon(Icons.chevron_right_rounded, color: context.inkSoft, size: 18),
           ],
         ),
       ),
@@ -841,8 +820,9 @@ class _SuggestRemindersSheetState
     setState(() => _visible.remove(p));
 
     // Usa o primeiro veículo como default para lembretes de documentos.
-    final vehicleId =
-        widget.vehicles.isNotEmpty ? widget.vehicles.first.id : '';
+    final vehicleId = widget.vehicles.isNotEmpty
+        ? widget.vehicles.first.id
+        : '';
     if (vehicleId.isEmpty) return;
 
     final now = DateTime.now().toUtc();
@@ -899,8 +879,8 @@ class _SuggestRemindersSheetState
             child: Container(
               width: 36,
               height: 4,
-              decoration: const BoxDecoration(
-                color: AppColors.hairline,
+              decoration: BoxDecoration(
+                color: context.hairline,
                 borderRadius: AppRadius.allSm,
               ),
             ),
@@ -919,7 +899,7 @@ class _SuggestRemindersSheetState
               style: AppTypography.body(
                 17,
                 weight: FontWeight.w700,
-                color: AppColors.ink,
+                color: context.ink,
               ),
             ),
           ),
@@ -948,9 +928,9 @@ class _SuggestRemindersSheetState
                       return Container(
                         padding: const EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
-                          color: AppColors.surfaceRaised,
+                          color: context.surfaceRaised,
                           borderRadius: AppRadius.allMd,
-                          border: Border.all(color: AppColors.hairline),
+                          border: Border.all(color: context.hairline),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -960,7 +940,7 @@ class _SuggestRemindersSheetState
                               style: AppTypography.body(
                                 14,
                                 weight: FontWeight.w600,
-                                color: AppColors.ink,
+                                color: context.ink,
                               ),
                             ),
                             if (p.rationale.isNotEmpty) ...[
@@ -969,7 +949,7 @@ class _SuggestRemindersSheetState
                                 p.rationale,
                                 style: AppTypography.body(
                                   12,
-                                  color: AppColors.inkMuted,
+                                  color: context.inkMuted,
                                 ),
                               ),
                             ],
@@ -980,8 +960,10 @@ class _SuggestRemindersSheetState
                                   child: FilledButton(
                                     onPressed: () => _create(p),
                                     style: FilledButton.styleFrom(
-                                      minimumSize:
-                                          const Size(double.infinity, 40),
+                                      minimumSize: const Size(
+                                        double.infinity,
+                                        40,
+                                      ),
                                       backgroundColor: AppColors.brand,
                                       foregroundColor: AppColors.brandInk,
                                     ),
@@ -993,12 +975,12 @@ class _SuggestRemindersSheetState
                                   child: OutlinedButton(
                                     onPressed: () => _ignore(p),
                                     style: OutlinedButton.styleFrom(
-                                      minimumSize:
-                                          const Size(double.infinity, 40),
-                                      side: const BorderSide(
-                                        color: AppColors.hairline,
+                                      minimumSize: const Size(
+                                        double.infinity,
+                                        40,
                                       ),
-                                      foregroundColor: AppColors.inkMuted,
+                                      side: BorderSide(color: context.hairline),
+                                      foregroundColor: context.inkMuted,
                                     ),
                                     child: const Text('Ignorar'),
                                   ),

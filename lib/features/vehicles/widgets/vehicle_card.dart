@@ -26,6 +26,7 @@
 // O card NÃO faz delete sozinho — emite callbacks; a tela que o hospeda
 // orquestra Dismissible + Snackbar + saver. Mantém o widget puro.
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/domain/models/enums.dart';
@@ -84,8 +85,19 @@ class VehicleCard extends StatelessWidget {
         final year = parts[0].substring(2); // "26" de "2026"
         final monthNum = int.tryParse(parts[1]);
         const monthAbr = [
-          '', 'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
-          'jul', 'ago', 'set', 'out', 'nov', 'dez',
+          '',
+          'jan',
+          'fev',
+          'mar',
+          'abr',
+          'mai',
+          'jun',
+          'jul',
+          'ago',
+          'set',
+          'out',
+          'nov',
+          'dez',
         ];
         if (monthNum != null && monthNum >= 1 && monthNum <= 12) {
           monthLabel = '${monthAbr[monthNum]}/$year';
@@ -140,24 +152,24 @@ class VehicleCard extends StatelessWidget {
     showMenu<_VehicleAction>(
       context: context,
       position: position,
-      color: AppColors.surfaceRaised,
+      color: context.surfaceRaised,
       elevation: 0,
-      shape: const RoundedRectangleBorder(
+      shape: RoundedRectangleBorder(
         borderRadius: AppRadius.allMd,
-        side: BorderSide(color: AppColors.hairline),
+        side: BorderSide(color: context.hairline),
       ),
-      items: const [
+      items: [
         PopupMenuItem(
           value: _VehicleAction.edit,
           child: Row(
             children: [
-              Icon(Icons.edit_outlined, size: 18, color: AppColors.ink),
-              SizedBox(width: AppSpacing.sm),
-              Text('Editar'),
+              Icon(Icons.edit_outlined, size: 18, color: context.ink),
+              const SizedBox(width: AppSpacing.sm),
+              const Text('Editar'),
             ],
           ),
         ),
-        PopupMenuItem(
+        const PopupMenuItem(
           value: _VehicleAction.delete,
           child: Row(
             children: [
@@ -185,7 +197,7 @@ class VehicleCard extends StatelessWidget {
     // sem precisar herdar do Card default (que adiciona elevation/tint
     // que o DS quer evitar).
     return Material(
-      color: AppColors.surfaceRaised,
+      color: context.surfaceRaised,
       borderRadius: AppRadius.allMd,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -193,11 +205,11 @@ class VehicleCard extends StatelessWidget {
         onLongPress: () => _showActionMenu(context),
         // Splash discreto — DS é "flat com hairline", não Material-pesado.
         splashColor: fuel.soft,
-        highlightColor: AppColors.surfaceSunken.withValues(alpha: 0.5),
+        highlightColor: context.surfaceSunken.withValues(alpha: 0.5),
         child: DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: AppRadius.allMd,
-            border: Border.all(color: AppColors.hairline, width: 1),
+            border: Border.all(color: context.hairline, width: 1),
           ),
           child: IntrinsicHeight(
             child: Row(
@@ -240,7 +252,7 @@ class VehicleCard extends StatelessWidget {
                               child: Icon(
                                 _vehicleIcon,
                                 size: 18,
-                                color: AppColors.inkMuted,
+                                color: context.inkMuted,
                               ),
                             ),
                             Expanded(
@@ -262,12 +274,14 @@ class VehicleCard extends StatelessWidget {
                                 return InkResponse(
                                   onTap: () => _showActionMenu(innerContext),
                                   radius: 20,
-                                  child: const Padding(
-                                    padding: EdgeInsets.all(AppSpacing.sm),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(
+                                      AppSpacing.sm,
+                                    ),
                                     child: Icon(
                                       Icons.more_horiz,
                                       size: 20,
-                                      color: AppColors.inkMuted,
+                                      color: innerContext.inkMuted,
                                     ),
                                   ),
                                 );
@@ -280,7 +294,7 @@ class VehicleCard extends StatelessWidget {
                           Text(
                             makeModel,
                             style: textTheme.bodySmall?.copyWith(
-                              color: AppColors.inkMuted,
+                              color: context.inkMuted,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -318,7 +332,7 @@ class VehicleCard extends StatelessWidget {
                                   Text(
                                     'km',
                                     style: textTheme.labelMedium?.copyWith(
-                                      color: AppColors.inkMuted,
+                                      color: context.inkMuted,
                                     ),
                                   ),
                                 ],

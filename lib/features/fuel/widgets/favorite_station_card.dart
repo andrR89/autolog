@@ -1,3 +1,4 @@
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/domain/models/vehicle.dart';
@@ -47,9 +48,9 @@ class _FavoriteStationContent extends StatelessWidget {
       ),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: AppColors.surfaceRaised,
+          color: context.surfaceRaised,
           borderRadius: AppRadius.allMd,
-          border: Border.all(color: AppColors.hairline),
+          border: Border.all(color: context.hairline),
         ),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
@@ -70,9 +71,9 @@ class _FavoriteStationContent extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         Text(
           'Adicione bandeira e nome ao registrar abastecimento pra ver seu posto preferido.',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.inkMuted,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: context.inkMuted),
         ),
       ],
     );
@@ -91,8 +92,7 @@ class _FavoriteStationContent extends StatelessWidget {
     final avgFormatted = currFmt.format(
       double.parse(favorite.avgPricePerLiter.toString()),
     );
-    final titleText =
-        '${favorite.brand ?? '—'} • ${favorite.name ?? 'Posto'}';
+    final titleText = '${favorite.brand ?? '—'} • ${favorite.name ?? 'Posto'}';
     final subText =
         '${favorite.entriesCount} abastecimento${favorite.entriesCount == 1 ? '' : 's'} • $avgFormatted/L em média';
 
@@ -100,8 +100,8 @@ class _FavoriteStationContent extends StatelessWidget {
     // Promove cheapest para non-nullable para uso seguro no widget filho.
     final cheapestStation =
         cheapest != null && !_isSameStation(favorite, cheapest)
-            ? cheapest
-            : null;
+        ? cheapest
+        : null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -111,15 +111,16 @@ class _FavoriteStationContent extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         Text(
           titleText,
-          style: AppTypography.display(22, weight: FontWeight.w700, height: 1.2),
+          style: AppTypography.display(
+            22,
+            weight: FontWeight.w700,
+            height: 1.2,
+          ),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: AppSpacing.xs),
-        Text(
-          subText,
-          style: AppTypography.body(13, color: AppColors.inkMuted),
-        ),
+        Text(subText, style: AppTypography.body(13, color: context.inkMuted)),
         if (cheapestStation != null) ...[
           const SizedBox(height: AppSpacing.md),
           _CheapestHintBadge(cheapest: cheapestStation, currFmt: currFmt),
@@ -131,14 +132,10 @@ class _FavoriteStationContent extends StatelessWidget {
   /// Verifica se dois StationStats representam a mesma estação usando
   /// [normalizeStation] (mesma lógica do aggregator).
   bool _isSameStation(StationStats a, StationStats b) {
-    final normBrandA =
-        a.brand != null ? normalizeStation(a.brand!) : '';
-    final normNameA =
-        a.name != null ? normalizeStation(a.name!) : '';
-    final normBrandB =
-        b.brand != null ? normalizeStation(b.brand!) : '';
-    final normNameB =
-        b.name != null ? normalizeStation(b.name!) : '';
+    final normBrandA = a.brand != null ? normalizeStation(a.brand!) : '';
+    final normNameA = a.name != null ? normalizeStation(a.name!) : '';
+    final normBrandB = b.brand != null ? normalizeStation(b.brand!) : '';
+    final normNameB = b.name != null ? normalizeStation(b.name!) : '';
 
     return normBrandA == normBrandB && normNameA == normNameB;
   }
@@ -153,18 +150,15 @@ class _Eyebrow extends StatelessWidget {
     return Text(
       text,
       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: AppColors.inkMuted,
-            letterSpacing: 1.4,
-          ),
+        color: context.inkMuted,
+        letterSpacing: 1.4,
+      ),
     );
   }
 }
 
 class _CheapestHintBadge extends StatelessWidget {
-  const _CheapestHintBadge({
-    required this.cheapest,
-    required this.currFmt,
-  });
+  const _CheapestHintBadge({required this.cheapest, required this.currFmt});
 
   final StationStats cheapest;
   final NumberFormat currFmt;
@@ -174,8 +168,7 @@ class _CheapestHintBadge extends StatelessWidget {
     final avgFormatted = currFmt.format(
       double.parse(cheapest.avgPricePerLiter.toString()),
     );
-    final label =
-        '💡 Mais barato: ${cheapest.brand ?? '—'} • $avgFormatted/L';
+    final label = '💡 Mais barato: ${cheapest.brand ?? '—'} • $avgFormatted/L';
 
     return DecoratedBox(
       decoration: const BoxDecoration(

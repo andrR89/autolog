@@ -10,6 +10,7 @@
 // Cada item tem botões "Criar lembrete" e "Ignorar".
 // Dedupe aplicado: não propõe itens que já têm reminder ativo com mesmo título.
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/data/repositories/fuel_entry_repository.dart';
@@ -60,8 +61,7 @@ class MaintenancePlanScreen extends ConsumerStatefulWidget {
 
 enum _ScreenState { empty, loading, success, quotaError, genericError }
 
-class _MaintenancePlanScreenState
-    extends ConsumerState<MaintenancePlanScreen> {
+class _MaintenancePlanScreenState extends ConsumerState<MaintenancePlanScreen> {
   _ScreenState _state = _ScreenState.empty;
 
   // Items visíveis após dedupe e remoções otimistas.
@@ -79,7 +79,9 @@ class _MaintenancePlanScreenState
 
       // Compute currentOdometerKm from local fuel entries (max odometer).
       final fuels =
-          ref.read(fuelEntriesByVehicleProvider(widget.vehicle.id)).valueOrNull ??
+          ref
+              .read(fuelEntriesByVehicleProvider(widget.vehicle.id))
+              .valueOrNull ??
           const <FuelEntry>[];
       final currentOdometerKm = fuels.isEmpty
           ? null
@@ -97,25 +99,21 @@ class _MaintenancePlanScreenState
       );
 
       // Dedupe contra lembretes ativos.
-      final remindersAsync =
-          ref.read(_maintenanceActiveRemindersProvider(widget.vehicle.id));
+      final remindersAsync = ref.read(
+        _maintenanceActiveRemindersProvider(widget.vehicle.id),
+      );
       final existing = remindersAsync.valueOrNull ?? [];
 
       // Convert MaintenanceItem → ProposedReminder for dedupe (title-only match).
       final proposed = schedule.items
-          .map(
-            (item) => ProposedReminder(title: item.task, rationale: ''),
-          )
+          .map((item) => ProposedReminder(title: item.task, rationale: ''))
           .toList();
       final deduped = dedupeProposed(proposed, existing);
-      final dedupedTitles =
-          deduped.map((p) => normalizeTitle(p.title)).toSet();
+      final dedupedTitles = deduped.map((p) => normalizeTitle(p.title)).toSet();
 
       // Filter items to only those that survived dedupe.
       final filteredItems = schedule.items
-          .where(
-            (item) => dedupedTitles.contains(normalizeTitle(item.task)),
-          )
+          .where((item) => dedupedTitles.contains(normalizeTitle(item.task)))
           .toList();
 
       setState(() {
@@ -184,9 +182,7 @@ class _MaintenancePlanScreenState
         await repo.create(reminderKm);
 
         final idDate = const Uuid().v4();
-        final dueDate = now.add(
-          Duration(days: (item.everyMonths ?? 12) * 30),
-        );
+        final dueDate = now.add(Duration(days: (item.everyMonths ?? 12) * 30));
         final reminderDate = Reminder(
           id: idDate,
           vehicleId: widget.vehicle.id,
@@ -221,9 +217,7 @@ class _MaintenancePlanScreenState
       } else {
         // months
         final id = const Uuid().v4();
-        final dueDate = now.add(
-          Duration(days: (item.everyMonths ?? 12) * 30),
-        );
+        final dueDate = now.add(Duration(days: (item.everyMonths ?? 12) * 30));
         final reminder = Reminder(
           id: id,
           vehicleId: widget.vehicle.id,
@@ -261,8 +255,9 @@ class _MaintenancePlanScreenState
           ..hideCurrentSnackBar()
           ..showSnackBar(
             const SnackBar(
-              content:
-                  Text('Não foi possível criar o lembrete. Tente novamente.'),
+              content: Text(
+                'Não foi possível criar o lembrete. Tente novamente.',
+              ),
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -310,8 +305,8 @@ class _MaintenancePlanScreenState
           statusBarBrightness: Brightness.dark,
         ),
       ),
-      floatingActionButton: _state == _ScreenState.success &&
-              _visibleItems.isNotEmpty
+      floatingActionButton:
+          _state == _ScreenState.success && _visibleItems.isNotEmpty
           ? FloatingActionButton.extended(
               onPressed: _createAll,
               backgroundColor: AppColors.brand,
@@ -322,16 +317,16 @@ class _MaintenancePlanScreenState
           : null,
       body: switch (_state) {
         _ScreenState.empty || _ScreenState.genericError => _EmptyState(
-            title: title,
-            vehicleName: '${v.make ?? ''} ${v.model ?? ''}'.trim(),
-            onGenerate: _generate,
-          ),
+          title: title,
+          vehicleName: '${v.make ?? ''} ${v.model ?? ''}'.trim(),
+          onGenerate: _generate,
+        ),
         _ScreenState.loading => const _LoadingState(),
         _ScreenState.success => _SuccessBody(
-            items: _visibleItems,
-            onCreate: _createReminder,
-            onIgnore: _ignoreItem,
-          ),
+          items: _visibleItems,
+          onCreate: _createReminder,
+          onIgnore: _ignoreItem,
+        ),
         _ScreenState.quotaError => _QuotaBannerState(onGenerate: _generate),
       },
     );
@@ -368,14 +363,14 @@ class _EmptyState extends StatelessWidget {
               Container(
                 width: 72,
                 height: 72,
-                decoration: const BoxDecoration(
-                  color: AppColors.surfaceSunken,
+                decoration: BoxDecoration(
+                  color: context.surfaceSunken,
                   borderRadius: AppRadius.allLg,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.build_outlined,
                   size: 32,
-                  color: AppColors.inkMuted,
+                  color: context.inkMuted,
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -393,15 +388,13 @@ class _EmptyState extends StatelessWidget {
                 vehicleName.isNotEmpty
                     ? 'Gerar plano de manutenção sugerido pra $vehicleName'
                     : 'Gerar plano de manutenção sugerido para este veículo',
-                style:
-                    textTheme.bodyMedium?.copyWith(color: AppColors.inkMuted),
+                style: textTheme.bodyMedium?.copyWith(color: context.inkMuted),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.xl),
               Text(
                 'Usa a mesma cota de análises (3/mês no gratuito).',
-                style:
-                    textTheme.bodySmall?.copyWith(color: AppColors.inkSoft),
+                style: textTheme.bodySmall?.copyWith(color: context.inkSoft),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.xxl),
@@ -446,7 +439,7 @@ class _LoadingState extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
           Text(
             'Consultando IA...',
-            style: textTheme.bodyMedium?.copyWith(color: AppColors.inkMuted),
+            style: textTheme.bodyMedium?.copyWith(color: context.inkMuted),
           ),
         ],
       ),
@@ -476,10 +469,7 @@ class _QuotaBannerState extends StatelessWidget {
           ),
           leading: const Icon(Icons.info_outline, color: AppColors.warning),
           actions: [
-            TextButton(
-              onPressed: onGenerate,
-              child: const Text('Fechar'),
-            ),
+            TextButton(onPressed: onGenerate, child: const Text('Fechar')),
           ],
         ),
         Expanded(
@@ -488,8 +478,7 @@ class _QuotaBannerState extends StatelessWidget {
               padding: const EdgeInsets.all(AppSpacing.xxxl),
               child: Text(
                 'Sem análises disponíveis este mês.\nAssine o plano premium para análises ilimitadas.',
-                style:
-                    textTheme.bodyMedium?.copyWith(color: AppColors.inkMuted),
+                style: textTheme.bodyMedium?.copyWith(color: context.inkMuted),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -523,10 +512,9 @@ class _SuccessBody extends StatelessWidget {
           padding: const EdgeInsets.all(AppSpacing.xxxl),
           child: Text(
             'Todos os itens de manutenção já foram adicionados ou ignorados.',
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: AppColors.inkMuted),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: context.inkMuted),
             textAlign: TextAlign.center,
           ),
         ),
@@ -541,7 +529,8 @@ class _SuccessBody extends StatelessWidget {
         AppSpacing.huge + 80, // space for FAB
       ),
       itemCount: items.length,
-      separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.md),
+      separatorBuilder: (context, index) =>
+          const SizedBox(height: AppSpacing.md),
       itemBuilder: (context, i) => _MaintenanceItemCard(
         item: items[i],
         onCreate: () => onCreate(items[i]),
@@ -604,9 +593,9 @@ class _MaintenanceItemCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceRaised,
+        color: context.surfaceRaised,
         borderRadius: AppRadius.allMd,
-        border: Border.all(color: AppColors.hairline),
+        border: Border.all(color: context.hairline),
       ),
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
@@ -617,7 +606,7 @@ class _MaintenanceItemCard extends StatelessWidget {
             style: AppTypography.body(
               15,
               weight: FontWeight.w600,
-              color: AppColors.ink,
+              color: context.ink,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -628,15 +617,13 @@ class _MaintenanceItemCard extends StatelessWidget {
                     ? Icons.calendar_today_outlined
                     : Icons.speed_outlined,
                 size: 14,
-                color: AppColors.inkSoft,
+                color: context.inkSoft,
               ),
               const SizedBox(width: AppSpacing.xs),
               Expanded(
                 child: Text(
                   _formatCadence(),
-                  style: textTheme.bodySmall?.copyWith(
-                    color: AppColors.inkMuted,
-                  ),
+                  style: textTheme.bodySmall?.copyWith(color: context.inkMuted),
                 ),
               ),
             ],
@@ -645,17 +632,14 @@ class _MaintenanceItemCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.xs),
             Text(
               item.notes!,
-              style: textTheme.bodySmall?.copyWith(color: AppColors.inkSoft),
+              style: textTheme.bodySmall?.copyWith(color: context.inkSoft),
             ),
           ],
           const SizedBox(height: AppSpacing.md),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              TextButton(
-                onPressed: onIgnore,
-                child: const Text('Ignorar'),
-              ),
+              TextButton(onPressed: onIgnore, child: const Text('Ignorar')),
               const SizedBox(width: AppSpacing.sm),
               FilledButton(
                 onPressed: onCreate,

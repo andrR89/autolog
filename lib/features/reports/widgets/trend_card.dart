@@ -1,3 +1,4 @@
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/domain/models/vehicle.dart';
@@ -68,9 +69,9 @@ class _TrendContent extends StatelessWidget {
       ),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: AppColors.surfaceRaised,
+          color: context.surfaceRaised,
           borderRadius: AppRadius.allMd,
-          border: Border.all(color: AppColors.hairline),
+          border: Border.all(color: context.hairline),
         ),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
@@ -91,9 +92,9 @@ class _TrendContent extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         Text(
           'Dados insuficientes pra calcular tendência.',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.inkMuted,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: context.inkMuted),
         ),
       ],
     );
@@ -131,16 +132,17 @@ class _ConsumptionRow extends StatelessWidget {
         Expanded(
           child: Text.rich(
             TextSpan(
-              style: AppTypography.body(13, color: AppColors.inkMuted),
+              style: AppTypography.body(13, color: context.inkMuted),
               children: [
                 const TextSpan(text: 'Consumo: '),
                 TextSpan(
-                  text: '${prev.replaceAll('.', ',')} → '
+                  text:
+                      '${prev.replaceAll('.', ',')} → '
                       '${curr.replaceAll('.', ',')} km/L',
                   style: AppTypography.body(
                     13,
                     weight: FontWeight.w600,
-                    color: AppColors.ink,
+                    color: context.ink,
                   ),
                 ),
               ],
@@ -178,7 +180,7 @@ class _SpendingRow extends StatelessWidget {
         Expanded(
           child: Text.rich(
             TextSpan(
-              style: AppTypography.body(13, color: AppColors.inkMuted),
+              style: AppTypography.body(13, color: context.inkMuted),
               children: [
                 const TextSpan(text: 'Gasto mensal médio: '),
                 TextSpan(
@@ -186,7 +188,7 @@ class _SpendingRow extends StatelessWidget {
                   style: AppTypography.body(
                     13,
                     weight: FontWeight.w600,
-                    color: AppColors.ink,
+                    color: context.ink,
                   ),
                 ),
               ],
@@ -213,9 +215,9 @@ class _Eyebrow extends StatelessWidget {
     return Text(
       text,
       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: AppColors.inkMuted,
-            letterSpacing: 1.4,
-          ),
+        color: context.inkMuted,
+        letterSpacing: 1.4,
+      ),
     );
   }
 }

@@ -13,6 +13,7 @@
 //   3. Append assistant msg em sucesso.
 //   4. Erros tratados por tipo.
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/domain/models/vehicle.dart';
@@ -80,7 +81,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     // Busca histórico recente (últimos 5 turns para contexto)
     final history = await repo.listByVehicle(widget.vehicle.id);
     final recentHistory = history.length > 1
-        ? history.sublist(0, history.length - 1).reversed.take(5).toList().reversed.toList()
+        ? history
+              .sublist(0, history.length - 1)
+              .reversed
+              .take(5)
+              .toList()
+              .reversed
+              .toList()
         : <ChatMessage>[];
 
     try {
@@ -207,9 +214,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               backgroundColor: AppColors.warningSoft,
               content: Text(
                 'Cota de chat esgotada — vire premium pra ilimitado.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.warning,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: AppColors.warning),
               ),
               leading: const Icon(Icons.info_outline, color: AppColors.warning),
               actions: [
@@ -223,14 +230,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           // Message list
           Expanded(
             child: messages.when(
-              loading: () =>
-                  const Center(child: CircularProgressIndicator()),
+              loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => Center(
                 child: Text(
                   'Erro ao carregar mensagens.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.inkMuted,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: AppColors.inkMuted),
                 ),
               ),
               data: (msgs) {
@@ -295,14 +301,14 @@ class _EmptyState extends StatelessWidget {
               Container(
                 width: 72,
                 height: 72,
-                decoration: const BoxDecoration(
-                  color: AppColors.surfaceSunken,
+                decoration: BoxDecoration(
+                  color: context.surfaceSunken,
                   borderRadius: AppRadius.allLg,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.chat_bubble_outline_rounded,
                   size: 32,
-                  color: AppColors.inkMuted,
+                  color: context.inkMuted,
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -318,9 +324,7 @@ class _EmptyState extends StatelessWidget {
               const SizedBox(height: AppSpacing.sm),
               Text(
                 'O assistente usa seu histórico de abastecimentos e despesas para responder.',
-                style: textTheme.bodyMedium?.copyWith(
-                  color: AppColors.inkMuted,
-                ),
+                style: textTheme.bodyMedium?.copyWith(color: context.inkMuted),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.xl),
@@ -333,11 +337,11 @@ class _EmptyState extends StatelessWidget {
                       (s) => ActionChip(
                         label: Text(s),
                         onPressed: () => onSuggestionTap(s),
-                        backgroundColor: AppColors.surfaceSunken,
+                        backgroundColor: context.surfaceSunken,
                         labelStyle: textTheme.bodySmall?.copyWith(
-                          color: AppColors.ink,
+                          color: context.ink,
                         ),
-                        side: const BorderSide(color: AppColors.hairline),
+                        side: BorderSide(color: context.hairline),
                       ),
                     )
                     .toList(),
@@ -375,12 +379,13 @@ class _ChatBubble extends StatelessWidget {
             maxWidth: MediaQuery.of(context).size.width * 0.78,
           ),
           child: Column(
-            crossAxisAlignment:
-                isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            crossAxisAlignment: isUser
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
             children: [
               Container(
                 decoration: BoxDecoration(
-                  color: isUser ? AppColors.brandSoft : AppColors.surfaceRaised,
+                  color: isUser ? AppColors.brandSoft : context.surfaceRaised,
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(AppRadius.md),
                     topRight: const Radius.circular(AppRadius.md),
@@ -391,9 +396,7 @@ class _ChatBubble extends StatelessWidget {
                         ? const Radius.circular(AppRadius.sm)
                         : const Radius.circular(AppRadius.md),
                   ),
-                  border: isUser
-                      ? null
-                      : Border.all(color: AppColors.hairline),
+                  border: isUser ? null : Border.all(color: context.hairline),
                 ),
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.md,
@@ -402,16 +405,14 @@ class _ChatBubble extends StatelessWidget {
                 child: Text(
                   message.content,
                   style: textTheme.bodyMedium?.copyWith(
-                    color: isUser ? AppColors.brandInk : AppColors.ink,
+                    color: isUser ? AppColors.brandInk : context.ink,
                   ),
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
                 _timeFormat.format(message.createdAt.toLocal()),
-                style: textTheme.labelSmall?.copyWith(
-                  color: AppColors.inkSoft,
-                ),
+                style: textTheme.labelSmall?.copyWith(color: context.inkSoft),
               ),
             ],
           ),
@@ -441,11 +442,9 @@ class _InputBar extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surfaceRaised,
-          border: Border(
-            top: BorderSide(color: AppColors.hairline),
-          ),
+        decoration: BoxDecoration(
+          color: context.surfaceRaised,
+          border: Border(top: BorderSide(color: context.hairline)),
         ),
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
@@ -459,23 +458,23 @@ class _InputBar extends StatelessWidget {
                 textCapitalization: TextCapitalization.sentences,
                 decoration: InputDecoration(
                   hintText: 'Faça uma pergunta...',
-                  hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.inkSoft,
-                  ),
-                  border: const OutlineInputBorder(
+                  hintStyle: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: context.inkSoft),
+                  border: OutlineInputBorder(
                     borderRadius: AppRadius.allMd,
-                    borderSide: BorderSide(color: AppColors.hairline),
+                    borderSide: BorderSide(color: context.hairline),
                   ),
-                  enabledBorder: const OutlineInputBorder(
+                  enabledBorder: OutlineInputBorder(
                     borderRadius: AppRadius.allMd,
-                    borderSide: BorderSide(color: AppColors.hairline),
+                    borderSide: BorderSide(color: context.hairline),
                   ),
                   focusedBorder: const OutlineInputBorder(
                     borderRadius: AppRadius.allMd,
                     borderSide: BorderSide(color: AppColors.brand),
                   ),
                   filled: true,
-                  fillColor: AppColors.surfaceSunken,
+                  fillColor: context.surfaceSunken,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.md,
                     vertical: AppSpacing.sm,
@@ -495,7 +494,7 @@ class _InputBar extends StatelessWidget {
                   onPressed: canSend ? onSend : null,
                   icon: const Icon(Icons.send),
                   color: AppColors.brand,
-                  disabledColor: AppColors.inkSoft,
+                  disabledColor: ctx.inkSoft,
                   style: IconButton.styleFrom(
                     backgroundColor: canSend
                         ? AppColors.brand.withValues(alpha: 0.1)

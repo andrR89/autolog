@@ -1,3 +1,4 @@
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/features/reports/trend_analyzer.dart';
 import 'package:decimal/decimal.dart';
@@ -38,8 +39,8 @@ class TrendBadge extends StatelessWidget {
     final Color fgColor;
     final Color bgColor;
     if (isStable) {
-      fgColor = AppColors.inkMuted;
-      bgColor = AppColors.surfaceSunken;
+      fgColor = context.inkMuted;
+      bgColor = context.surfaceSunken;
     } else if (isGood) {
       fgColor = AppColors.success;
       bgColor = AppColors.successSoft;
@@ -58,8 +59,8 @@ class TrendBadge extends StatelessWidget {
     final sign = deltaPercent > Decimal.zero
         ? '+'
         : deltaPercent < Decimal.zero
-            ? ''
-            : '';
+        ? ''
+        : '';
     // Format: ±X,X%
     final formatted =
         '$sign${absValue.toDouble().toStringAsFixed(1).replaceAll('.', ',')}%';

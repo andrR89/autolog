@@ -25,8 +25,9 @@ class Co2Card extends ConsumerWidget {
       error: (_, _) => const SizedBox.shrink(),
       data: (fuels) {
         final currentYear = DateTime.now().year;
-        final yearEntries =
-            fuels.where((e) => e.date.year == currentYear).toList();
+        final yearEntries = fuels
+            .where((e) => e.date.year == currentYear)
+            .toList();
 
         if (yearEntries.isEmpty) return const SizedBox.shrink();
 
@@ -46,9 +47,7 @@ class _Co2Content extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Formata o total em kg com 2 casas decimais (ex.: 92,40 kg)
-    final kgFormatted = result.totalKg
-        .toStringAsFixed(2)
-        .replaceAll('.', ',');
+    final kgFormatted = result.totalKg.toStringAsFixed(2).replaceAll('.', ',');
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -76,10 +75,7 @@ class _Co2Content extends StatelessWidget {
               const SizedBox(height: AppSpacing.xs),
               Text(
                 '≈ ${result.treesEquivalentYear} árvores absorvendo por 1 ano',
-                style: AppTypography.body(
-                  13,
-                  color: AppColors.success,
-                ),
+                style: AppTypography.body(13, color: AppColors.success),
               ),
             ],
           ),
@@ -98,9 +94,9 @@ class _Eyebrow extends StatelessWidget {
     return Text(
       text,
       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: AppColors.success,
-            letterSpacing: 1.4,
-          ),
+        color: AppColors.success,
+        letterSpacing: 1.4,
+      ),
     );
   }
 }

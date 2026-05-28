@@ -1,3 +1,4 @@
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/domain/models/vehicle.dart';
@@ -58,9 +59,9 @@ class _CostPerKmContent extends StatelessWidget {
       ),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: AppColors.surfaceRaised,
+          color: context.surfaceRaised,
           borderRadius: AppRadius.allMd,
-          border: Border.all(color: AppColors.hairline),
+          border: Border.all(color: context.hairline),
         ),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
@@ -79,9 +80,9 @@ class _CostPerKmContent extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         Text(
           'Cadastre mais abastecimentos pra calcular o custo por km.',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.inkMuted,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: context.inkMuted),
         ),
       ],
     );
@@ -113,7 +114,7 @@ class _CostPerKmContent extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         Text(
           'Baseado em $fuelCount abastecimentos · ${metrics.totalKm} km',
-          style: const TextStyle(fontSize: 12, color: AppColors.inkMuted),
+          style: TextStyle(fontSize: 12, color: context.inkMuted),
         ),
       ],
     );
@@ -129,9 +130,9 @@ class _Eyebrow extends StatelessWidget {
     return Text(
       text,
       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: AppColors.inkMuted,
-            letterSpacing: 1.4,
-          ),
+        color: context.inkMuted,
+        letterSpacing: 1.4,
+      ),
     );
   }
 }
@@ -148,12 +149,9 @@ class _MetricRow extends StatelessWidget {
       children: [
         Text(
           '$label: ',
-          style: AppTypography.body(14, color: AppColors.inkMuted),
+          style: AppTypography.body(14, color: context.inkMuted),
         ),
-        Text(
-          value,
-          style: AppTypography.metric(18),
-        ),
+        Text(value, style: AppTypography.metric(18)),
       ],
     );
   }

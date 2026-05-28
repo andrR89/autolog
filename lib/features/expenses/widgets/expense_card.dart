@@ -20,6 +20,7 @@
 //
 // O card é puro — não faz delete. A tela embrulha em Dismissible.
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/domain/models/expense.dart';
@@ -65,17 +66,17 @@ class ExpenseCard extends StatelessWidget {
     final cat = ExpenseCategoryStyle.of(expense.category);
 
     return Material(
-      color: AppColors.surfaceRaised,
+      color: context.surfaceRaised,
       borderRadius: AppRadius.allMd,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         splashColor: cat.soft,
-        highlightColor: AppColors.surfaceSunken.withValues(alpha: 0.5),
+        highlightColor: context.surfaceSunken.withValues(alpha: 0.5),
         child: DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: AppRadius.allMd,
-            border: Border.all(color: AppColors.hairline, width: 1),
+            border: Border.all(color: context.hairline, width: 1),
           ),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -97,7 +98,7 @@ class ExpenseCard extends StatelessWidget {
                         child: Text(
                           _eyebrowDate(expense.date),
                           style: textTheme.labelSmall?.copyWith(
-                            color: AppColors.inkMuted,
+                            color: context.inkMuted,
                             letterSpacing: 1.4,
                           ),
                         ),
@@ -109,7 +110,7 @@ class ExpenseCard extends StatelessWidget {
                       style: AppTypography.metric(
                         28,
                         weight: FontWeight.w700,
-                        color: AppColors.ink,
+                        color: context.ink,
                       ),
                     ),
                   ],
@@ -120,7 +121,7 @@ class ExpenseCard extends StatelessWidget {
                 Text(
                   expense.description,
                   style: textTheme.titleMedium?.copyWith(
-                    color: AppColors.ink,
+                    color: context.ink,
                     height: 1.3,
                   ),
                   maxLines: 2,
@@ -135,23 +136,19 @@ class ExpenseCard extends StatelessWidget {
                     _CategoryChip(cat: cat),
                     if (expense.odometer != null) ...[
                       const SizedBox(width: AppSpacing.sm),
-                      Container(
-                        width: 1,
-                        height: 12,
-                        color: AppColors.hairline,
-                      ),
+                      Container(width: 1, height: 12, color: context.hairline),
                       const SizedBox(width: AppSpacing.sm),
-                      const Icon(
+                      Icon(
                         Icons.speed_outlined,
                         size: 13,
-                        color: AppColors.inkSoft,
+                        color: context.inkSoft,
                       ),
                       const SizedBox(width: AppSpacing.xs),
                       Text(
                         '${_odometerLabel(expense.odometer!)} km',
                         style: AppTypography.tabular(
                           textTheme.bodySmall ?? const TextStyle(),
-                        ).copyWith(color: AppColors.inkMuted),
+                        ).copyWith(color: context.inkMuted),
                       ),
                     ],
                   ],

@@ -1,3 +1,4 @@
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/data/repositories/trip_repository.dart';
@@ -80,8 +81,7 @@ class TripsListScreen extends ConsumerWidget {
         ),
         data: (trips) => trips.isEmpty
             ? _EmptyState(
-                onAdd: () =>
-                    context.push('/vehicles/${vehicle.id}/trips/new'),
+                onAdd: () => context.push('/vehicles/${vehicle.id}/trips/new'),
               )
             : _TripsList(vehicle: vehicle, trips: trips),
       ),
@@ -109,13 +109,13 @@ class _TripsList extends StatelessWidget {
         AppSpacing.huge + AppSpacing.xl,
       ),
       itemCount: trips.length,
-      separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.md),
+      separatorBuilder: (context, index) =>
+          const SizedBox(height: AppSpacing.md),
       itemBuilder: (context, index) {
         final trip = trips[index];
         return _TripCard(
           trip: trip,
-          onTap: () =>
-              context.push('/vehicles/${vehicle.id}/trips/${trip.id}'),
+          onTap: () => context.push('/vehicles/${vehicle.id}/trips/${trip.id}'),
         );
       },
     );
@@ -139,9 +139,9 @@ class _TripCard extends StatelessWidget {
       borderRadius: AppRadius.allMd,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: AppColors.surfaceRaised,
+          color: context.surfaceRaised,
           borderRadius: AppRadius.allMd,
-          border: Border.all(color: AppColors.hairline),
+          border: Border.all(color: context.hairline),
         ),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
@@ -150,13 +150,13 @@ class _TripCard extends StatelessWidget {
               Container(
                 width: 44,
                 height: 44,
-                decoration: const BoxDecoration(
-                  color: AppColors.surfaceSunken,
+                decoration: BoxDecoration(
+                  color: context.surfaceSunken,
                   borderRadius: AppRadius.allSm,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.map_outlined,
-                  color: AppColors.inkMuted,
+                  color: context.inkMuted,
                   size: 22,
                 ),
               ),
@@ -174,19 +174,12 @@ class _TripCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       dateRange,
-                      style: AppTypography.body(
-                        13,
-                        color: AppColors.inkMuted,
-                      ),
+                      style: AppTypography.body(13, color: context.inkMuted),
                     ),
                   ],
                 ),
               ),
-              const Icon(
-                Icons.chevron_right,
-                color: AppColors.inkMuted,
-                size: 20,
-              ),
+              Icon(Icons.chevron_right, color: context.inkMuted, size: 20),
             ],
           ),
         ),
@@ -218,14 +211,14 @@ class _EmptyState extends StatelessWidget {
               Container(
                 width: 64,
                 height: 64,
-                decoration: const BoxDecoration(
-                  color: AppColors.surfaceSunken,
+                decoration: BoxDecoration(
+                  color: context.surfaceSunken,
                   borderRadius: AppRadius.allLg,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.map_outlined,
                   size: 30,
-                  color: AppColors.inkMuted,
+                  color: context.inkMuted,
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -241,9 +234,9 @@ class _EmptyState extends StatelessWidget {
               const SizedBox(height: AppSpacing.sm),
               Text(
                 'Crie uma viagem para agrupar abastecimentos e despesas de um período.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.inkMuted,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: context.inkMuted),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.xl),
@@ -273,7 +266,7 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.cloud_off, size: 40, color: AppColors.inkMuted),
+            Icon(Icons.cloud_off, size: 40, color: context.inkMuted),
             const SizedBox(height: AppSpacing.lg),
             Text(
               'Não foi possível carregar as viagens.',

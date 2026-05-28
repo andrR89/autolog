@@ -22,6 +22,7 @@
 //
 // O card é puro — não faz delete. A tela embrulha em Dismissible.
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/domain/models/enums.dart';
 import 'package:autolog/domain/models/reminder.dart';
@@ -86,14 +87,14 @@ class ReminderCard extends StatelessWidget {
 
     return Material(
       color: isDone
-          ? AppColors.surfaceSunken.withValues(alpha: 0.6)
-          : AppColors.surfaceRaised,
+          ? context.surfaceSunken.withValues(alpha: 0.6)
+          : context.surfaceRaised,
       borderRadius: AppRadius.allMd,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         splashColor: AppColors.brand.withValues(alpha: 0.06),
-        highlightColor: AppColors.surfaceSunken.withValues(alpha: 0.5),
+        highlightColor: context.surfaceSunken.withValues(alpha: 0.5),
         child: DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: AppRadius.allMd,
@@ -142,12 +143,12 @@ class ReminderCard extends StatelessWidget {
                                 reminder.title,
                                 style: textTheme.titleMedium?.copyWith(
                                   color: isDone
-                                      ? AppColors.inkMuted
-                                      : AppColors.ink,
+                                      ? context.inkMuted
+                                      : context.ink,
                                   decoration: isDone
                                       ? TextDecoration.lineThrough
                                       : null,
-                                  decorationColor: AppColors.inkMuted,
+                                  decorationColor: context.inkMuted,
                                   height: 1.3,
                                 ),
                                 maxLines: 2,
@@ -170,7 +171,7 @@ class ReminderCard extends StatelessWidget {
                               size: 13,
                               color: urgent
                                   ? AppColors.warning
-                                  : AppColors.inkSoft,
+                                  : context.inkSoft,
                             ),
                             const SizedBox(width: AppSpacing.xs),
                             Flexible(
@@ -179,7 +180,7 @@ class ReminderCard extends StatelessWidget {
                                 style: textTheme.bodySmall?.copyWith(
                                   color: urgent
                                       ? AppColors.warning
-                                      : AppColors.inkMuted,
+                                      : context.inkMuted,
                                   fontWeight: urgent
                                       ? FontWeight.w600
                                       : FontWeight.w400,

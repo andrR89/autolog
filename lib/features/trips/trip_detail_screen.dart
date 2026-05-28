@@ -1,3 +1,4 @@
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/data/repositories/trip_repository.dart';
@@ -96,14 +97,12 @@ class TripDetailScreen extends ConsumerWidget {
       ),
       body: fuelsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) => const Center(
-          child: Text('Não foi possível carregar os dados.'),
-        ),
+        error: (_, _) =>
+            const Center(child: Text('Não foi possível carregar os dados.')),
         data: (fuels) => expensesAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, _) => const Center(
-            child: Text('Não foi possível carregar os dados.'),
-          ),
+          error: (_, _) =>
+              const Center(child: Text('Não foi possível carregar os dados.')),
           data: (expenses) =>
               _DetailBody(trip: trip, fuels: fuels, expenses: expenses),
         ),
@@ -121,7 +120,10 @@ class TripDetailScreen extends ConsumerWidget {
             const SizedBox(height: AppSpacing.sm),
             Padding(
               padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.sm,
+                AppSpacing.lg,
+                AppSpacing.sm,
+                AppSpacing.lg,
+                AppSpacing.sm,
               ),
               child: Text(
                 'ADICIONAR À VIAGEM',
@@ -245,16 +247,24 @@ class _DetailBody extends StatelessWidget {
         // ── Header ────────────────────────────────────────────────────────────
         Text(
           trip.name,
-          style: AppTypography.display(26, weight: FontWeight.w700, height: 1.1),
+          style: AppTypography.display(
+            26,
+            weight: FontWeight.w700,
+            height: 1.1,
+          ),
         ),
         const SizedBox(height: AppSpacing.xs),
         Row(
           children: [
-            const Icon(Icons.calendar_today_outlined, size: 14, color: AppColors.inkMuted),
+            Icon(
+              Icons.calendar_today_outlined,
+              size: 14,
+              color: context.inkMuted,
+            ),
             const SizedBox(width: AppSpacing.xs),
             Text(
               '$dateRange · ${stats.days} ${stats.days == 1 ? 'dia' : 'dias'}',
-              style: AppTypography.body(13, color: AppColors.inkMuted),
+              style: AppTypography.body(13, color: context.inkMuted),
             ),
           ],
         ),
@@ -262,7 +272,7 @@ class _DetailBody extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Text(
             trip.notes!,
-            style: AppTypography.body(14, color: AppColors.inkMuted),
+            style: AppTypography.body(14, color: context.inkMuted),
           ),
         ],
         const SizedBox(height: AppSpacing.xl),
@@ -278,22 +288,24 @@ class _DetailBody extends StatelessWidget {
             style: AppTypography.body(
               12,
               weight: FontWeight.w700,
-              color: AppColors.inkMuted,
+              color: context.inkMuted,
               letterSpacing: 1.4,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          ...timeline.map((item) => Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.md),
-            child: _TimelineItem(item: item),
-          )),
+          ...timeline.map(
+            (item) => Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.md),
+              child: _TimelineItem(item: item),
+            ),
+          ),
         ] else
           Center(
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.xl),
               child: Text(
                 'Nenhum abastecimento ou despesa neste período.',
-                style: AppTypography.body(14, color: AppColors.inkMuted),
+                style: AppTypography.body(14, color: context.inkMuted),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -308,10 +320,14 @@ class _DetailBody extends StatelessWidget {
     Trip trip,
   ) {
     final startDay = DateTime.utc(
-      trip.startDate.year, trip.startDate.month, trip.startDate.day,
+      trip.startDate.year,
+      trip.startDate.month,
+      trip.startDate.day,
     );
     final endDay = DateTime.utc(
-      trip.endDate.year, trip.endDate.month, trip.endDate.day,
+      trip.endDate.year,
+      trip.endDate.month,
+      trip.endDate.day,
     );
 
     final items = <_TripTimelineEntry>[];
@@ -350,9 +366,9 @@ class _StatsCard extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: AppColors.surfaceRaised,
+        color: context.surfaceRaised,
         borderRadius: AppRadius.allMd,
-        border: Border.all(color: AppColors.hairline),
+        border: Border.all(color: context.hairline),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -361,7 +377,11 @@ class _StatsCard extends StatelessWidget {
           children: [
             Text(
               'Resumo da viagem',
-              style: AppTypography.body(13, weight: FontWeight.w700, color: AppColors.inkMuted),
+              style: AppTypography.body(
+                13,
+                weight: FontWeight.w700,
+                color: context.inkMuted,
+              ),
             ),
             const SizedBox(height: AppSpacing.md),
             _StatRow(
@@ -386,9 +406,7 @@ class _StatsCard extends StatelessWidget {
             _StatRow(
               icon: Icons.speed_outlined,
               label: 'Quilômetros rodados',
-              value: stats.kmDriven > 0
-                  ? '${stats.kmDriven} km'
-                  : '—',
+              value: stats.kmDriven > 0 ? '${stats.kmDriven} km' : '—',
             ),
             const _Divider(),
             _StatRow(
@@ -433,7 +451,7 @@ class _StatRow extends StatelessWidget {
           Icon(
             icon,
             size: 18,
-            color: highlight ? AppColors.brand : AppColors.inkMuted,
+            color: highlight ? AppColors.brand : context.inkMuted,
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
@@ -441,7 +459,7 @@ class _StatRow extends StatelessWidget {
               label,
               style: AppTypography.body(
                 14,
-                color: highlight ? AppColors.ink : AppColors.inkMuted,
+                color: highlight ? context.ink : context.inkMuted,
                 weight: highlight ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
@@ -451,7 +469,7 @@ class _StatRow extends StatelessWidget {
             style: AppTypography.body(
               14,
               weight: FontWeight.w700,
-              color: highlight ? AppColors.brand : AppColors.ink,
+              color: highlight ? AppColors.brand : context.ink,
             ),
           ),
         ],
@@ -465,7 +483,7 @@ class _Divider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Divider(color: AppColors.hairline, height: 1, thickness: 1);
+    return Divider(color: context.hairline, height: 1, thickness: 1);
   }
 }
 
@@ -509,7 +527,7 @@ class _TimelineItem extends StatelessWidget {
       final x = item._expense!;
       return _ItemCard(
         icon: Icons.receipt_outlined,
-        iconColor: AppColors.inkMuted,
+        iconColor: context.inkMuted,
         title: x.description,
         subtitle: x.category.wire,
         trailing: currFmt.format(x.amount.toDouble()),
@@ -540,9 +558,9 @@ class _ItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: AppColors.surfaceRaised,
+        color: context.surfaceRaised,
         borderRadius: AppRadius.allMd,
-        border: Border.all(color: AppColors.hairline),
+        border: Border.all(color: context.hairline),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(
@@ -554,8 +572,8 @@ class _ItemCard extends StatelessWidget {
             Container(
               width: 36,
               height: 36,
-              decoration: const BoxDecoration(
-                color: AppColors.surfaceSunken,
+              decoration: BoxDecoration(
+                color: context.surfaceSunken,
                 borderRadius: AppRadius.allSm,
               ),
               child: Icon(icon, size: 18, color: iconColor),
@@ -573,7 +591,7 @@ class _ItemCard extends StatelessWidget {
                   ),
                   Text(
                     '$subtitle · $date',
-                    style: AppTypography.body(12, color: AppColors.inkMuted),
+                    style: AppTypography.body(12, color: context.inkMuted),
                   ),
                 ],
               ),
