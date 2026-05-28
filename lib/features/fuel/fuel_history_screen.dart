@@ -505,15 +505,19 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 360),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xxxl),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
+    // SingleChildScrollView evita overflow quando SliverFillRemaining dá
+    // altura insuficiente pra ícone + título + corpo (regressão 28/05/2026:
+    // 14px overflow em alguns devices).
+    return SingleChildScrollView(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 360),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xxxl),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
               Container(
                 width: 64,
                 height: 64,
@@ -545,7 +549,8 @@ class _EmptyState extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
