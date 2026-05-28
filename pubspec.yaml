@@ -58,6 +58,9 @@ dependencies:
   flutter_local_notifications: ^18.0.1
   timezone: ^0.10.1
 
+  # Home widget (iOS WidgetKit / Android AppWidget bridge)
+  home_widget: ^0.7.0
+
   # Design system — tipografia (Bricolage Grotesque display + Manrope body).
   # Justificativa: identidade visual distinta vs. fonte do sistema. Carrega
   # sob demanda e faz cache local; impacto runtime irrisório no primeiro start.

@@ -1,11 +1,16 @@
+import 'dart:async';
+
 import 'package:autolog/core/design/app_theme.dart';
 import 'package:autolog/core/router.dart';
+import 'package:autolog/data/local/database.dart';
 import 'package:autolog/features/auth/auth_redirect.dart';
 import 'package:autolog/features/auth/auth_service.dart';
+import 'package:autolog/features/home_widget/home_widget_service.dart';
 import 'package:autolog/features/settings/theme_mode_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 // Providers de ThemeMode foram movidos pra
 // `features/settings/theme_mode_providers.dart` pra serem compartilhados
@@ -25,11 +30,41 @@ class AutoLogApp extends ConsumerStatefulWidget {
 
 class _AutoLogAppState extends ConsumerState<AutoLogApp> {
   late final GoRouter _router;
+  StreamSubscription<AuthState>? _authSub;
 
   @override
   void initState() {
     super.initState();
     _router = _buildRouter();
+    _scheduleWidgetRefreshOnLogin();
+  }
+
+  /// Dispara refresh do widget quando o usuário entra/sai.
+  /// Fire-and-forget — nunca bloqueia nem propaga erro.
+  /// Guard try/catch: em ambiente de testes, Supabase pode não estar
+  /// inicializado e chamamos silenciosamente (widget é cosmético).
+  void _scheduleWidgetRefreshOnLogin() {
+    try {
+      final supabase = Supabase.instance.client;
+      _authSub = supabase.auth.onAuthStateChange.listen((event) {
+        final session = event.session;
+        if (session != null) {
+          final db = ref.read(appDatabaseProvider);
+          final widgetService = ref.read(homeWidgetServiceProvider);
+          // ignore: discarded_futures
+          widgetService.refresh(db: db, userId: session.user.id);
+        }
+      });
+    } catch (_) {
+      // Supabase não inicializado (ex: testes unitários). Ignora silenciosamente.
+    }
+  }
+
+  @override
+  void dispose() {
+    _authSub?.cancel();
+    _router.dispose();
+    super.dispose();
   }
 
   GoRouter _buildRouter() {
@@ -46,12 +81,6 @@ class _AutoLogAppState extends ConsumerState<AutoLogApp> {
       },
       routes: appRoutes,
     );
-  }
-
-  @override
-  void dispose() {
-    _router.dispose();
-    super.dispose();
   }
 
   @override

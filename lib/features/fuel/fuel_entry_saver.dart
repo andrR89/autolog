@@ -1,10 +1,12 @@
 import 'dart:async';
 
+import 'package:autolog/data/local/database.dart';
 import 'package:autolog/data/repositories/fuel_entry_repository.dart';
 import 'package:autolog/domain/models/enums.dart';
 import 'package:autolog/domain/models/fuel_entry.dart';
 import 'package:autolog/domain/models/vehicle.dart';
 import 'package:autolog/domain/repositories/fuel_entry_repository.dart';
+import 'package:autolog/features/home_widget/home_widget_service.dart';
 import 'package:autolog/features/notifications/notification_orchestrator.dart';
 import 'package:autolog/features/reminders/reminder_trigger_service.dart';
 import 'package:decimal/decimal.dart';
@@ -17,20 +19,28 @@ import 'package:uuid/uuid.dart';
 /// Recebe o repositório e um gerador de IDs injetáveis para facilitar testes.
 /// O parâmetro [triggerService] é opcional: quando null, nenhum disparo de
 /// lembrete por km ocorre (comportamento da Sprint 2.3 preservado).
+/// O parâmetro [homeWidgetService] é opcional: quando fornecido, dispara
+/// refresh do widget de tela inicial após save bem-sucedido (Sprint 6.BB).
 class FuelEntrySaver {
   FuelEntrySaver(
     this._repo, {
     required String Function() generateId,
     ReminderTriggerService? triggerService,
     NotificationOrchestrator? notificationOrchestrator,
+    HomeWidgetService? homeWidgetService,
+    AppDatabase? db,
   }) : _generateId = generateId,
        _triggerService = triggerService,
-       _notificationOrchestrator = notificationOrchestrator;
+       _notificationOrchestrator = notificationOrchestrator,
+       _homeWidgetService = homeWidgetService,
+       _db = db;
 
   final FuelEntryRepository _repo;
   final String Function() _generateId;
   final ReminderTriggerService? _triggerService;
   final NotificationOrchestrator? _notificationOrchestrator;
+  final HomeWidgetService? _homeWidgetService;
+  final AppDatabase? _db;
 
   /// Cria um abastecimento.
   ///
@@ -84,6 +94,14 @@ class FuelEntrySaver {
         vehicleId, vehicle.userId,
       ));
     }
+    // 6.BB: atualiza widget de tela inicial após save bem-sucedido.
+    // Fire-and-forget — widget é cosmético, nunca bloqueia.
+    if (_homeWidgetService != null && _db != null && vehicle != null) {
+      unawaited(_homeWidgetService.refresh(
+        db: _db,
+        userId: vehicle.userId,
+      ));
+    }
     return saved;
   }
 
@@ -131,12 +149,15 @@ class FuelEntrySaver {
 final fuelEntrySaverProvider = Provider<FuelEntrySaver>((ref) {
   final repo = ref.watch(fuelEntryRepositoryProvider);
   final triggerService = ref.watch(reminderTriggerServiceProvider);
-  final notificationOrchestrator =
-      ref.watch(notificationOrchestratorProvider);
+  final notificationOrchestrator = ref.watch(notificationOrchestratorProvider);
+  final homeWidgetService = ref.watch(homeWidgetServiceProvider);
+  final db = ref.watch(appDatabaseProvider);
   return FuelEntrySaver(
     repo,
     generateId: () => const Uuid().v4(),
     triggerService: triggerService,
     notificationOrchestrator: notificationOrchestrator,
+    homeWidgetService: homeWidgetService,
+    db: db,
   );
 });
