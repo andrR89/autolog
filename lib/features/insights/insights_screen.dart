@@ -408,7 +408,7 @@ class _QuotaBannerState extends StatelessWidget {
               child: Text(
                 'Sem análises disponíveis este mês.\nAssine o plano premium para análises ilimitadas.',
                 style: textTheme.bodyMedium?.copyWith(
-                  color: AppColors.inkMuted,
+                  color: context.inkMuted,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -585,7 +585,7 @@ class _SectionHeader extends StatelessWidget {
           Text(
             label,
             style: textTheme.labelSmall?.copyWith(
-              color: AppColors.inkMuted,
+              color: context.inkMuted,
               letterSpacing: 1.6,
             ),
           ),

@@ -33,6 +33,7 @@
 // O card é puro — não faz delete sozinho. A tela hospedeira embrulha em
 // Dismissible (mesmo padrão do VehicleCard).
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/domain/models/enums.dart';
@@ -115,17 +116,17 @@ class FuelEntryCard extends StatelessWidget {
     final hasConsumo = kmPerLiter != null;
 
     return Material(
-      color: AppColors.surfaceRaised,
+      color: context.surfaceRaised,
       borderRadius: AppRadius.allMd,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         splashColor: fuel.soft,
-        highlightColor: AppColors.surfaceSunken.withValues(alpha: 0.5),
+        highlightColor: context.surfaceSunken.withValues(alpha: 0.5),
         child: DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: AppRadius.allMd,
-            border: Border.all(color: AppColors.hairline, width: 1),
+            border: Border.all(color: context.hairline, width: 1),
           ),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -147,7 +148,7 @@ class FuelEntryCard extends StatelessWidget {
                         child: Text(
                           _eyebrowDate(entry.date),
                           style: textTheme.labelSmall?.copyWith(
-                            color: AppColors.inkMuted,
+                            color: context.inkMuted,
                             letterSpacing: 1.4,
                           ),
                         ),
@@ -170,8 +171,8 @@ class FuelEntryCard extends StatelessWidget {
                             32,
                             weight: FontWeight.w700,
                             color: hasConsumo
-                                ? AppColors.ink
-                                : AppColors.inkSoft,
+                                ? context.ink
+                                : context.inkSoft,
                           ),
                         ),
                         if (hasConsumo) ...[
@@ -181,7 +182,7 @@ class FuelEntryCard extends StatelessWidget {
                             child: Text(
                               'km/l',
                               style: textTheme.labelMedium?.copyWith(
-                                color: AppColors.inkMuted,
+                                color: context.inkMuted,
                                 letterSpacing: 0.2,
                               ),
                             ),
@@ -204,12 +205,12 @@ class FuelEntryCard extends StatelessWidget {
                   'Odômetro ${_odometerLabel(entry.odometer)} km',
                   style: AppTypography.tabular(
                     textTheme.bodySmall ?? const TextStyle(),
-                  ).copyWith(color: AppColors.inkMuted),
+                  ).copyWith(color: context.inkMuted),
                 ),
                 const SizedBox(height: AppSpacing.md),
 
                 // Hairline separa stats da meta-info (tipo / fonte).
-                Container(height: 1, color: AppColors.hairline),
+                Container(height: 1, color: context.hairline),
                 const SizedBox(height: AppSpacing.sm + 2),
 
                 // --- Linha 4: tipo de tanque (esq) + origem (dir) ---
@@ -220,13 +221,13 @@ class FuelEntryCard extends StatelessWidget {
                       size: 16,
                       color: entry.fullTank
                           ? AppColors.success
-                          : AppColors.inkMuted,
+                          : context.inkMuted,
                     ),
                     const SizedBox(width: AppSpacing.xs + 2),
                     Text(
                       _tankLabel(entry.fullTank),
                       style: textTheme.labelMedium?.copyWith(
-                        color: AppColors.inkMuted,
+                        color: context.inkMuted,
                         letterSpacing: 0.2,
                       ),
                     ),
@@ -234,7 +235,7 @@ class FuelEntryCard extends StatelessWidget {
                     Text(
                       _sourceLabel(entry.source),
                       style: textTheme.labelSmall?.copyWith(
-                        color: AppColors.inkSoft,
+                        color: context.inkSoft,
                         letterSpacing: 1.2,
                       ),
                     ),
@@ -242,7 +243,7 @@ class FuelEntryCard extends StatelessWidget {
                     Icon(
                       _sourceIcon(entry.source),
                       size: 14,
-                      color: AppColors.inkSoft,
+                      color: context.inkSoft,
                     ),
                   ],
                 ),
@@ -271,10 +272,10 @@ class _SecondaryStats extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final baseStyle = AppTypography.tabular(
       textTheme.bodyMedium ?? const TextStyle(),
-    ).copyWith(color: AppColors.ink);
+    ).copyWith(color: context.ink);
 
     final dividerStyle = textTheme.bodySmall?.copyWith(
-      color: AppColors.inkSoft,
+      color: context.inkSoft,
     );
 
     return DefaultTextStyle.merge(

@@ -5,6 +5,7 @@
 // Layout horizontal: ícone calendário pequeno à esquerda, label uppercase
 // + data formatada em pt-BR, chevron à direita pra sinalizar "abre seletor".
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:flutter/material.dart';
@@ -40,12 +41,12 @@ class DatePickerField extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Material(
-      color: AppColors.surfaceSunken,
+      color: context.surfaceSunken,
       borderRadius: AppRadius.allMd,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        splashColor: AppColors.hairline,
+        splashColor: context.hairline,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.lg,
@@ -55,10 +56,10 @@ class DatePickerField extends StatelessWidget {
           ),
           child: Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.event_rounded,
                 size: 18,
-                color: AppColors.inkMuted,
+                color: context.inkMuted,
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -69,7 +70,7 @@ class DatePickerField extends StatelessWidget {
                     Text(
                       'DATA',
                       style: textTheme.labelSmall?.copyWith(
-                        color: AppColors.inkSoft,
+                        color: context.inkSoft,
                         letterSpacing: 1.6,
                       ),
                     ),
@@ -79,16 +80,16 @@ class DatePickerField extends StatelessWidget {
                       style: AppTypography.body(
                         15,
                         weight: FontWeight.w600,
-                        color: AppColors.ink,
+                        color: context.ink,
                       ),
                     ),
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
                 size: 20,
-                color: AppColors.inkMuted,
+                color: context.inkMuted,
               ),
             ],
           ),

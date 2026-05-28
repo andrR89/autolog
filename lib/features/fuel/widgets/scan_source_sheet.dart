@@ -9,6 +9,7 @@
 // Estética: drag handle do tema, título eyebrow uppercase + frase
 // curta, e os dois tiles em surfaceSunken com ícone "papel" à esquerda.
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/platform/image_source.dart';
@@ -50,7 +51,7 @@ class _ScanSourceSheet extends StatelessWidget {
               child: Text(
                 'DE ONDE VEM O CUPOM',
                 style: textTheme.labelSmall?.copyWith(
-                  color: AppColors.inkMuted,
+                  color: context.inkMuted,
                   letterSpacing: 1.6,
                   fontWeight: FontWeight.w700,
                 ),
@@ -66,7 +67,7 @@ class _ScanSourceSheet extends StatelessWidget {
               child: Text(
                 'Tire uma foto agora ou escolha uma imagem que já tem.',
                 style: textTheme.bodyMedium?.copyWith(
-                  color: AppColors.inkMuted,
+                  color: context.inkMuted,
                 ),
               ),
             ),
@@ -120,13 +121,13 @@ class _SourceTile extends StatelessWidget {
     // Tile "accent" usa o pareamento brand + accent (mesma identidade do
     // CTA do form). Tile secundário usa surfaceSunken + ink — menos
     // chamativo, mas mesmo footprint.
-    final bg = accent ? AppColors.brand : AppColors.surfaceSunken;
-    final iconBg = accent ? AppColors.accent : AppColors.surfaceRaised;
+    final bg = accent ? AppColors.brand : context.surfaceSunken;
+    final iconBg = accent ? AppColors.accent : context.surfaceRaised;
     final iconColor = accent ? AppColors.accentInk : AppColors.brand;
-    final labelColor = accent ? AppColors.brandInk : AppColors.ink;
+    final labelColor = accent ? AppColors.brandInk : context.ink;
     final detailColor = accent
         ? AppColors.brandInk.withValues(alpha: 0.6)
-        : AppColors.inkMuted;
+        : context.inkMuted;
 
     return Material(
       color: bg,
@@ -136,7 +137,7 @@ class _SourceTile extends StatelessWidget {
         onTap: onTap,
         splashColor: accent
             ? AppColors.accent.withValues(alpha: 0.12)
-            : AppColors.hairline,
+            : context.hairline,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.md,
@@ -180,7 +181,7 @@ class _SourceTile extends StatelessWidget {
               Icon(
                 Icons.arrow_forward_rounded,
                 size: 18,
-                color: accent ? AppColors.accent : AppColors.inkMuted,
+                color: accent ? AppColors.accent : context.inkMuted,
               ),
             ],
           ),

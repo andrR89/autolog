@@ -1,3 +1,4 @@
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/data/repositories/fipe_history_repository.dart';
@@ -44,9 +45,9 @@ class _FipeHistoryCard extends StatelessWidget {
       ),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: AppColors.surfaceRaised,
+          color: context.surfaceRaised,
           borderRadius: AppRadius.allMd,
-          border: Border.all(color: AppColors.hairline),
+          border: Border.all(color: context.hairline),
         ),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
@@ -78,7 +79,7 @@ class _FipeHistoryCard extends StatelessWidget {
               style: AppTypography.display(
                 15,
                 weight: FontWeight.w600,
-                color: AppColors.ink,
+                color: context.ink,
               ),
             ),
             const Spacer(),
@@ -88,7 +89,7 @@ class _FipeHistoryCard extends StatelessWidget {
         const SizedBox(height: AppSpacing.xs),
         Text(
           '${snapshots.length} pontos coletados',
-          style: const TextStyle(fontSize: 12, color: AppColors.inkMuted),
+          style: TextStyle(fontSize: 12, color: context.inkMuted),
         ),
         const SizedBox(height: AppSpacing.lg),
         SizedBox(
@@ -116,14 +117,14 @@ class _FipeHistoryCard extends StatelessWidget {
 class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Row(
       children: [
-        Icon(Icons.show_chart, color: AppColors.inkSoft, size: 20),
-        SizedBox(width: AppSpacing.sm),
+        Icon(Icons.show_chart, color: context.inkSoft, size: 20),
+        const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: Text(
             'Valor FIPE — atualize no cadastro pra começar o histórico',
-            style: TextStyle(fontSize: 13, color: AppColors.inkMuted),
+            style: TextStyle(fontSize: 13, color: context.inkMuted),
           ),
         ),
       ],
@@ -159,7 +160,7 @@ class _SinglePointState extends StatelessWidget {
           style: AppTypography.display(
             15,
             weight: FontWeight.w600,
-            color: AppColors.ink,
+            color: context.ink,
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -168,13 +169,13 @@ class _SinglePointState extends StatelessWidget {
           style: AppTypography.display(
             22,
             weight: FontWeight.w700,
-            color: AppColors.ink,
+            color: context.ink,
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
           '1 ponto coletado em $monthLabel',
-          style: const TextStyle(fontSize: 12, color: AppColors.inkMuted),
+          style: TextStyle(fontSize: 12, color: context.inkMuted),
         ),
       ],
     );
@@ -195,6 +196,7 @@ class _LineChart extends StatelessWidget {
     final spots = snapshots.asMap().entries.map((e) {
       return FlSpot(e.key.toDouble(), e.value.value.toDouble());
     }).toList();
+    final inkMuted = context.inkMuted;
 
     return LineChart(
       LineChartData(
@@ -224,9 +226,9 @@ class _LineChart extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
                     _monthShortPtBr(snapshots[idx].month),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 10,
-                      color: AppColors.inkMuted,
+                      color: inkMuted,
                     ),
                   ),
                 );

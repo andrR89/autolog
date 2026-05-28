@@ -1,3 +1,4 @@
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/data/repositories/insurance_repository.dart';
 import 'package:autolog/data/repositories/vehicle_repository.dart';
@@ -205,7 +206,7 @@ class _InsuranceFormScreenState extends ConsumerState<InsuranceFormScreen> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 1,
-        shadowColor: AppColors.hairline,
+        shadowColor: context.hairline,
         systemOverlayStyle: const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
           statusBarIconBrightness: Brightness.dark,
@@ -349,9 +350,9 @@ class _InsuranceFormScreenState extends ConsumerState<InsuranceFormScreen> {
                   SafeArea(
                     top: false,
                     child: Container(
-                      decoration: const BoxDecoration(
-                        color: AppColors.surfaceRaised,
-                        border: Border(top: AppBorders.hairline),
+                      decoration: BoxDecoration(
+                        color: context.surfaceRaised,
+                        border: Border(top: BorderSide(color: context.hairline)),
                       ),
                       padding: const EdgeInsets.fromLTRB(
                         AppSpacing.lg,
@@ -411,8 +412,8 @@ class _DateField extends StatelessWidget {
       icon: const Icon(Icons.event_rounded, size: 18),
       label: Text(isRequired ? '$label *' : label),
       style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.inkMuted,
-        side: const BorderSide(color: AppColors.hairline),
+        foregroundColor: context.inkMuted,
+        side: BorderSide(color: context.hairline),
         padding: const EdgeInsets.symmetric(
           vertical: AppSpacing.md,
           horizontal: AppSpacing.lg,

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/data/repositories/fuel_entry_repository.dart';
 import 'package:autolog/domain/models/enums.dart';
@@ -230,7 +231,7 @@ class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 1,
-        shadowColor: AppColors.hairline,
+        shadowColor: context.hairline,
         // Status bar com ícones escuros — fundo é o surface off-white.
         systemOverlayStyle: const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
@@ -378,7 +379,7 @@ class _SectionFieldLabel extends StatelessWidget {
     return Text(
       label,
       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-        color: AppColors.inkSoft,
+        color: context.inkSoft,
         letterSpacing: 1.4,
         fontWeight: FontWeight.w700,
       ),
@@ -436,7 +437,7 @@ class _TypeChip extends StatelessWidget {
     return Material(
       color: selected
           ? AppColors.brand.withValues(alpha: 0.10)
-          : AppColors.surfaceSunken,
+          : context.surfaceSunken,
       borderRadius: const BorderRadius.all(Radius.circular(AppRadius.pill)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -463,13 +464,13 @@ class _TypeChip extends StatelessWidget {
               Icon(
                 icon,
                 size: 15,
-                color: selected ? AppColors.brand : AppColors.inkMuted,
+                color: selected ? AppColors.brand : context.inkMuted,
               ),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 label,
                 style: textTheme.labelMedium?.copyWith(
-                  color: selected ? AppColors.brand : AppColors.inkMuted,
+                  color: selected ? AppColors.brand : context.inkMuted,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
                   letterSpacing: 0.2,
                 ),
@@ -551,8 +552,8 @@ class _DoneToggle extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final bgColor = value
         ? AppColors.successSoft
-        : AppColors.surfaceSunken.withValues(alpha: 0.65);
-    final iconColor = value ? AppColors.success : AppColors.inkMuted;
+        : context.surfaceSunken.withValues(alpha: 0.65);
+    final iconColor = value ? AppColors.success : context.inkMuted;
 
     return AnimatedContainer(
       duration: AppMotion.standard,
@@ -563,7 +564,7 @@ class _DoneToggle extends StatelessWidget {
         border: Border.all(
           color: value
               ? AppColors.success.withValues(alpha: 0.18)
-              : AppColors.hairline,
+              : context.hairline,
           width: 1,
         ),
       ),
@@ -575,7 +576,7 @@ class _DoneToggle extends StatelessWidget {
           onTap: () => onChanged(!value),
           splashColor: value
               ? AppColors.success.withValues(alpha: 0.08)
-              : AppColors.hairline,
+              : context.hairline,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.md,
@@ -592,7 +593,7 @@ class _DoneToggle extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: value
                         ? AppColors.success.withValues(alpha: 0.15)
-                        : AppColors.surfaceRaised,
+                        : context.surfaceRaised,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
@@ -612,7 +613,7 @@ class _DoneToggle extends StatelessWidget {
                       Text(
                         value ? 'Lembrete concluído' : 'Marcar como concluído',
                         style: textTheme.titleSmall?.copyWith(
-                          color: AppColors.ink,
+                          color: context.ink,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -622,7 +623,7 @@ class _DoneToggle extends StatelessWidget {
                             ? 'Este lembrete foi atendido.'
                             : 'O lembrete continua ativo.',
                         style: textTheme.bodySmall?.copyWith(
-                          color: AppColors.inkMuted,
+                          color: context.inkMuted,
                           height: 1.3,
                         ),
                       ),
@@ -658,9 +659,9 @@ class _SaveActionBar extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surfaceRaised,
-          border: Border(top: AppBorders.hairline),
+        decoration: BoxDecoration(
+          color: context.surfaceRaised,
+          border: Border(top: BorderSide(color: context.hairline)),
         ),
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg,

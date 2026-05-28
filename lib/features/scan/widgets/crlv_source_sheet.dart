@@ -4,6 +4,7 @@
 // seleção de arquivo (PDF ou imagem) via file_picker.
 // Mantém o mesmo vocabulário visual (drag handle, eyebrow uppercase, _SourceTile).
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:flutter/material.dart';
@@ -51,7 +52,7 @@ class _CrlvSourceSheet extends StatelessWidget {
               child: Text(
                 'DE ONDE VEM O CRLV',
                 style: textTheme.labelSmall?.copyWith(
-                  color: AppColors.inkMuted,
+                  color: context.inkMuted,
                   letterSpacing: 1.6,
                   fontWeight: FontWeight.w700,
                 ),
@@ -67,7 +68,7 @@ class _CrlvSourceSheet extends StatelessWidget {
               child: Text(
                 'Tire uma foto, escolha da galeria ou selecione um PDF.',
                 style: textTheme.bodyMedium?.copyWith(
-                  color: AppColors.inkMuted,
+                  color: context.inkMuted,
                 ),
               ),
             ),
@@ -126,13 +127,13 @@ class _SourceTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    final bg = accent ? AppColors.brand : AppColors.surfaceSunken;
-    final iconBg = accent ? AppColors.accent : AppColors.surfaceRaised;
+    final bg = accent ? AppColors.brand : context.surfaceSunken;
+    final iconBg = accent ? AppColors.accent : context.surfaceRaised;
     final iconColor = accent ? AppColors.accentInk : AppColors.brand;
-    final labelColor = accent ? AppColors.brandInk : AppColors.ink;
+    final labelColor = accent ? AppColors.brandInk : context.ink;
     final detailColor = accent
         ? AppColors.brandInk.withValues(alpha: 0.6)
-        : AppColors.inkMuted;
+        : context.inkMuted;
 
     return Material(
       color: bg,
@@ -142,7 +143,7 @@ class _SourceTile extends StatelessWidget {
         onTap: onTap,
         splashColor: accent
             ? AppColors.accent.withValues(alpha: 0.12)
-            : AppColors.hairline,
+            : context.hairline,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.md,
@@ -186,7 +187,7 @@ class _SourceTile extends StatelessWidget {
               Icon(
                 Icons.arrow_forward_rounded,
                 size: 18,
-                color: accent ? AppColors.accent : AppColors.inkMuted,
+                color: accent ? AppColors.accent : context.inkMuted,
               ),
             ],
           ),

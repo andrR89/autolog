@@ -3,6 +3,7 @@
 // Convidativo, explica o valor antes de pedir a ação.
 // Usa um frame tracejado com ícone de sino, headline e CTA inline.
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:flutter/material.dart';
@@ -41,7 +42,7 @@ class RemindersEmptyState extends StatelessWidget {
                 'Lembretes te ajudam a não esquecer manutenções, '
                 'seguros e datas importantes do seu carro.',
                 style: textTheme.bodyMedium?.copyWith(
-                  color: AppColors.inkMuted,
+                  color: context.inkMuted,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -68,7 +69,7 @@ class _BellFrame extends StatelessWidget {
   Widget build(BuildContext context) {
     return CustomPaint(
       painter: _DashedRoundedRectPainter(
-        color: AppColors.hairline,
+        color: context.hairline,
         radius: AppRadius.lg,
       ),
       child: SizedBox(
@@ -77,7 +78,7 @@ class _BellFrame extends StatelessWidget {
           child: Icon(
             Icons.notifications_none_outlined,
             size: 56,
-            color: AppColors.ink.withValues(alpha: 0.30),
+            color: context.ink.withValues(alpha: 0.30),
           ),
         ),
       ),

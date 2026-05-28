@@ -21,6 +21,7 @@
 // - Barra com hairline top e fundo surfaceRaised (sobe sutilmente do
 //   off-white da tela).
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:flutter/material.dart';
@@ -55,9 +56,9 @@ class TotalActionBar extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surfaceRaised,
-          border: Border(top: AppBorders.hairline),
+        decoration: BoxDecoration(
+          color: context.surfaceRaised,
+          border: Border(top: BorderSide(color: context.hairline)),
         ),
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg,
@@ -77,7 +78,7 @@ class TotalActionBar extends StatelessWidget {
                   Text(
                     'TOTAL',
                     style: textTheme.labelSmall?.copyWith(
-                      color: AppColors.inkSoft,
+                      color: context.inkSoft,
                       letterSpacing: 1.8,
                     ),
                   ),
@@ -93,7 +94,7 @@ class TotalActionBar extends StatelessWidget {
                       style: AppTypography.metric(
                         26,
                         weight: FontWeight.w700,
-                        color: hasTotal ? AppColors.ink : AppColors.inkSoft,
+                        color: hasTotal ? context.ink : context.inkSoft,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

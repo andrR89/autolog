@@ -83,7 +83,7 @@ class ReminderCard extends StatelessWidget {
     final urgent = _isUrgent;
 
     // Cor de borda: urgente = warning, normal = hairline.
-    final borderColor = urgent ? AppColors.warning : AppColors.hairline;
+    final borderColor = urgent ? AppColors.warning : context.hairline;
 
     return Material(
       color: isDone

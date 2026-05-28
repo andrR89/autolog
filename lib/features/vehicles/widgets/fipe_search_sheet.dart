@@ -1,3 +1,4 @@
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/data/remote/fipe_models.dart';
 import 'package:autolog/data/remote/fipe_repository.dart';
@@ -262,7 +263,7 @@ class _FipeSearchSheetContentState
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.hairline,
+              color: context.hairline,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -271,7 +272,7 @@ class _FipeSearchSheetContentState
         // Breadcrumb
         _BreadcrumbBar(step: _step, onBack: _step != _Step.brand ? _goBack : null),
 
-        const Divider(height: 1, color: AppColors.hairline),
+        Divider(height: 1, color: context.hairline),
 
         // Busca
         Padding(
@@ -333,12 +334,12 @@ class _FipeSearchSheetContentState
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.wifi_off_rounded, size: 48, color: AppColors.inkSoft),
+              Icon(Icons.wifi_off_rounded, size: 48, color: context.inkSoft),
               const SizedBox(height: 12),
               Text(
                 'Não conseguimos buscar agora',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: AppColors.ink,
+                  color: context.ink,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -346,7 +347,7 @@ class _FipeSearchSheetContentState
               Text(
                 _error!,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.inkMuted,
+                  color: context.inkMuted,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -434,7 +435,7 @@ class _FipeSearchSheetContentState
       child: Text(
         'Nenhum resultado para "$_query"',
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          color: AppColors.inkSoft,
+          color: context.inkSoft,
         ),
       ),
     );
@@ -510,7 +511,7 @@ class _BreadcrumbItem extends StatelessWidget {
       color = AppColors.success;
       weight = FontWeight.w500;
     } else {
-      color = AppColors.inkSoft;
+      color = context.inkSoft;
       weight = FontWeight.w400;
     }
 
@@ -537,9 +538,9 @@ class _BreadcrumbSep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 6),
-      child: Icon(Icons.chevron_right, size: 16, color: AppColors.inkSoft),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      child: Icon(Icons.chevron_right, size: 16, color: context.inkSoft),
     );
   }
 }
@@ -571,18 +572,18 @@ class _ItemTile extends StatelessWidget {
               child: Text(
                 name,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.ink,
+                  color: context.ink,
                 ),
               ),
             ),
             Text(
               code,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: AppColors.inkSoft,
+                color: context.inkSoft,
               ),
             ),
             const SizedBox(width: 4),
-            const Icon(Icons.chevron_right, size: 18, color: AppColors.inkSoft),
+            Icon(Icons.chevron_right, size: 18, color: context.inkSoft),
           ],
         ),
       ),

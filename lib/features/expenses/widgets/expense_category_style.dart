@@ -81,7 +81,7 @@ class ExpenseCategoryStyle {
           label: 'Licenciamento',
         );
       case ExpenseCategory.outro:
-        return const ExpenseCategoryStyle(
+        return const ExpenseCategoryStyle( // dark-todo: const list — inkMuted hardcoded
           color: AppColors.inkMuted,
           icon: Icons.more_horiz,
           label: 'Outro',

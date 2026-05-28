@@ -1,3 +1,4 @@
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/data/repositories/trip_repository.dart';
 import 'package:autolog/domain/models/trip.dart';
@@ -170,7 +171,7 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 1,
-        shadowColor: AppColors.hairline,
+        shadowColor: context.hairline,
         systemOverlayStyle: const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
           statusBarIconBrightness: Brightness.dark,
@@ -260,9 +261,9 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
             SafeArea(
               top: false,
               child: Container(
-                decoration: const BoxDecoration(
-                  color: AppColors.surfaceRaised,
-                  border: Border(top: AppBorders.hairline),
+                decoration: BoxDecoration(
+                  color: context.surfaceRaised,
+                  border: Border(top: BorderSide(color: context.hairline)),
                 ),
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.lg,
@@ -318,10 +319,10 @@ class _DateField extends StatelessWidget {
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: label,
-          suffixIcon: const Icon(
+          suffixIcon: Icon(
             Icons.calendar_today_outlined,
             size: 18,
-            color: AppColors.inkMuted,
+            color: context.inkMuted,
           ),
         ),
         child: Text(value, style: Theme.of(context).textTheme.bodyMedium),

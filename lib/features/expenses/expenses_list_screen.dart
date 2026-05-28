@@ -13,6 +13,7 @@
 // Cálculo dos 30 dias: feito local na apresentação — não muda o data flow
 // (StreamProvider já existente). Provider: expensesByVehicleProvider.
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/data/repositories/expense_repository.dart';
@@ -239,7 +240,7 @@ class _MonthSectionHeader extends StatelessWidget {
       child: Text(
         label,
         style: textTheme.labelSmall?.copyWith(
-          color: AppColors.inkMuted,
+          color: context.inkMuted,
           letterSpacing: 1.6,
         ),
       ),
@@ -368,7 +369,7 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.cloud_off, size: 40, color: AppColors.inkMuted),
+            Icon(Icons.cloud_off, size: 40, color: context.inkMuted),
             const SizedBox(height: AppSpacing.lg),
             Text(
               'Não foi possível carregar as despesas.',

@@ -1,3 +1,4 @@
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/data/repositories/fuel_entry_repository.dart';
@@ -71,7 +72,7 @@ class MyStationsScreen extends ConsumerWidget {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 1,
-        shadowColor: AppColors.hairline,
+        shadowColor: context.hairline,
         systemOverlayStyle: const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
           statusBarIconBrightness: Brightness.dark,
@@ -185,16 +186,16 @@ class _FavoriteInsightSection extends StatelessWidget {
           child: Text(
             'POSTO PREFERIDO',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppColors.inkMuted,
+                  color: context.inkMuted,
                   letterSpacing: 1.4,
                 ),
           ),
         ),
         DecoratedBox(
           decoration: BoxDecoration(
-            color: AppColors.surfaceRaised,
+            color: context.surfaceRaised,
             borderRadius: AppRadius.allMd,
-            border: Border.all(color: AppColors.hairline),
+            border: Border.all(color: context.hairline),
           ),
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
@@ -217,7 +218,7 @@ class _FavoriteInsightSection extends StatelessWidget {
                   Text(
                     '${favorite.entriesCount} abastecimento${favorite.entriesCount == 1 ? '' : 's'} '
                     '• ${currFmt.format(double.parse(favorite.avgPricePerLiter.toString()))}/L em média',
-                    style: AppTypography.body(13, color: AppColors.inkMuted),
+                    style: AppTypography.body(13, color: context.inkMuted),
                   ),
                 ],
                 if (cheapest != null &&
@@ -258,7 +259,7 @@ class _FavoriteInsightSection extends StatelessWidget {
           child: Text(
             'TODOS OS POSTOS',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppColors.inkMuted,
+                  color: context.inkMuted,
                   letterSpacing: 1.4,
                 ),
           ),
@@ -290,10 +291,10 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.local_gas_station_outlined,
               size: 56,
-              color: AppColors.inkSoft,
+              color: context.inkSoft,
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
@@ -301,14 +302,14 @@ class _EmptyState extends StatelessWidget {
               style: AppTypography.body(
                 16,
                 weight: FontWeight.w600,
-                color: AppColors.ink,
+                color: context.ink,
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
               'Adicione bandeira/nome ao registrar abastecimento.',
-              style: AppTypography.body(14, color: AppColors.inkMuted),
+              style: AppTypography.body(14, color: context.inkMuted),
               textAlign: TextAlign.center,
             ),
           ],
@@ -346,9 +347,9 @@ class _StationCard extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: AppColors.surfaceRaised,
+        color: context.surfaceRaised,
         borderRadius: AppRadius.allMd,
-        border: Border.all(color: AppColors.hairline),
+        border: Border.all(color: context.hairline),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -356,9 +357,9 @@ class _StationCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Ícone
-            const DecoratedBox(
+            DecoratedBox(
               decoration: BoxDecoration(
-                color: AppColors.surfaceSunken,
+                color: context.surfaceSunken,
                 borderRadius: AppRadius.allSm,
               ),
               child: SizedBox(
@@ -367,7 +368,7 @@ class _StationCard extends StatelessWidget {
                 child: Icon(
                   Icons.local_gas_station_outlined,
                   size: 20,
-                  color: AppColors.inkMuted,
+                  color: context.inkMuted,
                 ),
               ),
             ),
@@ -383,7 +384,7 @@ class _StationCard extends StatelessWidget {
                     style: AppTypography.body(
                       15,
                       weight: FontWeight.w600,
-                      color: AppColors.ink,
+                      color: context.ink,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -391,7 +392,7 @@ class _StationCard extends StatelessWidget {
                   const SizedBox(height: AppSpacing.xs),
                   Text(
                     subtitleText,
-                    style: AppTypography.body(13, color: AppColors.inkMuted),
+                    style: AppTypography.body(13, color: context.inkMuted),
                   ),
                 ],
               ),
@@ -407,13 +408,13 @@ class _StationCard extends StatelessWidget {
                   style: AppTypography.body(
                     14,
                     weight: FontWeight.w700,
-                    color: AppColors.ink,
+                    color: context.ink,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   dateFormatted,
-                  style: AppTypography.body(12, color: AppColors.inkSoft),
+                  style: AppTypography.body(12, color: context.inkSoft),
                 ),
               ],
             ),

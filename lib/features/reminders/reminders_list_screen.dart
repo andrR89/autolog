@@ -10,6 +10,7 @@
 // - FAB extended "Novo lembrete" em accent lima.
 // - Empty state convidativo.
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/data/repositories/reminder_repository.dart';
@@ -165,7 +166,7 @@ class _Body extends ConsumerWidget {
         _SectionHeader(
           label: 'PENDENTES',
           count: pending.length,
-          color: AppColors.ink,
+          isPrimary: true,
         ),
       );
       for (final r in pending) {
@@ -184,7 +185,7 @@ class _Body extends ConsumerWidget {
         _SectionHeader(
           label: 'CONCLUÍDOS',
           count: done.length,
-          color: AppColors.inkMuted,
+          isPrimary: false,
         ),
       );
       for (final r in done) {
@@ -209,12 +210,12 @@ class _SectionHeader extends StatelessWidget {
   const _SectionHeader({
     required this.label,
     required this.count,
-    required this.color,
+    required this.isPrimary,
   });
 
   final String label;
   final int count;
-  final Color color;
+  final bool isPrimary;
 
   @override
   Widget build(BuildContext context) {
@@ -227,9 +228,7 @@ class _SectionHeader extends StatelessWidget {
           Text(
             label,
             style: textTheme.labelSmall?.copyWith(
-              color: color == AppColors.ink
-                  ? AppColors.inkMuted
-                  : AppColors.inkSoft,
+              color: isPrimary ? context.inkMuted : context.inkSoft,
               letterSpacing: 1.6,
             ),
           ),
@@ -240,9 +239,9 @@ class _SectionHeader extends StatelessWidget {
               vertical: 1,
             ),
             decoration: BoxDecoration(
-              color: color == AppColors.ink
+              color: isPrimary
                   ? AppColors.brand.withValues(alpha: 0.08)
-                  : AppColors.surfaceSunken,
+                  : context.surfaceSunken,
               borderRadius: const BorderRadius.all(
                 Radius.circular(AppRadius.pill),
               ),
@@ -250,9 +249,7 @@ class _SectionHeader extends StatelessWidget {
             child: Text(
               '$count',
               style: textTheme.labelSmall?.copyWith(
-                color: color == AppColors.ink
-                    ? AppColors.brand
-                    : AppColors.inkSoft,
+                color: isPrimary ? AppColors.brand : context.inkSoft,
                 letterSpacing: 0.2,
               ),
             ),
@@ -383,7 +380,7 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.cloud_off, size: 40, color: AppColors.inkMuted),
+            Icon(Icons.cloud_off, size: 40, color: context.inkMuted),
             const SizedBox(height: AppSpacing.lg),
             Text(
               'Não foi possível carregar os lembretes.',

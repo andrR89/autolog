@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/data/repositories/fuel_entry_repository.dart';
 import 'package:autolog/domain/models/enums.dart';
@@ -506,7 +507,7 @@ class _FuelEntryFormScreenState extends ConsumerState<FuelEntryFormScreen> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 1,
-        shadowColor: AppColors.hairline,
+        shadowColor: context.hairline,
         // Status bar com ícones escuros — fundo é o surface off-white.
         systemOverlayStyle: const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
@@ -782,7 +783,7 @@ class _FuelTypeSectionLabel extends StatelessWidget {
     return Text(
       'TIPO DE COMBUSTÍVEL',
       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-        color: AppColors.inkSoft,
+        color: context.inkSoft,
         letterSpacing: 1.4,
         fontWeight: FontWeight.w700,
       ),
@@ -815,14 +816,14 @@ class _FieldWithAutoBadge extends StatelessWidget {
               vertical: AppSpacing.xs,
             ),
             decoration: BoxDecoration(
-              color: AppColors.surfaceRaised,
+              color: context.surfaceRaised,
               borderRadius: AppRadius.allSm,
-              border: Border.all(color: AppColors.hairline, width: 1),
+              border: Border.all(color: context.hairline, width: 1),
             ),
             child: Text(
               'auto',
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: AppColors.inkSoft,
+                color: context.inkSoft,
                 letterSpacing: 0.6,
               ),
             ),

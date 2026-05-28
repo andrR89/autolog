@@ -71,7 +71,7 @@ class _PersonalDocumentsScreenState
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 1,
-        shadowColor: AppColors.hairline,
+        shadowColor: context.hairline,
         systemOverlayStyle: const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
           statusBarIconBrightness: Brightness.dark,
@@ -378,7 +378,7 @@ class _CnhCard extends StatelessWidget {
               child: Icon(
                 Icons.badge_outlined,
                 size: 24,
-                color: isExpiringSoon ? AppColors.warning : AppColors.inkMuted,
+                color: isExpiringSoon ? AppColors.warning : context.inkMuted,
               ),
             ),
             const SizedBox(width: AppSpacing.md),
@@ -426,9 +426,9 @@ class _CnhCard extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
-              color: AppColors.inkSoft,
+              color: context.inkSoft,
               size: 20,
             ),
           ],
@@ -551,7 +551,7 @@ class _AsyncAllInsurancesSliverState
           ),
           child: Text(
             'Nenhuma apólice ativa.',
-            style: AppTypography.body(14, color: AppColors.inkSoft),
+            style: AppTypography.body(14, color: context.inkSoft),
           ),
         ),
       );
@@ -773,7 +773,7 @@ class _FineCard extends StatelessWidget {
                       dueStr,
                       style: AppTypography.body(
                         12,
-                        color: isUrgent ? AppColors.danger : AppColors.inkMuted,
+                        color: isUrgent ? AppColors.danger : context.inkMuted,
                         weight: isUrgent ? FontWeight.w600 : FontWeight.w400,
                       ),
                     ),

@@ -3,6 +3,7 @@
 // Convidativo, não vazio — mesmo tom de VehiclesEmptyState.
 // Usa um frame tracejado com ícone de recibo, headline calorosa e CTA inline.
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:flutter/material.dart';
@@ -40,7 +41,7 @@ class ExpensesEmptyState extends StatelessWidget {
               Text(
                 'Toque em + pra começar a controlar os gastos do seu carro.',
                 style: textTheme.bodyMedium?.copyWith(
-                  color: AppColors.inkMuted,
+                  color: context.inkMuted,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -67,7 +68,7 @@ class _ReceiptFrame extends StatelessWidget {
   Widget build(BuildContext context) {
     return CustomPaint(
       painter: _DashedRoundedRectPainter(
-        color: AppColors.hairline,
+        color: context.hairline,
         radius: AppRadius.lg,
       ),
       child: SizedBox(
@@ -76,7 +77,7 @@ class _ReceiptFrame extends StatelessWidget {
           child: Icon(
             Icons.receipt_long_outlined,
             size: 56,
-            color: AppColors.ink.withValues(alpha: 0.30),
+            color: context.ink.withValues(alpha: 0.30),
           ),
         ),
       ),

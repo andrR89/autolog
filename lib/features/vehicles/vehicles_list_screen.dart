@@ -24,6 +24,7 @@
 //   o smoke test (não procura por título "Meus veículos") e com os
 //   testes de back button (não tocam nessa tela).
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/domain/models/vehicle.dart';
@@ -82,17 +83,17 @@ class _VehiclesListScreenState extends ConsumerState<VehiclesListScreen> {
         actions: [
           const SyncIndicator(),
           IconButton(
-            icon: const Icon(Icons.badge_outlined, color: AppColors.inkMuted),
+            icon: Icon(Icons.badge_outlined, color: context.inkMuted),
             tooltip: 'Documentos',
             onPressed: () => context.push('/personal-documents'),
           ),
           IconButton(
-            icon: const Icon(Icons.settings_outlined, color: AppColors.inkMuted),
+            icon: Icon(Icons.settings_outlined, color: context.inkMuted),
             tooltip: 'Configurações',
             onPressed: () => context.push('/settings'),
           ),
           IconButton(
-            icon: const Icon(Icons.logout, color: AppColors.inkMuted),
+            icon: Icon(Icons.logout, color: context.inkMuted),
             tooltip: 'Sair',
             onPressed: () async {
               try {
@@ -204,7 +205,7 @@ class _Header extends StatelessWidget {
           Text(
             'MINHA',
             style: textTheme.labelSmall?.copyWith(
-              color: AppColors.inkMuted,
+              color: context.inkMuted,
               letterSpacing: 1.6,
             ),
           ),
@@ -220,7 +221,7 @@ class _Header extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           Text(
             subtitle,
-            style: textTheme.bodySmall?.copyWith(color: AppColors.inkMuted),
+            style: textTheme.bodySmall?.copyWith(color: context.inkMuted),
           ),
         ],
       ),
@@ -363,7 +364,7 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.cloud_off, size: 40, color: AppColors.inkMuted),
+            Icon(Icons.cloud_off, size: 40, color: context.inkMuted),
             const SizedBox(height: AppSpacing.lg),
             Text(
               'Não foi possível carregar sua garagem.',

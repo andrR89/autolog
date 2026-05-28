@@ -8,6 +8,7 @@
 // - Tooltip com valor formatado em km/L.
 // - ANIMAÇÃO: swapAnimationDuration 800ms easeOutCubic.
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/features/reports/monthly_consumption.dart';
@@ -42,6 +43,11 @@ class ConsumptionAreaChart extends StatelessWidget {
 
     final fmt = NumberFormat('0.0', 'pt_BR');
 
+    // Capture dynamic colors before fl_chart callbacks (no BuildContext inside).
+    final hairline = context.hairline;
+    final inkSoft = context.inkSoft;
+    final surfaceRaised = context.surfaceRaised;
+
     return SizedBox(
       height: 200,
       child: LineChart(
@@ -51,8 +57,8 @@ class ConsumptionAreaChart extends StatelessWidget {
           gridData: FlGridData(
             show: true,
             drawVerticalLine: false,
-            getDrawingHorizontalLine: (_) => const FlLine(
-              color: AppColors.hairline,
+            getDrawingHorizontalLine: (_) => FlLine(
+              color: hairline,
               strokeWidth: 1,
               dashArray: [4, 4],
             ),
@@ -94,7 +100,7 @@ class ConsumptionAreaChart extends StatelessWidget {
                     meta: meta,
                     child: Text(
                       fmt.format(value),
-                      style: AppTypography.body(10, color: AppColors.inkSoft),
+                      style: AppTypography.body(10, color: inkSoft),
                     ),
                   );
                 },
@@ -116,7 +122,7 @@ class ConsumptionAreaChart extends StatelessWidget {
                     meta: meta,
                     child: Text(
                       _shortMonth(data[index].month),
-                      style: AppTypography.body(10, color: AppColors.inkSoft),
+                      style: AppTypography.body(10, color: inkSoft),
                     ),
                   );
                 },
@@ -136,7 +142,7 @@ class ConsumptionAreaChart extends StatelessWidget {
                   final isLast = index == spots.length - 1;
                   return FlDotCirclePainter(
                     radius: isLast ? 5.0 : 3.5,
-                    color: isLast ? AppColors.brand : AppColors.surfaceRaised,
+                    color: isLast ? AppColors.brand : surfaceRaised,
                     strokeWidth: isLast ? 0 : 2,
                     strokeColor: AppColors.brand,
                   );

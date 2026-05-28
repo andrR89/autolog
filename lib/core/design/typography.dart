@@ -17,11 +17,15 @@ import 'tokens.dart';
 
 abstract final class AppTypography {
   /// Família display (headlines, números grandes, hero).
+  ///
+  /// Cor `null` (default) → herda do `DefaultTextStyle` do Theme, que segue
+  /// `colorScheme.onSurface` (dinâmico light/dark). Antes era `AppColors.ink`
+  /// hardcoded — quebrava o dark mode (preto em preto).
   static TextStyle display(
     double size, {
     FontWeight weight = FontWeight.w600,
     double? height,
-    double letterSpacing = -0.02 * 16, // tracking-tight visual
+    double letterSpacing = -0.02 * 16,
     Color? color,
   }) {
     return GoogleFonts.bricolageGrotesque(
@@ -29,11 +33,11 @@ abstract final class AppTypography {
       fontWeight: weight,
       height: height,
       letterSpacing: size * -0.015,
-      color: color ?? AppColors.ink,
+      color: color,
     );
   }
 
-  /// Família corpo (UI, body, labels).
+  /// Família corpo (UI, body, labels). Cor `null` herda do Theme — ver `display`.
   static TextStyle body(
     double size, {
     FontWeight weight = FontWeight.w400,
@@ -46,7 +50,7 @@ abstract final class AppTypography {
       fontWeight: weight,
       height: height,
       letterSpacing: letterSpacing,
-      color: color ?? AppColors.ink,
+      color: color,
     );
   }
 

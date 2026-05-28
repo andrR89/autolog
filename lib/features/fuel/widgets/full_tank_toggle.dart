@@ -12,6 +12,7 @@
 //
 // O switch real fica à direita (theme = brand verde quando ligado).
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:flutter/material.dart';
 
@@ -30,8 +31,8 @@ class FullTankToggle extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final bgColor = value
         ? AppColors.successSoft
-        : AppColors.surfaceSunken.withValues(alpha: 0.65);
-    final iconColor = value ? AppColors.success : AppColors.inkMuted;
+        : context.surfaceSunken.withValues(alpha: 0.65);
+    final iconColor = value ? AppColors.success : context.inkMuted;
     final icon = value
         ? Icons.local_gas_station_rounded
         : Icons.water_drop_outlined;
@@ -51,7 +52,7 @@ class FullTankToggle extends StatelessWidget {
         border: Border.all(
           color: value
               ? AppColors.success.withValues(alpha: 0.18)
-              : AppColors.hairline,
+              : context.hairline,
           width: 1,
         ),
       ),
@@ -63,7 +64,7 @@ class FullTankToggle extends StatelessWidget {
           onTap: () => onChanged(!value),
           splashColor: value
               ? AppColors.success.withValues(alpha: 0.08)
-              : AppColors.hairline,
+              : context.hairline,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.md,
@@ -80,7 +81,7 @@ class FullTankToggle extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: value
                         ? AppColors.success.withValues(alpha: 0.15)
-                        : AppColors.surfaceRaised,
+                        : context.surfaceRaised,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(icon, size: 18, color: iconColor),
@@ -94,7 +95,7 @@ class FullTankToggle extends StatelessWidget {
                       Text(
                         title,
                         style: textTheme.titleSmall?.copyWith(
-                          color: AppColors.ink,
+                          color: context.ink,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -102,7 +103,7 @@ class FullTankToggle extends StatelessWidget {
                       Text(
                         subtitle,
                         style: textTheme.bodySmall?.copyWith(
-                          color: AppColors.inkMuted,
+                          color: context.inkMuted,
                           height: 1.3,
                         ),
                       ),

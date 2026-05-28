@@ -3,6 +3,7 @@
 // Em vez de "Sem dados suficientes ainda", usa mensagem contextual
 // que convida à ação — parte da linguagem visual "confiante, calmo, brasileiro".
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:flutter/material.dart';
@@ -24,18 +25,18 @@ class EmptyChartState extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               // Ícone decorativo suave
-              const SizedBox(
+              SizedBox(
                 width: 36,
                 height: 36,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceSunken,
+                    color: context.surfaceSunken,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.bar_chart_rounded,
                     size: 18,
-                    color: AppColors.inkSoft,
+                    color: context.inkSoft,
                   ),
                 ),
               ),
@@ -45,7 +46,7 @@ class EmptyChartState extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: AppTypography.body(
                   13,
-                  color: AppColors.inkSoft,
+                  color: context.inkSoft,
                   height: 1.5,
                 ),
               ),

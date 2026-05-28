@@ -3,6 +3,7 @@
 // Substitui o uso de Chip default do Material (que vem com padding pesado
 // e ripple gritante). É só um Container — papel, não componente.
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/domain/models/enums.dart';
 import 'package:autolog/features/vehicles/widgets/fuel_type_style.dart';
@@ -45,7 +46,7 @@ class FuelChip extends StatelessWidget {
           Text(
             style.label,
             style: textTheme.labelMedium?.copyWith(
-              color: AppColors.ink,
+              color: context.ink,
               letterSpacing: 0.2,
             ),
           ),

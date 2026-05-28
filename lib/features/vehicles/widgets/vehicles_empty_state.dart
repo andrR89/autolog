@@ -13,6 +13,7 @@
 // empty state, o usuário ainda não conhece a convenção do FAB; o
 // botão inline é mais óbvio.
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:flutter/material.dart';
@@ -53,7 +54,7 @@ class VehiclesEmptyState extends StatelessWidget {
                 'Adicione seu primeiro carro pra começar a registrar '
                 'abastecimentos, despesas e lembretes.',
                 style: textTheme.bodyMedium?.copyWith(
-                  color: AppColors.inkMuted,
+                  color: context.inkMuted,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -80,7 +81,7 @@ class _ParkingSpotFrame extends StatelessWidget {
   Widget build(BuildContext context) {
     return CustomPaint(
       painter: _DashedRoundedRectPainter(
-        color: AppColors.hairline,
+        color: context.hairline,
         radius: AppRadius.lg,
       ),
       child: SizedBox(
@@ -89,7 +90,7 @@ class _ParkingSpotFrame extends StatelessWidget {
           child: Icon(
             Icons.directions_car_filled_outlined,
             size: 64,
-            color: AppColors.ink.withValues(alpha: 0.35),
+            color: context.ink.withValues(alpha: 0.35),
           ),
         ),
       ),

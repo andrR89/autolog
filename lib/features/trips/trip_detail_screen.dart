@@ -128,7 +128,7 @@ class TripDetailScreen extends ConsumerWidget {
               child: Text(
                 'ADICIONAR À VIAGEM',
                 style: Theme.of(ctx).textTheme.labelSmall?.copyWith(
-                  color: AppColors.inkMuted,
+                  color: ctx.inkMuted,
                   letterSpacing: 1.4,
                   fontWeight: FontWeight.w700,
                 ),

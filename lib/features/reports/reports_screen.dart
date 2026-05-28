@@ -12,6 +12,7 @@
 //
 // Providers e funções de agregação NÃO foram alterados.
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/domain/models/expense.dart';
@@ -175,7 +176,7 @@ class _ChartSections extends StatelessWidget {
           async: priceAsync,
           overline: 'Preço/litro',
           title: 'Evolução',
-          overlineColor: AppColors.inkMuted,
+          overlineColor: context.inkMuted,
           emptyMessage:
               'Cadastre abastecimentos pra ver a variação do preço do combustível.',
           buildChart: (data) => PriceLineChart(data: data),
@@ -363,16 +364,16 @@ class _SectionSkeletonState extends State<_SectionSkeleton>
       builder: (context, _) {
         final alpha = (0.08 + _shimmer.value * 0.08).clamp(0.0, 1.0);
         return Container(
-          color: AppColors.surfaceRaised,
+          color: context.surfaceRaised,
           padding: const EdgeInsets.all(AppSpacing.xxl),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _bar(width: 48, height: 10, alpha: alpha),
+              _bar(context, width: 48, height: 10, alpha: alpha),
               const SizedBox(height: AppSpacing.xs + 2),
-              _bar(width: 100, height: 18, alpha: alpha),
+              _bar(context, width: 100, height: 18, alpha: alpha),
               const SizedBox(height: AppSpacing.lg),
-              _bar(width: double.infinity, height: 180, alpha: alpha),
+              _bar(context, width: double.infinity, height: 180, alpha: alpha),
             ],
           ),
         );
@@ -380,7 +381,7 @@ class _SectionSkeletonState extends State<_SectionSkeleton>
     );
   }
 
-  Widget _bar({
+  Widget _bar(BuildContext context, {
     required double width,
     required double height,
     required double alpha,
@@ -389,7 +390,7 @@ class _SectionSkeletonState extends State<_SectionSkeleton>
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: AppColors.ink.withValues(alpha: alpha),
+        color: context.ink.withValues(alpha: alpha),
         borderRadius: AppRadius.allSm,
       ),
     );
@@ -411,9 +412,9 @@ class _MyStationsCard extends StatelessWidget {
       onTap: () => context.push('/stations'),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surfaceRaised,
+          color: context.surfaceRaised,
           borderRadius: AppRadius.allMd,
-          border: Border.all(color: AppColors.hairline),
+          border: Border.all(color: context.hairline),
         ),
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.lg,
@@ -421,9 +422,9 @@ class _MyStationsCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const DecoratedBox(
+            DecoratedBox(
               decoration: BoxDecoration(
-                color: AppColors.surfaceSunken,
+                color: context.surfaceSunken,
                 borderRadius: AppRadius.allSm,
               ),
               child: SizedBox(
@@ -432,7 +433,7 @@ class _MyStationsCard extends StatelessWidget {
                 child: Icon(
                   Icons.local_gas_station_outlined,
                   size: 20,
-                  color: AppColors.inkMuted,
+                  color: context.inkMuted,
                 ),
               ),
             ),
@@ -446,19 +447,19 @@ class _MyStationsCard extends StatelessWidget {
                     style: AppTypography.body(
                       15,
                       weight: FontWeight.w600,
-                      color: AppColors.ink,
+                      color: context.ink,
                     ),
                   ),
                   Text(
                     'Veja onde você abastece e o preço médio',
-                    style: AppTypography.body(12, color: AppColors.inkMuted),
+                    style: AppTypography.body(12, color: context.inkMuted),
                   ),
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right,
-              color: AppColors.inkSoft,
+              color: context.inkSoft,
               size: 20,
             ),
           ],

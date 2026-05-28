@@ -17,6 +17,7 @@
 // entre a lista de garagem e este formulário — o usuário "reconhece" o carro
 // imediatamente pela cor do combustível.
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/domain/models/vehicle.dart';
@@ -49,7 +50,7 @@ class VehicleContextChip extends StatelessWidget {
           Text(
             'PARA',
             style: textTheme.labelSmall?.copyWith(
-              color: AppColors.inkSoft,
+              color: context.inkSoft,
               letterSpacing: 1.8,
             ),
           ),

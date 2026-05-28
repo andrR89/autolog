@@ -8,6 +8,7 @@
 // - ANIMAÇÃO: swapAnimationDuration 800ms easeOutCubic (fl_chart built-in).
 //   Ao entrar, barras crescem do zero. Ao dados mudarem, re-animam.
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/features/reports/monthly_spending.dart';
@@ -25,6 +26,11 @@ class SpendingBarChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final now = DateTime.now();
     final currentBucket = DateTime.utc(now.year, now.month, 1);
+
+    // Capture dynamic colors before fl_chart callbacks (no BuildContext inside).
+    final hairline = context.hairline;
+    final inkSoft = context.inkSoft;
+    final surfaceSunken = context.surfaceSunken;
 
     // Conversão Decimal→double APENAS na borda de display (BarChartGroupData).
     final groups = [
@@ -46,7 +52,7 @@ class SpendingBarChart extends StatelessWidget {
               backDrawRodData: BackgroundBarChartRodData(
                 show: true,
                 toY: _maxY(data) * 1.1,
-                color: AppColors.surfaceSunken,
+                color: surfaceSunken,
               ),
             ),
           ],
@@ -70,8 +76,8 @@ class SpendingBarChart extends StatelessWidget {
             show: true,
             drawVerticalLine: false,
             horizontalInterval: maxY / 4,
-            getDrawingHorizontalLine: (_) => const FlLine(
-              color: AppColors.hairline,
+            getDrawingHorizontalLine: (_) => FlLine(
+              color: hairline,
               strokeWidth: 1,
               dashArray: [4, 4],
             ),
@@ -115,7 +121,7 @@ class SpendingBarChart extends StatelessWidget {
                     meta: meta,
                     child: Text(
                       fmt.format(value),
-                      style: AppTypography.body(10, color: AppColors.inkSoft),
+                      style: AppTypography.body(10, color: inkSoft),
                     ),
                   );
                 },
@@ -142,7 +148,7 @@ class SpendingBarChart extends StatelessWidget {
                         10,
                         color: data[index].month == currentBucket
                             ? AppColors.brand
-                            : AppColors.inkSoft,
+                            : inkSoft,
                         weight: data[index].month == currentBucket
                             ? FontWeight.w700
                             : FontWeight.w400,

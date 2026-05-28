@@ -15,6 +15,7 @@
 //   Tom **convidativo, não punitivo** — copy "Você usou seus 5 scans do
 //   mês" + CTA Premium em accent. Não usa danger (não é erro do usuário).
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:flutter/material.dart';
 
@@ -45,7 +46,7 @@ showScanSuccessBanner(BuildContext context) {
       ),
       content: RichText(
         text: TextSpan(
-          style: textTheme.bodyMedium?.copyWith(color: AppColors.ink),
+          style: textTheme.bodyMedium?.copyWith(color: context.ink),
           children: [
             const TextSpan(text: 'Dados extraídos do cupom. '),
             TextSpan(
@@ -105,7 +106,7 @@ showQuotaExhaustedBanner(
       ),
       content: RichText(
         text: TextSpan(
-          style: textTheme.bodyMedium?.copyWith(color: AppColors.ink),
+          style: textTheme.bodyMedium?.copyWith(color: context.ink),
           children: const [
             TextSpan(text: 'Seus '),
             TextSpan(

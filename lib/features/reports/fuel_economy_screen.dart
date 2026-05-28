@@ -1,3 +1,4 @@
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/domain/models/enums.dart';
@@ -300,7 +301,7 @@ class _ConsumptionRow extends StatelessWidget {
         Expanded(
           child: Text(
             'Sem dados — usando $fallback km/L estimado',
-            style: AppTypography.body(14, color: AppColors.inkMuted),
+            style: AppTypography.body(14, color: context.inkMuted),
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
@@ -309,8 +310,8 @@ class _ConsumptionRow extends StatelessWidget {
             horizontal: AppSpacing.sm,
             vertical: 2,
           ),
-          decoration: const BoxDecoration(
-            color: AppColors.surfaceSunken,
+          decoration: BoxDecoration(
+            color: context.surfaceSunken,
             borderRadius: AppRadius.allSm,
           ),
           child: Text(
@@ -318,7 +319,7 @@ class _ConsumptionRow extends StatelessWidget {
             style: AppTypography.body(
               11,
               weight: FontWeight.w600,
-              color: AppColors.inkMuted,
+              color: context.inkMuted,
             ),
           ),
         ),
@@ -441,7 +442,7 @@ class _RecommendationPlaceholder extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Text(
             'Preencha os preços acima para ver a recomendação.',
-            style: AppTypography.body(14, color: AppColors.inkMuted),
+            style: AppTypography.body(14, color: context.inkMuted),
           ),
         ],
       ),
@@ -462,9 +463,9 @@ class _Card extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: AppColors.surfaceRaised,
+        color: context.surfaceRaised,
         borderRadius: AppRadius.allMd,
-        border: Border.all(color: AppColors.hairline),
+        border: Border.all(color: context.hairline),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -484,7 +485,7 @@ class _Eyebrow extends StatelessWidget {
     return Text(
       text,
       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: AppColors.inkMuted,
+            color: context.inkMuted,
             letterSpacing: 1.4,
           ),
     );

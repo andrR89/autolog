@@ -11,6 +11,7 @@
 // ficam em surfaceSunken neutro com label inkMuted — eles existem como
 // opção, mas não chamam atenção.
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/domain/models/enums.dart';
 import 'package:autolog/features/vehicles/widgets/fuel_type_style.dart';
@@ -83,7 +84,7 @@ class _FuelTypeChip extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Material(
-      color: selected ? color.withValues(alpha: 0.14) : AppColors.surfaceSunken,
+      color: selected ? color.withValues(alpha: 0.14) : context.surfaceSunken,
       borderRadius: const BorderRadius.all(Radius.circular(AppRadius.pill)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -116,7 +117,7 @@ class _FuelTypeChip extends StatelessWidget {
               Text(
                 label,
                 style: textTheme.labelMedium?.copyWith(
-                  color: selected ? AppColors.ink : AppColors.inkMuted,
+                  color: selected ? context.ink : context.inkMuted,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
                   letterSpacing: 0.2,
                 ),

@@ -10,6 +10,7 @@
 // A selecionada ganha fundo brand.withValues(alpha: 0.1), borda brand e
 // texto brand em peso 700 — padrão de "seleção suave" do DS.
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/domain/models/enums.dart';
 import 'package:flutter/material.dart';
@@ -91,7 +92,7 @@ class _CategoryChip extends StatelessWidget {
     return Material(
       color: selected
           ? selectedColor.withValues(alpha: 0.10)
-          : AppColors.surfaceSunken,
+          : context.surfaceSunken,
       borderRadius: const BorderRadius.all(Radius.circular(AppRadius.pill)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -118,13 +119,13 @@ class _CategoryChip extends StatelessWidget {
               Icon(
                 icon,
                 size: 15,
-                color: selected ? selectedColor : AppColors.inkMuted,
+                color: selected ? selectedColor : context.inkMuted,
               ),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 label,
                 style: textTheme.labelMedium?.copyWith(
-                  color: selected ? selectedColor : AppColors.inkMuted,
+                  color: selected ? selectedColor : context.inkMuted,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
                   letterSpacing: 0.2,
                 ),

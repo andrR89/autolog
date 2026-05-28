@@ -29,6 +29,7 @@
 // (Lembretes, Despesas, Relatórios, Editar) e FAB extended manda
 // para o formulário.
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/data/repositories/fuel_entry_repository.dart';
@@ -340,7 +341,7 @@ class _AppBar extends StatelessWidget {
     // Quando NÃO selada, o app bar fica sobre o painel brand: ícones
     // claros e título oculto. Quando selada (após scroll), vira AppBar
     // canônica com fundo surface + título.
-    final foreground = sealed ? AppColors.ink : AppColors.brandInk;
+    final foreground = sealed ? context.ink : AppColors.brandInk;
 
     // Status bar: branca (ícones claros) sobre o hero brand; escura (ícones
     // escuros) quando a AppBar selou e o fundo virou surface off-white.
@@ -360,7 +361,7 @@ class _AppBar extends StatelessWidget {
       pinned: true,
       elevation: 0,
       scrolledUnderElevation: 0,
-      backgroundColor: sealed ? AppColors.surface : AppColors.brand,
+      backgroundColor: sealed ? context.surface : AppColors.brand,
       surfaceTintColor: Colors.transparent,
       systemOverlayStyle: overlayStyle,
       iconTheme: IconThemeData(color: foreground),
@@ -383,7 +384,7 @@ class _AppBar extends StatelessWidget {
           vehicle.nickname,
           style: Theme.of(
             context,
-          ).textTheme.titleLarge?.copyWith(color: AppColors.ink),
+          ).textTheme.titleLarge?.copyWith(color: context.ink),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -454,7 +455,7 @@ class _HistoryHeader extends StatelessWidget {
           Text(
             'HISTÓRICO',
             style: textTheme.labelSmall?.copyWith(
-              color: AppColors.inkMuted,
+              color: context.inkMuted,
               letterSpacing: 1.6,
             ),
           ),
@@ -486,7 +487,7 @@ class _MonthHeader extends StatelessWidget {
         15,
         weight: FontWeight.w600,
         height: 1.1,
-        color: AppColors.inkMuted,
+        color: context.inkMuted,
       ),
     );
   }
@@ -516,14 +517,14 @@ class _EmptyState extends StatelessWidget {
               Container(
                 width: 64,
                 height: 64,
-                decoration: const BoxDecoration(
-                  color: AppColors.surfaceSunken,
+                decoration: BoxDecoration(
+                  color: context.surfaceSunken,
                   borderRadius: AppRadius.allLg,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.local_gas_station_outlined,
                   size: 30,
-                  color: AppColors.inkMuted,
+                  color: context.inkMuted,
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -540,7 +541,7 @@ class _EmptyState extends StatelessWidget {
               Text(
                 'Toque em + pra começar a história deste carro.',
                 style: textTheme.bodyMedium?.copyWith(
-                  color: AppColors.inkMuted,
+                  color: context.inkMuted,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -566,7 +567,7 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.cloud_off, size: 40, color: AppColors.inkMuted),
+            Icon(Icons.cloud_off, size: 40, color: context.inkMuted),
             const SizedBox(height: AppSpacing.lg),
             Text(
               'Não foi possível carregar os abastecimentos.',
@@ -730,9 +731,9 @@ class _TripsBannerCard extends StatelessWidget {
         onTap: () => context.push('/vehicles/$vehicleId/trips'),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: AppColors.surfaceRaised,
+            color: context.surfaceRaised,
             borderRadius: AppRadius.allMd,
-            border: Border.all(color: AppColors.hairline),
+            border: Border.all(color: context.hairline),
           ),
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
@@ -741,13 +742,13 @@ class _TripsBannerCard extends StatelessWidget {
                 Container(
                   width: 40,
                   height: 40,
-                  decoration: const BoxDecoration(
-                    color: AppColors.surfaceSunken,
+                  decoration: BoxDecoration(
+                    color: context.surfaceSunken,
                     borderRadius: AppRadius.allSm,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.map_outlined,
-                    color: AppColors.inkMuted,
+                    color: context.inkMuted,
                     size: 22,
                   ),
                 ),
@@ -767,15 +768,15 @@ class _TripsBannerCard extends StatelessWidget {
                         'Agrupe abastecimentos e despesas por período',
                         style: AppTypography.body(
                           13,
-                          color: AppColors.inkMuted,
+                          color: context.inkMuted,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const Icon(
+                Icon(
                   Icons.chevron_right,
-                  color: AppColors.inkMuted,
+                  color: context.inkMuted,
                   size: 20,
                 ),
               ],
@@ -808,9 +809,9 @@ class _FuelEconomyBannerCard extends StatelessWidget {
         onTap: () => context.push('/vehicles/$vehicleId/fuel-economy'),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: AppColors.surfaceRaised,
+            color: context.surfaceRaised,
             borderRadius: AppRadius.allMd,
-            border: Border.all(color: AppColors.hairline),
+            border: Border.all(color: context.hairline),
           ),
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
@@ -819,13 +820,13 @@ class _FuelEconomyBannerCard extends StatelessWidget {
                 Container(
                   width: 40,
                   height: 40,
-                  decoration: const BoxDecoration(
-                    color: AppColors.surfaceSunken,
+                  decoration: BoxDecoration(
+                    color: context.surfaceSunken,
                     borderRadius: AppRadius.allSm,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.calculate_outlined,
-                    color: AppColors.inkMuted,
+                    color: context.inkMuted,
                     size: 22,
                   ),
                 ),
@@ -845,15 +846,15 @@ class _FuelEconomyBannerCard extends StatelessWidget {
                         'Descubra qual combustível compensa hoje',
                         style: AppTypography.body(
                           13,
-                          color: AppColors.inkMuted,
+                          color: context.inkMuted,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const Icon(
+                Icon(
                   Icons.chevron_right,
-                  color: AppColors.inkMuted,
+                  color: context.inkMuted,
                   size: 20,
                 ),
               ],

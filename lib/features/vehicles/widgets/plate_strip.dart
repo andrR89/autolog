@@ -7,6 +7,7 @@
 // ("sem placa") em inkSoft, mantendo o mesmo formato para não criar
 // "buracos" visuais entre cards.
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -30,9 +31,9 @@ class PlateStrip extends StatelessWidget {
       decoration: BoxDecoration(
         // Fundo off-white quente — destaca dentro do card branco e
         // referencia o papel da placa real.
-        color: AppColors.surface,
+        color: context.surface,
         borderRadius: AppRadius.allSm,
-        border: Border.all(color: AppColors.hairline, width: 1),
+        border: Border.all(color: context.hairline, width: 1),
       ),
       child: Text(
         display,
@@ -41,7 +42,7 @@ class PlateStrip extends StatelessWidget {
           fontWeight: hasPlate ? FontWeight.w700 : FontWeight.w500,
           letterSpacing: hasPlate ? 1.4 : 0.2,
           height: 1.0,
-          color: hasPlate ? AppColors.ink : AppColors.inkSoft,
+          color: hasPlate ? context.ink : context.inkSoft,
           fontFeatures: const [FontFeature.tabularFigures()],
           fontStyle: hasPlate ? FontStyle.normal : FontStyle.italic,
         ),

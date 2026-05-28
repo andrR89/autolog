@@ -26,6 +26,7 @@
 // Sem baseline (carro novo, primeiro abastecimento ainda): mostra "—"
 // + tagline convidativa. Não dá erro, não some — é parte do convite.
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/domain/models/vehicle.dart';
@@ -293,7 +294,7 @@ class _MonthStrip extends StatelessWidget {
     };
 
     return Container(
-      color: AppColors.surface,
+      color: context.surface,
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.xxl,
         AppSpacing.lg,
@@ -306,7 +307,7 @@ class _MonthStrip extends StatelessWidget {
           Text(
             monthLabel,
             style: textTheme.labelSmall?.copyWith(
-              color: AppColors.inkMuted,
+              color: context.inkMuted,
               letterSpacing: 1.6,
             ),
           ),
@@ -322,13 +323,13 @@ class _MonthStrip extends StatelessWidget {
               const SizedBox(width: AppSpacing.sm + 2),
               // "vírgula respiratória" em hairline pra dar ritmo editorial
               // sem precisar de bullet visual.
-              Container(width: 1, height: 14, color: AppColors.hairline),
+              Container(width: 1, height: 14, color: context.hairline),
               const SizedBox(width: AppSpacing.sm + 2),
               Flexible(
                 child: Text(
                   countText,
                   style: textTheme.bodyMedium?.copyWith(
-                    color: AppColors.inkMuted,
+                    color: context.inkMuted,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

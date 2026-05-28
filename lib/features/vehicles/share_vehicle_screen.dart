@@ -1,3 +1,4 @@
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/data/repositories/vehicle_member_repository.dart';
 import 'package:autolog/domain/models/vehicle.dart';
@@ -155,14 +156,14 @@ class _ShareVehicleScreenState extends ConsumerState<ShareVehicleScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.surface,
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
+        backgroundColor: context.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          color: AppColors.ink,
+          color: context.ink,
           tooltip: 'Voltar',
           onPressed: () {
             if (context.canPop()) {
@@ -174,7 +175,7 @@ class _ShareVehicleScreenState extends ConsumerState<ShareVehicleScreen> {
         ),
         title: Text(
           'Compartilhar veículo',
-          style: textTheme.titleLarge?.copyWith(color: AppColors.ink),
+          style: textTheme.titleLarge?.copyWith(color: context.ink),
         ),
       ),
       body: ListView(
@@ -184,7 +185,7 @@ class _ShareVehicleScreenState extends ConsumerState<ShareVehicleScreen> {
           Text(
             widget.vehicle.nickname,
             style: textTheme.headlineSmall?.copyWith(
-              color: AppColors.ink,
+              color: context.ink,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -192,16 +193,16 @@ class _ShareVehicleScreenState extends ConsumerState<ShareVehicleScreen> {
           Text(
             'Quem você adicionar verá e poderá editar este veículo, '
             'abastecimentos, despesas e lembretes.',
-            style: textTheme.bodyMedium?.copyWith(color: AppColors.inkMuted),
+            style: textTheme.bodyMedium?.copyWith(color: context.inkMuted),
           ),
           const SizedBox(height: AppSpacing.xl),
 
           // ── Formulário de adição ─────────────────────────────────────
           Container(
             decoration: BoxDecoration(
-              color: AppColors.surfaceRaised,
+              color: context.surfaceRaised,
               borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(color: AppColors.hairline),
+              border: Border.all(color: context.hairline),
             ),
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Form(
@@ -212,7 +213,7 @@ class _ShareVehicleScreenState extends ConsumerState<ShareVehicleScreen> {
                   Text(
                     'Adicionar por email',
                     style: textTheme.titleMedium?.copyWith(
-                      color: AppColors.ink,
+                      color: context.ink,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -226,10 +227,10 @@ class _ShareVehicleScreenState extends ConsumerState<ShareVehicleScreen> {
                     decoration: InputDecoration(
                       hintText: 'email@exemplo.com',
                       hintStyle: textTheme.bodyMedium?.copyWith(
-                        color: AppColors.inkSoft,
+                        color: context.inkSoft,
                       ),
                       filled: true,
-                      fillColor: AppColors.surfaceSunken,
+                      fillColor: context.surfaceSunken,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(AppRadius.sm),
                         borderSide: BorderSide.none,
@@ -288,7 +289,7 @@ class _ShareVehicleScreenState extends ConsumerState<ShareVehicleScreen> {
           Text(
             'MEMBROS ATUAIS',
             style: textTheme.labelSmall?.copyWith(
-              color: AppColors.inkMuted,
+              color: context.inkMuted,
               letterSpacing: 1.6,
             ),
           ),
@@ -314,7 +315,7 @@ class _ShareVehicleScreenState extends ConsumerState<ShareVehicleScreen> {
                   child: Text(
                     'Nenhum membro adicionado ainda.',
                     style: textTheme.bodyMedium?.copyWith(
-                      color: AppColors.inkSoft,
+                      color: context.inkSoft,
                     ),
                   ),
                 );
@@ -357,22 +358,22 @@ class _MemberTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       decoration: BoxDecoration(
-        color: AppColors.surfaceRaised,
+        color: context.surfaceRaised,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: AppColors.hairline),
+        border: Border.all(color: context.hairline),
       ),
       child: ListTile(
-        leading: const CircleAvatar(
-          backgroundColor: AppColors.surfaceSunken,
-          child: Icon(Icons.person_outline, color: AppColors.inkMuted),
+        leading: CircleAvatar(
+          backgroundColor: context.surfaceSunken,
+          child: Icon(Icons.person_outline, color: context.inkMuted),
         ),
         title: Text(
           _truncate(member.userId),
-          style: textTheme.bodyMedium?.copyWith(color: AppColors.ink),
+          style: textTheme.bodyMedium?.copyWith(color: context.ink),
         ),
         subtitle: Text(
           member.role == 'owner' ? 'Proprietário' : 'Membro',
-          style: textTheme.bodySmall?.copyWith(color: AppColors.inkMuted),
+          style: textTheme.bodySmall?.copyWith(color: context.inkMuted),
         ),
         trailing: IconButton(
           icon: const Icon(Icons.person_remove_outlined, color: AppColors.danger),

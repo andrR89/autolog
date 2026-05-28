@@ -140,7 +140,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             onPressed: () => Navigator.of(ctx).pop(true),
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.danger,
-              foregroundColor: AppColors.surfaceRaised,
+              foregroundColor: Colors.white,
             ),
             child: const Text('Limpar'),
           ),
@@ -236,7 +236,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   'Erro ao carregar mensagens.',
                   style: Theme.of(
                     context,
-                  ).textTheme.bodyMedium?.copyWith(color: AppColors.inkMuted),
+                  ).textTheme.bodyMedium?.copyWith(color: context.inkMuted),
                 ),
               ),
               data: (msgs) {

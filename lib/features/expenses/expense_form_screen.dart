@@ -1,3 +1,4 @@
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/domain/models/enums.dart';
 import 'package:autolog/domain/models/expense.dart';
@@ -282,7 +283,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 1,
-        shadowColor: AppColors.hairline,
+        shadowColor: context.hairline,
         // Status bar com ícones escuros — fundo é o surface off-white.
         systemOverlayStyle: const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
@@ -428,7 +429,7 @@ class _SectionFieldLabel extends StatelessWidget {
     return Text(
       label,
       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-        color: AppColors.inkSoft,
+        color: context.inkSoft,
         letterSpacing: 1.4,
         fontWeight: FontWeight.w700,
       ),
@@ -453,9 +454,9 @@ class _SaveActionBar extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surfaceRaised,
-          border: Border(top: AppBorders.hairline),
+        decoration: BoxDecoration(
+          color: context.surfaceRaised,
+          border: Border(top: BorderSide(color: context.hairline)),
         ),
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg,

@@ -9,6 +9,7 @@
 // - Tooltip limpo em fundo escuro.
 // - ANIMAÇÃO: swapAnimationDuration 800ms easeOutCubic.
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/features/reports/monthly_price.dart';
@@ -48,6 +49,12 @@ class PriceLineChart extends StatelessWidget {
     );
     final fmtShort = NumberFormat('0.00', 'pt_BR');
 
+    // Capture dynamic colors before fl_chart callbacks (no BuildContext inside).
+    final hairline = context.hairline;
+    final inkSoft = context.inkSoft;
+    final inkMuted = context.inkMuted;
+    final surfaceRaised = context.surfaceRaised;
+
     return SizedBox(
       height: 200,
       child: LineChart(
@@ -57,8 +64,8 @@ class PriceLineChart extends StatelessWidget {
           gridData: FlGridData(
             show: true,
             drawVerticalLine: false,
-            getDrawingHorizontalLine: (_) => const FlLine(
-              color: AppColors.hairline,
+            getDrawingHorizontalLine: (_) => FlLine(
+              color: hairline,
               strokeWidth: 1,
               dashArray: [3, 5],
             ),
@@ -101,7 +108,7 @@ class PriceLineChart extends StatelessWidget {
                     child: Text(
                       r'R$'
                       '${fmtShort.format(value)}',
-                      style: AppTypography.body(10, color: AppColors.inkSoft),
+                      style: AppTypography.body(10, color: inkSoft),
                     ),
                   );
                 },
@@ -123,7 +130,7 @@ class PriceLineChart extends StatelessWidget {
                     meta: meta,
                     child: Text(
                       _shortMonth(data[index].month),
-                      style: AppTypography.body(10, color: AppColors.inkSoft),
+                      style: AppTypography.body(10, color: inkSoft),
                     ),
                   );
                 },
@@ -136,16 +143,16 @@ class PriceLineChart extends StatelessWidget {
               isCurved: true,
               curveSmoothness: 0.3,
               // Cor da linha: inkMuted — dado de mercado, sem "alarmar" com cor forte
-              color: AppColors.inkMuted,
+              color: inkMuted,
               barWidth: 2,
               dotData: FlDotData(
                 show: true,
                 getDotPainter: (spot, percent, barData, index) {
                   return FlDotCirclePainter(
                     radius: 3.0,
-                    color: AppColors.surfaceRaised,
+                    color: surfaceRaised,
                     strokeWidth: 1.5,
-                    strokeColor: AppColors.inkMuted,
+                    strokeColor: inkMuted,
                   );
                 },
               ),

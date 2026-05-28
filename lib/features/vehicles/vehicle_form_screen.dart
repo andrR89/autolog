@@ -1,3 +1,4 @@
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/data/remote/fipe_models.dart';
 import 'package:autolog/data/repositories/fipe_history_repository.dart';
@@ -481,7 +482,7 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 1,
-        shadowColor: AppColors.hairline,
+        shadowColor: context.hairline,
         // Status bar com ícones escuros — fundo é o surface off-white.
         systemOverlayStyle: const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
@@ -573,8 +574,8 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
                         onPressed: _crlvScanning ? null : _openCrlvScan,
                         style: FilledButton.styleFrom(
                           minimumSize: const Size(double.infinity, 48),
-                          backgroundColor: AppColors.surfaceRaised,
-                          foregroundColor: AppColors.ink,
+                          backgroundColor: context.surfaceRaised,
+                          foregroundColor: context.ink,
                         ),
                         icon: _crlvScanning
                             ? const SizedBox(
@@ -866,7 +867,7 @@ class _SectionFieldLabel extends StatelessWidget {
     return Text(
       label,
       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-        color: AppColors.inkSoft,
+        color: context.inkSoft,
         letterSpacing: 1.4,
         fontWeight: FontWeight.w700,
       ),
@@ -894,9 +895,9 @@ class _SaveActionBar extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surfaceRaised,
-          border: Border(top: AppBorders.hairline),
+        decoration: BoxDecoration(
+          color: context.surfaceRaised,
+          border: Border(top: BorderSide(color: context.hairline, width: 1)),
         ),
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg,
@@ -954,10 +955,10 @@ class _VehicleTypeChip extends StatelessWidget {
           horizontal: AppSpacing.sm,
         ),
         decoration: BoxDecoration(
-          color: selected ? AppColors.brand : AppColors.surfaceRaised,
+          color: selected ? AppColors.brand : context.surfaceRaised,
           borderRadius: AppRadius.allMd,
           border: Border.all(
-            color: selected ? AppColors.brand : AppColors.hairline,
+            color: selected ? AppColors.brand : context.hairline,
           ),
         ),
         child: Row(
@@ -966,13 +967,13 @@ class _VehicleTypeChip extends StatelessWidget {
             Icon(
               icon,
               size: 20,
-              color: selected ? AppColors.brandInk : AppColors.inkMuted,
+              color: selected ? AppColors.brandInk : context.inkMuted,
             ),
             const SizedBox(width: AppSpacing.sm),
             Text(
               label,
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: selected ? AppColors.brandInk : AppColors.ink,
+                color: selected ? AppColors.brandInk : context.ink,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
@@ -1066,9 +1067,9 @@ class _TechnicalSpecsSectionState extends State<_TechnicalSpecsSection> {
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: AppColors.surfaceRaised,
+          color: context.surfaceRaised,
           borderRadius: AppRadius.allMd,
-          border: Border.all(color: AppColors.hairline),
+          border: Border.all(color: context.hairline),
         ),
         child: ClipRRect(
           borderRadius: AppRadius.allMd,
@@ -1078,7 +1079,7 @@ class _TechnicalSpecsSectionState extends State<_TechnicalSpecsSection> {
             title: Text(
               'Detalhes técnicos (opcional)',
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: AppColors.ink,
+                color: context.ink,
                 fontWeight: FontWeight.w600,
               ),
             ),

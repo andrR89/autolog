@@ -12,6 +12,7 @@
 // Não usa Card (que adicionaria borda uniform). Usa separação visual por
 // espaçamento e overline colorida — estilo editorial, não formulário.
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:flutter/material.dart';
@@ -44,7 +45,7 @@ class ChartSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: AppColors.surfaceRaised,
+      color: context.surfaceRaised,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.xxl,
@@ -86,7 +87,7 @@ class ChartSection extends StatelessWidget {
                     child: Text(
                       insight!,
                       textAlign: TextAlign.end,
-                      style: AppTypography.body(12, color: AppColors.inkMuted),
+                      style: AppTypography.body(12, color: context.inkMuted),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
