@@ -27,6 +27,7 @@
 import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
+import 'package:autolog/core/design/widgets/skeleton.dart';
 import 'package:autolog/domain/models/vehicle.dart';
 import 'package:autolog/features/auth/auth_service.dart';
 import 'package:autolog/features/sync/sync_indicator.dart';
@@ -109,7 +110,7 @@ class _VehiclesListScreenState extends ConsumerState<VehiclesListScreen> {
       body: SafeArea(
         top: false,
         child: vehiclesAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const _GarageSkeleton(),
           error: (error, _) =>
               _ErrorState(onRetry: () => ref.invalidate(vehiclesProvider)),
           data: (vehicles) => _Body(vehicles: vehicles),
@@ -344,6 +345,40 @@ class _DismissBackground extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Skeleton de carregamento da garagem
+// ---------------------------------------------------------------------------
+
+class _GarageSkeleton extends StatelessWidget {
+  const _GarageSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header "MINHA / Garagem" skeleton
+          SizedBox(height: AppSpacing.sm),
+          SkeletonLine(width: 48, height: 11),
+          SizedBox(height: AppSpacing.sm),
+          SkeletonLine(width: 160, height: 34),
+          SizedBox(height: AppSpacing.xs),
+          SkeletonLine(width: 80, height: 12),
+          SizedBox(height: AppSpacing.lg),
+          // Cards de veículo
+          SkeletonBox(width: double.infinity, height: 120),
+          SizedBox(height: AppSpacing.md),
+          SkeletonBox(width: double.infinity, height: 120),
+          SizedBox(height: AppSpacing.md),
+          SkeletonBox(width: double.infinity, height: 120),
         ],
       ),
     );

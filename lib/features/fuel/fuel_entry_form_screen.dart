@@ -309,6 +309,7 @@ class _FuelEntryFormScreenState extends ConsumerState<FuelEntryFormScreen> {
     final scanState = ref.read(scanControllerProvider);
 
     if (scanState is ScanQuotaExhausted) {
+      unawaited(HapticFeedback.heavyImpact());
       showQuotaExhaustedBanner(
         context,
         onSeePremium: () {
@@ -323,6 +324,7 @@ class _FuelEntryFormScreenState extends ConsumerState<FuelEntryFormScreen> {
     }
 
     if (scanState is ScanError) {
+      unawaited(HapticFeedback.heavyImpact());
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(scanState.message),
@@ -462,6 +464,9 @@ class _FuelEntryFormScreenState extends ConsumerState<FuelEntryFormScreen> {
         );
       }
 
+      // Feedback tátil: salvo com sucesso.
+      unawaited(HapticFeedback.mediumImpact());
+
       if (mounted) {
         if (context.canPop()) {
           context.pop();
@@ -470,6 +475,9 @@ class _FuelEntryFormScreenState extends ConsumerState<FuelEntryFormScreen> {
         }
       }
     } catch (e) {
+      // Feedback tátil: falha ao salvar.
+      unawaited(HapticFeedback.heavyImpact());
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -714,27 +722,29 @@ class _FuelEntryFormScreenState extends ConsumerState<FuelEntryFormScreen> {
                           onSelected: (selection) {
                             _stationBrandCtrl.text = selection;
                           },
-                          fieldViewBuilder: (
-                            context,
-                            controller,
-                            focusNode,
-                            onFieldSubmitted,
-                          ) {
-                            // Sincroniza estado interno do Autocomplete com nosso ctrl.
-                            controller.addListener(() {
-                              if (_stationBrandCtrl.text != controller.text) {
-                                _stationBrandCtrl.text = controller.text;
-                              }
-                            });
-                            return TextFormField(
-                              controller: controller,
-                              focusNode: focusNode,
-                              decoration: const InputDecoration(
-                                labelText: 'Bandeira',
-                                hintText: 'Ex.: Shell',
-                              ),
-                            );
-                          },
+                          fieldViewBuilder:
+                              (
+                                context,
+                                controller,
+                                focusNode,
+                                onFieldSubmitted,
+                              ) {
+                                // Sincroniza estado interno do Autocomplete com nosso ctrl.
+                                controller.addListener(() {
+                                  if (_stationBrandCtrl.text !=
+                                      controller.text) {
+                                    _stationBrandCtrl.text = controller.text;
+                                  }
+                                });
+                                return TextFormField(
+                                  controller: controller,
+                                  focusNode: focusNode,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Bandeira',
+                                    hintText: 'Ex.: Shell',
+                                  ),
+                                );
+                              },
                         ),
                         const SizedBox(height: AppSpacing.md),
 

@@ -32,6 +32,7 @@
 import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
+import 'package:autolog/core/design/widgets/skeleton.dart';
 import 'package:autolog/data/repositories/fuel_entry_repository.dart';
 import 'package:autolog/domain/models/enums.dart';
 import 'package:autolog/domain/models/fuel_entry.dart';
@@ -78,6 +79,11 @@ class _FuelHistoryScreenState extends ConsumerState<FuelHistoryScreen> {
   /// vista; nesse momento a AppBar ganha fundo sólido + título visível.
   bool _appBarSealed = false;
 
+  /// Paginação lazy: número de entradas visíveis da timeline.
+  /// Inicia em [_kPageSize]; incrementa ao chegar no fim da lista.
+  static const int _kPageSize = 25;
+  int _visibleCount = _kPageSize;
+
   @override
   void initState() {
     super.initState();
@@ -101,6 +107,20 @@ class _FuelHistoryScreenState extends ConsumerState<FuelHistoryScreen> {
     if (shouldSeal != _appBarSealed) {
       setState(() => _appBarSealed = shouldSeal);
     }
+
+    // Paginação: ao chegar a 200px do fim da lista, carrega mais 25 entradas.
+    if (_scrollController.hasClients) {
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      if (_scrollController.offset >= maxScroll - 200) {
+        final entriesAsync = ref.read(
+          fuelEntriesByVehicleProvider(widget.vehicle.id),
+        );
+        final totalEntries = entriesAsync.value?.length ?? 0;
+        if (_visibleCount < totalEntries) {
+          setState(() => _visibleCount += _kPageSize);
+        }
+      }
+    }
   }
 
   @override
@@ -108,17 +128,19 @@ class _FuelHistoryScreenState extends ConsumerState<FuelHistoryScreen> {
     final vehicle = widget.vehicle;
     final entriesAsync = ref.watch(fuelEntriesByVehicleProvider(vehicle.id));
 
+    // Reseta paginação se a lista mudou de tamanho.
+    entriesAsync.whenData((entries) {
+      if (entries.length < _visibleCount) {
+        _visibleCount = _kPageSize;
+      }
+    });
+
     return Scaffold(
       body: entriesAsync.when(
         loading: () => _ScaffoldedBody(
           vehicle: vehicle,
           appBarSealed: _appBarSealed,
-          child: const Center(
-            child: Padding(
-              padding: EdgeInsets.all(AppSpacing.huge),
-              child: CircularProgressIndicator(),
-            ),
-          ),
+          child: const _FuelHistorySkeleton(),
         ),
         error: (_, _) => _ScaffoldedBody(
           vehicle: vehicle,
@@ -133,6 +155,7 @@ class _FuelHistoryScreenState extends ConsumerState<FuelHistoryScreen> {
           entries: entries,
           scrollController: _scrollController,
           appBarSealed: _appBarSealed,
+          visibleCount: entries.length <= _kPageSize ? null : _visibleCount,
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -183,6 +206,7 @@ class _DataBody extends ConsumerWidget {
     required this.entries,
     required this.scrollController,
     required this.appBarSealed,
+    this.visibleCount,
   });
 
   final Vehicle vehicle;
@@ -190,8 +214,13 @@ class _DataBody extends ConsumerWidget {
   final ScrollController scrollController;
   final bool appBarSealed;
 
+  /// Quando não-null, limita quantas entradas são renderizadas na timeline
+  /// (lazy load). Null = sem limite (lista pequena, <=25 entradas).
+  final int? visibleCount;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Para consumo usamos sempre o histórico completo (cálculo é sagrado).
     final rows = computeForDisplay(entries);
     final hero = pickHeroKmPerLiter(rows);
     final monthStats = computeCurrentMonthStats(entries);
@@ -201,7 +230,16 @@ class _DataBody extends ConsumerWidget {
     // Construímos a "lista" como uma sequência mista de headers de mês e
     // cards, achatada em itens — mais simples que SliverList intercalado
     // e suficiente para o volume típico (poucas dezenas de abastecimentos).
-    final items = _buildTimelineItems(rows);
+    //
+    // Paginação lazy: exibimos apenas as primeiras [visibleCount] entradas
+    // do histórico quando a lista é grande (>25 entradas). O cálculo de
+    // consumo sempre usa o histórico completo — apenas a renderização é
+    // limitada.
+    final allItems = _buildTimelineItems(rows);
+    final items = visibleCount != null && visibleCount! < allItems.length
+        ? _limitItems(allItems, visibleCount!)
+        : allItems;
+    final hasMore = visibleCount != null && visibleCount! < allItems.length;
 
     return CustomScrollView(
       controller: scrollController,
@@ -219,27 +257,15 @@ class _DataBody extends ConsumerWidget {
         ),
         // Gráfico FIPE — só aparece se o veículo tem código FIPE configurado.
         if (vehicle.fipeCode != null)
-          SliverToBoxAdapter(
-            child: FipeHistoryChart(vehicleId: vehicle.id),
-          ),
+          SliverToBoxAdapter(child: FipeHistoryChart(vehicleId: vehicle.id)),
         // Cards de custo por km e tendência — só se há ao menos 1 entry.
         if (entries.isNotEmpty) ...[
-          SliverToBoxAdapter(
-            child: CostPerKmCard(vehicle: vehicle),
-          ),
-          SliverToBoxAdapter(
-            child: TrendCard(vehicle: vehicle),
-          ),
-          SliverToBoxAdapter(
-            child: Co2Card(vehicle: vehicle),
-          ),
-          SliverToBoxAdapter(
-            child: FavoriteStationCard(vehicle: vehicle),
-          ),
+          SliverToBoxAdapter(child: CostPerKmCard(vehicle: vehicle)),
+          SliverToBoxAdapter(child: TrendCard(vehicle: vehicle)),
+          SliverToBoxAdapter(child: Co2Card(vehicle: vehicle)),
+          SliverToBoxAdapter(child: FavoriteStationCard(vehicle: vehicle)),
           // Card de viagens — acesso rápido ao modo viagem.
-          SliverToBoxAdapter(
-            child: _TripsBannerCard(vehicleId: vehicle.id),
-          ),
+          SliverToBoxAdapter(child: _TripsBannerCard(vehicleId: vehicle.id)),
           // Calculadora etanol × gasolina — exclusiva pra veículos flex.
           if (vehicle.fuelType == FuelType.flex)
             SliverToBoxAdapter(
@@ -256,12 +282,12 @@ class _DataBody extends ConsumerWidget {
         else ...[
           const SliverToBoxAdapter(child: _HistoryHeader()),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(
+            padding: EdgeInsets.fromLTRB(
               AppSpacing.lg,
               0,
               AppSpacing.lg,
-              // Espaço pro FAB extended.
-              AppSpacing.huge + AppSpacing.xl,
+              // Espaço pro FAB extended (maior quando há indicador de "mais").
+              hasMore ? AppSpacing.xxl : AppSpacing.huge + AppSpacing.xl,
             ),
             sliver: SliverList.builder(
               itemCount: items.length,
@@ -288,6 +314,23 @@ class _DataBody extends ConsumerWidget {
               },
             ),
           ),
+          // Indicador de carregamento quando há mais entradas para mostrar.
+          if (hasMore)
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  top: AppSpacing.md,
+                  bottom: AppSpacing.huge + AppSpacing.xl,
+                ),
+                child: Center(
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              ),
+            ),
         ],
       ],
     );
@@ -323,6 +366,70 @@ class _DataBody extends ConsumerWidget {
     final raw = DateFormat('MMMM yyyy', 'pt_BR').format(date);
     if (raw.isEmpty) return raw;
     return raw[0].toUpperCase() + raw.substring(1);
+  }
+
+  /// Limita [allItems] a [count] entradas (_EntryItem), preservando todos os
+  /// headers de mês correspondentes. Garante que o corte não separe um header
+  /// do seu primeiro card.
+  static List<_TimelineItem> _limitItems(
+    List<_TimelineItem> allItems,
+    int count,
+  ) {
+    var entryCount = 0;
+    final result = <_TimelineItem>[];
+    for (final item in allItems) {
+      result.add(item);
+      if (item is _EntryItem) {
+        entryCount++;
+        if (entryCount >= count) break;
+      }
+    }
+    return result;
+  }
+}
+
+// ============================================================================
+// Skeleton loading state da timeline
+// ============================================================================
+
+class _FuelHistorySkeleton extends StatelessWidget {
+  const _FuelHistorySkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.xl,
+        AppSpacing.lg,
+        AppSpacing.lg,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Imita o "HISTÓRICO / Abastecimentos" header
+          SkeletonLine(width: 80, height: 11),
+          SizedBox(height: AppSpacing.sm),
+          SkeletonLine(width: 200, height: 24),
+          SizedBox(height: AppSpacing.xxl),
+          // Month header
+          SkeletonLine(width: 100, height: 15),
+          SizedBox(height: AppSpacing.md),
+          // Cards
+          SkeletonFuelCard(),
+          SizedBox(height: AppSpacing.md),
+          SkeletonFuelCard(),
+          SizedBox(height: AppSpacing.md),
+          SkeletonFuelCard(),
+          SizedBox(height: AppSpacing.xxl),
+          SkeletonLine(width: 80, height: 15),
+          SizedBox(height: AppSpacing.md),
+          SkeletonFuelCard(),
+          SizedBox(height: AppSpacing.md),
+          SkeletonFuelCard(),
+        ],
+      ),
+    );
   }
 }
 
@@ -518,37 +625,37 @@ class _EmptyState extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: context.surfaceSunken,
-                  borderRadius: AppRadius.allLg,
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: context.surfaceSunken,
+                    borderRadius: AppRadius.allLg,
+                  ),
+                  child: Icon(
+                    Icons.local_gas_station_outlined,
+                    size: 30,
+                    color: context.inkMuted,
+                  ),
                 ),
-                child: Icon(
-                  Icons.local_gas_station_outlined,
-                  size: 30,
-                  color: context.inkMuted,
+                const SizedBox(height: AppSpacing.lg),
+                Text(
+                  'Nenhum abastecimento aqui ainda.',
+                  style: AppTypography.display(
+                    22,
+                    weight: FontWeight.w700,
+                    height: 1.2,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              Text(
-                'Nenhum abastecimento aqui ainda.',
-                style: AppTypography.display(
-                  22,
-                  weight: FontWeight.w700,
-                  height: 1.2,
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Toque em + pra começar a história deste carro.',
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: context.inkMuted,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                'Toque em + pra começar a história deste carro.',
-                style: textTheme.bodyMedium?.copyWith(
-                  color: context.inkMuted,
-                ),
-                textAlign: TextAlign.center,
-              ),
               ],
             ),
           ),
@@ -764,26 +871,16 @@ class _TripsBannerCard extends StatelessWidget {
                     children: [
                       Text(
                         'Viagens',
-                        style: AppTypography.body(
-                          15,
-                          weight: FontWeight.w600,
-                        ),
+                        style: AppTypography.body(15, weight: FontWeight.w600),
                       ),
                       Text(
                         'Agrupe abastecimentos e despesas por período',
-                        style: AppTypography.body(
-                          13,
-                          color: context.inkMuted,
-                        ),
+                        style: AppTypography.body(13, color: context.inkMuted),
                       ),
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.chevron_right,
-                  color: context.inkMuted,
-                  size: 20,
-                ),
+                Icon(Icons.chevron_right, color: context.inkMuted, size: 20),
               ],
             ),
           ),
@@ -842,26 +939,16 @@ class _FuelEconomyBannerCard extends StatelessWidget {
                     children: [
                       Text(
                         'Etanol × Gasolina',
-                        style: AppTypography.body(
-                          15,
-                          weight: FontWeight.w600,
-                        ),
+                        style: AppTypography.body(15, weight: FontWeight.w600),
                       ),
                       Text(
                         'Descubra qual combustível compensa hoje',
-                        style: AppTypography.body(
-                          13,
-                          color: context.inkMuted,
-                        ),
+                        style: AppTypography.body(13, color: context.inkMuted),
                       ),
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.chevron_right,
-                  color: context.inkMuted,
-                  size: 20,
-                ),
+                Icon(Icons.chevron_right, color: context.inkMuted, size: 20),
               ],
             ),
           ),

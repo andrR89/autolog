@@ -10,9 +10,12 @@
 // Lembretes sugeridos passam por dedupeProposed antes de serem exibidos.
 // Criar lembrete: ReminderRepository.create() + remoção otimista da lista.
 
+import 'dart:async';
+
 import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
+import 'package:autolog/core/design/widgets/skeleton.dart';
 import 'package:autolog/data/repositories/reminder_repository.dart';
 import 'package:autolog/domain/models/enums.dart';
 import 'package:autolog/domain/models/reminder.dart';
@@ -94,6 +97,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
       setState(() => _state = _ScreenState.quotaError);
     } on ScanException {
       setState(() => _state = _ScreenState.genericError);
+      unawaited(HapticFeedback.heavyImpact());
       if (mounted) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
@@ -189,9 +193,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
         ),
         actions: [
           if (_result != null)
-            TtsButton(
-              textBuilder: () => narrateInsights(_result!),
-            ),
+            TtsButton(textBuilder: () => narrateInsights(_result!)),
         ],
       ),
       body: switch (_state) {
@@ -367,15 +369,38 @@ class _LoadingState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return Center(
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.xxl,
+        AppSpacing.lg,
+        AppSpacing.lg,
+      ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const CircularProgressIndicator(),
+          // Label de seção skeleton
+          const SkeletonLine(width: 140, height: 11),
           const SizedBox(height: AppSpacing.lg),
-          Text(
-            'Analisando histórico...',
-            style: textTheme.bodyMedium?.copyWith(color: context.inkMuted),
+          // Cards de insight
+          const SkeletonInsightCard(),
+          const SizedBox(height: AppSpacing.md),
+          const SkeletonInsightCard(),
+          const SizedBox(height: AppSpacing.md),
+          const SkeletonInsightCard(),
+          const SizedBox(height: AppSpacing.xxl),
+          // Label da segunda seção
+          const SkeletonLine(width: 160, height: 11),
+          const SizedBox(height: AppSpacing.lg),
+          const SkeletonInsightCard(),
+          const SizedBox(height: AppSpacing.md),
+          const SkeletonInsightCard(),
+          const SizedBox(height: AppSpacing.xl),
+          Center(
+            child: Text(
+              'Analisando histórico...',
+              style: textTheme.bodySmall?.copyWith(color: context.inkSoft),
+            ),
           ),
         ],
       ),
@@ -415,9 +440,7 @@ class _QuotaBannerState extends StatelessWidget {
               padding: const EdgeInsets.all(AppSpacing.xxxl),
               child: Text(
                 'Sem análises disponíveis este mês.\nAssine o plano premium para análises ilimitadas.',
-                style: textTheme.bodyMedium?.copyWith(
-                  color: context.inkMuted,
-                ),
+                style: textTheme.bodyMedium?.copyWith(color: context.inkMuted),
                 textAlign: TextAlign.center,
               ),
             ),
