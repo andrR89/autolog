@@ -16,8 +16,8 @@ void main() {
   tearDown(() => db.close());
 
   group('schema', () {
-    test('abre com schemaVersion 16 e expõe exatamente 17 tabelas', () {
-      expect(db.schemaVersion, 16); // v16 com calendar_event_links (Sprint 6.EE)
+    test('abre com schemaVersion 17 e expõe exatamente 17 tabelas', () {
+      expect(db.schemaVersion, 17); // v17 com onboarding_seen (Sprint 6.GG)
       expect(db.allTables.length, 17);
     });
   });

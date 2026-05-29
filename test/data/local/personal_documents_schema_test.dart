@@ -11,7 +11,7 @@ void main() {
   group('Schema v7', () {
     test('schemaVersion bumped to 7', () {
       final db = AppDatabase(NativeDatabase.memory());
-      expect(db.schemaVersion, 16); // v16 com calendar_event_links (Sprint 6.EE)
+      expect(db.schemaVersion, 17); // v17 com onboarding_seen (Sprint 6.GG)
       db.close();
     });
 

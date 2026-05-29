@@ -12,6 +12,7 @@ const authRoutes = {'/login', '/signup'};
 /// - Não logado **fora** de rota de auth → `/login`
 /// - Não logado **em** rota de auth → null (permanece onde está)
 /// - Logado **em** rota de auth → `/home`
+/// - Logado em `/onboarding` → null (o onboarding está autorizado para logados)
 /// - Logado **fora** de rota de auth → null (permanece onde está)
 String? authRedirect({required bool isLoggedIn, required String location}) {
   final isAuthRoute = authRoutes.contains(location);

@@ -7,9 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('Schema v16 — CalendarEventLinks', () {
-    test('schemaVersion é 16', () {
+    test('schemaVersion é 17 (v17 com onboarding_seen, Sprint 6.GG)', () {
       final db = AppDatabase(NativeDatabase.memory());
-      expect(db.schemaVersion, 16);
+      expect(db.schemaVersion, 17);
       db.close();
     });
 

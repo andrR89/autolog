@@ -304,6 +304,10 @@ class UserSettings extends Table {
   BoolColumn get notifRecapReady =>
       boolean().withDefault(const Constant(true))();
 
+  /// Flag de onboarding — false até o usuário concluir o tour (Sprint 6.GG).
+  BoolColumn get onboardingSeen =>
+      boolean().withDefault(const Constant(false))();
+
   @override
   Set<Column> get primaryKey => {userId};
 }

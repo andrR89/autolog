@@ -62,4 +62,16 @@ abstract class UserSettingsRepository {
 
   /// Stream reativo: emite sempre que qualquer pref de notif mudar.
   Stream<NotificationPreferences> watchNotifPrefs(String userId);
+
+  // ---------------------------------------------------------------------------
+  // Onboarding (Sprint 6.GG)
+  // ---------------------------------------------------------------------------
+
+  /// Retorna true se o usuário já concluiu o tour de onboarding.
+  ///
+  /// Default: false (nunca viu).
+  Future<bool> getOnboardingSeen(String userId);
+
+  /// Marca o tour como concluído para [userId].
+  Future<void> setOnboardingSeen(String userId);
 }

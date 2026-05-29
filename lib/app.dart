@@ -6,6 +6,7 @@ import 'package:autolog/data/local/database.dart';
 import 'package:autolog/features/auth/auth_redirect.dart';
 import 'package:autolog/features/auth/auth_service.dart';
 import 'package:autolog/features/home_widget/home_widget_service.dart';
+import 'package:autolog/features/onboarding/onboarding_providers.dart';
 import 'package:autolog/features/settings/theme_mode_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -77,7 +78,22 @@ class _AutoLogAppState extends ConsumerState<AutoLogApp> {
       redirect: (context, state) {
         final isLoggedIn = ref.read(authServiceProvider).isLoggedIn;
         final location = state.uri.toString();
-        return authRedirect(isLoggedIn: isLoggedIn, location: location);
+
+        // 1. Auth gate — redireciona para /login se não logado (ou para /home
+        //    se logado num route de auth).
+        final authDest = authRedirect(isLoggedIn: isLoggedIn, location: location);
+        if (authDest != null) return authDest;
+
+        // 2. Onboarding gate — só aciona quando o usuário está autenticado e
+        //    não está já no onboarding.
+        if (isLoggedIn && location != '/onboarding') {
+          final needed = ref
+              .read(onboardingNeededProvider)
+              .valueOrNull;
+          if (needed == true) return '/onboarding';
+        }
+
+        return null;
       },
       routes: appRoutes,
     );

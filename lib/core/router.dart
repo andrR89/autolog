@@ -19,6 +19,7 @@ import 'package:autolog/features/fuel/my_stations_screen.dart';
 import 'package:autolog/features/insights/fiscal_plan_screen.dart';
 import 'package:autolog/features/insights/insights_screen.dart';
 import 'package:autolog/features/insights/maintenance_plan_screen.dart';
+import 'package:autolog/features/onboarding/onboarding_screen.dart';
 import 'package:autolog/features/personal_documents/cnh_form_screen.dart';
 import 'package:autolog/features/personal_documents/fine_form_screen.dart';
 import 'package:autolog/features/personal_documents/insurance_form_screen.dart';
@@ -65,6 +66,13 @@ class RouterNotifier extends ChangeNotifier {
 /// Todas as rotas usam [appTransitionPage] para garantir a transição
 /// slide+fade consistente (ver `lib/core/transitions.dart`).
 final List<RouteBase> appRoutes = [
+  // Tour de onboarding — exibido uma única vez após login novo (Sprint 6.GG).
+  GoRoute(
+    path: '/onboarding',
+    pageBuilder: (context, state) =>
+        appTransitionPage(state: state, child: const OnboardingScreen()),
+  ),
+
   GoRoute(
     path: '/login',
     pageBuilder: (context, state) =>

@@ -7571,6 +7571,21 @@ class $UserSettingsTable extends UserSettings
     ),
     defaultValue: const Constant(true),
   );
+  static const VerificationMeta _onboardingSeenMeta = const VerificationMeta(
+    'onboardingSeen',
+  );
+  @override
+  late final GeneratedColumn<bool> onboardingSeen = GeneratedColumn<bool>(
+    'onboarding_seen',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("onboarding_seen" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     userId,
@@ -7579,6 +7594,7 @@ class $UserSettingsTable extends UserSettings
     notifCnh,
     notifFiscal,
     notifRecapReady,
+    onboardingSeen,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -7639,6 +7655,15 @@ class $UserSettingsTable extends UserSettings
         ),
       );
     }
+    if (data.containsKey('onboarding_seen')) {
+      context.handle(
+        _onboardingSeenMeta,
+        onboardingSeen.isAcceptableOrUnknown(
+          data['onboarding_seen']!,
+          _onboardingSeenMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -7672,6 +7697,10 @@ class $UserSettingsTable extends UserSettings
         DriftSqlType.bool,
         data['${effectivePrefix}notif_recap_ready'],
       )!,
+      onboardingSeen: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}onboarding_seen'],
+      )!,
     );
   }
 
@@ -7688,6 +7717,9 @@ class UserSettingsRow extends DataClass implements Insertable<UserSettingsRow> {
   final bool notifCnh;
   final bool notifFiscal;
   final bool notifRecapReady;
+
+  /// Flag de onboarding — false até o usuário concluir o tour (Sprint 6.GG).
+  final bool onboardingSeen;
   const UserSettingsRow({
     required this.userId,
     required this.themePref,
@@ -7695,6 +7727,7 @@ class UserSettingsRow extends DataClass implements Insertable<UserSettingsRow> {
     required this.notifCnh,
     required this.notifFiscal,
     required this.notifRecapReady,
+    required this.onboardingSeen,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -7705,6 +7738,7 @@ class UserSettingsRow extends DataClass implements Insertable<UserSettingsRow> {
     map['notif_cnh'] = Variable<bool>(notifCnh);
     map['notif_fiscal'] = Variable<bool>(notifFiscal);
     map['notif_recap_ready'] = Variable<bool>(notifRecapReady);
+    map['onboarding_seen'] = Variable<bool>(onboardingSeen);
     return map;
   }
 
@@ -7716,6 +7750,7 @@ class UserSettingsRow extends DataClass implements Insertable<UserSettingsRow> {
       notifCnh: Value(notifCnh),
       notifFiscal: Value(notifFiscal),
       notifRecapReady: Value(notifRecapReady),
+      onboardingSeen: Value(onboardingSeen),
     );
   }
 
@@ -7733,6 +7768,7 @@ class UserSettingsRow extends DataClass implements Insertable<UserSettingsRow> {
       notifCnh: serializer.fromJson<bool>(json['notifCnh']),
       notifFiscal: serializer.fromJson<bool>(json['notifFiscal']),
       notifRecapReady: serializer.fromJson<bool>(json['notifRecapReady']),
+      onboardingSeen: serializer.fromJson<bool>(json['onboardingSeen']),
     );
   }
   @override
@@ -7745,6 +7781,7 @@ class UserSettingsRow extends DataClass implements Insertable<UserSettingsRow> {
       'notifCnh': serializer.toJson<bool>(notifCnh),
       'notifFiscal': serializer.toJson<bool>(notifFiscal),
       'notifRecapReady': serializer.toJson<bool>(notifRecapReady),
+      'onboardingSeen': serializer.toJson<bool>(onboardingSeen),
     };
   }
 
@@ -7755,6 +7792,7 @@ class UserSettingsRow extends DataClass implements Insertable<UserSettingsRow> {
     bool? notifCnh,
     bool? notifFiscal,
     bool? notifRecapReady,
+    bool? onboardingSeen,
   }) => UserSettingsRow(
     userId: userId ?? this.userId,
     themePref: themePref ?? this.themePref,
@@ -7762,6 +7800,7 @@ class UserSettingsRow extends DataClass implements Insertable<UserSettingsRow> {
     notifCnh: notifCnh ?? this.notifCnh,
     notifFiscal: notifFiscal ?? this.notifFiscal,
     notifRecapReady: notifRecapReady ?? this.notifRecapReady,
+    onboardingSeen: onboardingSeen ?? this.onboardingSeen,
   );
   UserSettingsRow copyWithCompanion(UserSettingsCompanion data) {
     return UserSettingsRow(
@@ -7777,6 +7816,9 @@ class UserSettingsRow extends DataClass implements Insertable<UserSettingsRow> {
       notifRecapReady: data.notifRecapReady.present
           ? data.notifRecapReady.value
           : this.notifRecapReady,
+      onboardingSeen: data.onboardingSeen.present
+          ? data.onboardingSeen.value
+          : this.onboardingSeen,
     );
   }
 
@@ -7788,7 +7830,8 @@ class UserSettingsRow extends DataClass implements Insertable<UserSettingsRow> {
           ..write('notifConsumptionDrop: $notifConsumptionDrop, ')
           ..write('notifCnh: $notifCnh, ')
           ..write('notifFiscal: $notifFiscal, ')
-          ..write('notifRecapReady: $notifRecapReady')
+          ..write('notifRecapReady: $notifRecapReady, ')
+          ..write('onboardingSeen: $onboardingSeen')
           ..write(')'))
         .toString();
   }
@@ -7801,6 +7844,7 @@ class UserSettingsRow extends DataClass implements Insertable<UserSettingsRow> {
     notifCnh,
     notifFiscal,
     notifRecapReady,
+    onboardingSeen,
   );
   @override
   bool operator ==(Object other) =>
@@ -7811,7 +7855,8 @@ class UserSettingsRow extends DataClass implements Insertable<UserSettingsRow> {
           other.notifConsumptionDrop == this.notifConsumptionDrop &&
           other.notifCnh == this.notifCnh &&
           other.notifFiscal == this.notifFiscal &&
-          other.notifRecapReady == this.notifRecapReady);
+          other.notifRecapReady == this.notifRecapReady &&
+          other.onboardingSeen == this.onboardingSeen);
 }
 
 class UserSettingsCompanion extends UpdateCompanion<UserSettingsRow> {
@@ -7821,6 +7866,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSettingsRow> {
   final Value<bool> notifCnh;
   final Value<bool> notifFiscal;
   final Value<bool> notifRecapReady;
+  final Value<bool> onboardingSeen;
   final Value<int> rowid;
   const UserSettingsCompanion({
     this.userId = const Value.absent(),
@@ -7829,6 +7875,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSettingsRow> {
     this.notifCnh = const Value.absent(),
     this.notifFiscal = const Value.absent(),
     this.notifRecapReady = const Value.absent(),
+    this.onboardingSeen = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   UserSettingsCompanion.insert({
@@ -7838,6 +7885,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSettingsRow> {
     this.notifCnh = const Value.absent(),
     this.notifFiscal = const Value.absent(),
     this.notifRecapReady = const Value.absent(),
+    this.onboardingSeen = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : userId = Value(userId);
   static Insertable<UserSettingsRow> custom({
@@ -7847,6 +7895,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSettingsRow> {
     Expression<bool>? notifCnh,
     Expression<bool>? notifFiscal,
     Expression<bool>? notifRecapReady,
+    Expression<bool>? onboardingSeen,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -7857,6 +7906,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSettingsRow> {
       if (notifCnh != null) 'notif_cnh': notifCnh,
       if (notifFiscal != null) 'notif_fiscal': notifFiscal,
       if (notifRecapReady != null) 'notif_recap_ready': notifRecapReady,
+      if (onboardingSeen != null) 'onboarding_seen': onboardingSeen,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -7868,6 +7918,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSettingsRow> {
     Value<bool>? notifCnh,
     Value<bool>? notifFiscal,
     Value<bool>? notifRecapReady,
+    Value<bool>? onboardingSeen,
     Value<int>? rowid,
   }) {
     return UserSettingsCompanion(
@@ -7877,6 +7928,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSettingsRow> {
       notifCnh: notifCnh ?? this.notifCnh,
       notifFiscal: notifFiscal ?? this.notifFiscal,
       notifRecapReady: notifRecapReady ?? this.notifRecapReady,
+      onboardingSeen: onboardingSeen ?? this.onboardingSeen,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -7904,6 +7956,9 @@ class UserSettingsCompanion extends UpdateCompanion<UserSettingsRow> {
     if (notifRecapReady.present) {
       map['notif_recap_ready'] = Variable<bool>(notifRecapReady.value);
     }
+    if (onboardingSeen.present) {
+      map['onboarding_seen'] = Variable<bool>(onboardingSeen.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -7919,6 +7974,7 @@ class UserSettingsCompanion extends UpdateCompanion<UserSettingsRow> {
           ..write('notifCnh: $notifCnh, ')
           ..write('notifFiscal: $notifFiscal, ')
           ..write('notifRecapReady: $notifRecapReady, ')
+          ..write('onboardingSeen: $onboardingSeen, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -12862,6 +12918,7 @@ typedef $$UserSettingsTableCreateCompanionBuilder =
       Value<bool> notifCnh,
       Value<bool> notifFiscal,
       Value<bool> notifRecapReady,
+      Value<bool> onboardingSeen,
       Value<int> rowid,
     });
 typedef $$UserSettingsTableUpdateCompanionBuilder =
@@ -12872,6 +12929,7 @@ typedef $$UserSettingsTableUpdateCompanionBuilder =
       Value<bool> notifCnh,
       Value<bool> notifFiscal,
       Value<bool> notifRecapReady,
+      Value<bool> onboardingSeen,
       Value<int> rowid,
     });
 
@@ -12911,6 +12969,11 @@ class $$UserSettingsTableFilterComposer
 
   ColumnFilters<bool> get notifRecapReady => $composableBuilder(
     column: $table.notifRecapReady,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get onboardingSeen => $composableBuilder(
+    column: $table.onboardingSeen,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -12953,6 +13016,11 @@ class $$UserSettingsTableOrderingComposer
     column: $table.notifRecapReady,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get onboardingSeen => $composableBuilder(
+    column: $table.onboardingSeen,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$UserSettingsTableAnnotationComposer
@@ -12985,6 +13053,11 @@ class $$UserSettingsTableAnnotationComposer
 
   GeneratedColumn<bool> get notifRecapReady => $composableBuilder(
     column: $table.notifRecapReady,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get onboardingSeen => $composableBuilder(
+    column: $table.onboardingSeen,
     builder: (column) => column,
   );
 }
@@ -13026,6 +13099,7 @@ class $$UserSettingsTableTableManager
                 Value<bool> notifCnh = const Value.absent(),
                 Value<bool> notifFiscal = const Value.absent(),
                 Value<bool> notifRecapReady = const Value.absent(),
+                Value<bool> onboardingSeen = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => UserSettingsCompanion(
                 userId: userId,
@@ -13034,6 +13108,7 @@ class $$UserSettingsTableTableManager
                 notifCnh: notifCnh,
                 notifFiscal: notifFiscal,
                 notifRecapReady: notifRecapReady,
+                onboardingSeen: onboardingSeen,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -13044,6 +13119,7 @@ class $$UserSettingsTableTableManager
                 Value<bool> notifCnh = const Value.absent(),
                 Value<bool> notifFiscal = const Value.absent(),
                 Value<bool> notifRecapReady = const Value.absent(),
+                Value<bool> onboardingSeen = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => UserSettingsCompanion.insert(
                 userId: userId,
@@ -13052,6 +13128,7 @@ class $$UserSettingsTableTableManager
                 notifCnh: notifCnh,
                 notifFiscal: notifFiscal,
                 notifRecapReady: notifRecapReady,
+                onboardingSeen: onboardingSeen,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

@@ -151,6 +151,34 @@ class DriftUserSettingsRepository implements UserSettingsRepository {
               : const NotificationPreferences(),
         );
   }
+
+  // ---------------------------------------------------------------------------
+  // Onboarding (Sprint 6.GG)
+  // ---------------------------------------------------------------------------
+
+  @override
+  Future<bool> getOnboardingSeen(String userId) async {
+    final row = await (_db.select(_db.userSettings)
+          ..where((t) => t.userId.equals(userId)))
+        .getSingleOrNull();
+    return row?.onboardingSeen ?? false;
+  }
+
+  @override
+  Future<void> setOnboardingSeen(String userId) async {
+    final row = await _getOrCreate(userId);
+    await _db.into(_db.userSettings).insertOnConflictUpdate(
+          UserSettingsCompanion.insert(
+            userId: userId,
+            themePref: Value(row.themePref),
+            notifConsumptionDrop: Value(row.notifConsumptionDrop),
+            notifCnh: Value(row.notifCnh),
+            notifFiscal: Value(row.notifFiscal),
+            notifRecapReady: Value(row.notifRecapReady),
+            onboardingSeen: const Value(true),
+          ),
+        );
+  }
 }
 
 // ---------------------------------------------------------------------------
