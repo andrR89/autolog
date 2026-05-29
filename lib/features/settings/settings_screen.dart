@@ -1,6 +1,7 @@
 import 'package:autolog/data/repositories/user_settings_repository.dart';
 import 'package:autolog/domain/repositories/user_settings_repository.dart';
 import 'package:autolog/features/calendar/google_calendar_service.dart';
+import 'package:autolog/features/export/widgets/export_card.dart';
 import 'package:autolog/features/settings/notif_prefs_providers.dart';
 import 'package:autolog/features/settings/theme_mode_providers.dart';
 import 'package:autolog/features/vehicles/vehicles_provider.dart';
@@ -31,19 +32,13 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         children: [
           const SizedBox(height: 8),
-          _AppearanceCard(
-            userId: userId,
-            repo: repo,
-            current: current,
-          ),
+          _AppearanceCard(userId: userId, repo: repo, current: current),
           const SizedBox(height: 8),
-          _NotificationsCard(
-            userId: userId,
-            repo: repo,
-            prefs: prefs,
-          ),
+          _NotificationsCard(userId: userId, repo: repo, prefs: prefs),
           const SizedBox(height: 8),
           const _GoogleCalendarCard(),
+          const SizedBox(height: 8),
+          const ExportCard(),
           const SizedBox(height: 8),
         ],
       ),
@@ -74,9 +69,9 @@ class _AppearanceCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Text(
                 'Aparência',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
             RadioGroup<ThemeModeEnum>(
@@ -131,9 +126,9 @@ class _NotificationsCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Text(
                 'Notificações',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
             SwitchListTile(
@@ -151,15 +146,15 @@ class _NotificationsCard extends StatelessWidget {
             ),
             SwitchListTile(
               title: const Text('IPVA / Licenciamento próximo'),
-              subtitle:
-                  const Text('Avisa quando vencer em menos de 30 dias'),
+              subtitle: const Text('Avisa quando vencer em menos de 30 dias'),
               value: prefs.fiscal,
               onChanged: (v) => repo.setNotifPref(userId, 'fiscal', v),
             ),
             SwitchListTile(
               title: const Text('Recap mensal pronto'),
-              subtitle:
-                  const Text('Notifica nos primeiros dias do mês com o resumo'),
+              subtitle: const Text(
+                'Notifica nos primeiros dias do mês com o resumo',
+              ),
               value: prefs.recapReady,
               onChanged: (v) => repo.setNotifPref(userId, 'recap_ready', v),
             ),
@@ -242,9 +237,9 @@ class _GoogleCalendarCardState extends ConsumerState<_GoogleCalendarCard> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Text(
                 'Google Calendar',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
             Padding(
@@ -252,8 +247,8 @@ class _GoogleCalendarCardState extends ConsumerState<_GoogleCalendarCard> {
               child: Text(
                 'Lembretes criados aqui aparecem no seu Google Calendar.',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
             const SizedBox(height: 8),
@@ -267,13 +262,18 @@ class _GoogleCalendarCardState extends ConsumerState<_GoogleCalendarCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   ListTile(
-                    leading: const Icon(Icons.check_circle, color: Colors.green),
+                    leading: const Icon(
+                      Icons.check_circle,
+                      color: Colors.green,
+                    ),
                     title: const Text('Conectado'),
                     subtitle: Text(_email ?? 'Google Calendar'),
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 4),
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
                     child: OutlinedButton.icon(
                       onPressed: _disconnect,
                       icon: const Icon(Icons.logout, size: 18),
@@ -284,8 +284,10 @@ class _GoogleCalendarCardState extends ConsumerState<_GoogleCalendarCard> {
               )
             else
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 4,
+                ),
                 child: ElevatedButton.icon(
                   onPressed: _connect,
                   icon: const Icon(Icons.calendar_today, size: 18),
@@ -299,4 +301,3 @@ class _GoogleCalendarCardState extends ConsumerState<_GoogleCalendarCard> {
     );
   }
 }
-
