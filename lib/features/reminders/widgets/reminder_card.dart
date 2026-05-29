@@ -134,25 +134,46 @@ class ReminderCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Linha 1: título + chip tipo.
+                        // Linha 1: título + badge recorrência + chip tipo.
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
-                              child: Text(
-                                reminder.title,
-                                style: textTheme.titleMedium?.copyWith(
-                                  color: isDone
-                                      ? context.inkMuted
-                                      : context.ink,
-                                  decoration: isDone
-                                      ? TextDecoration.lineThrough
-                                      : null,
-                                  decorationColor: context.inkMuted,
-                                  height: 1.3,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
+                              child: Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      reminder.title,
+                                      style: textTheme.titleMedium?.copyWith(
+                                        color: isDone
+                                            ? context.inkMuted
+                                            : context.ink,
+                                        decoration: isDone
+                                            ? TextDecoration.lineThrough
+                                            : null,
+                                        decorationColor: context.inkMuted,
+                                        height: 1.3,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  // Badge de recorrência — exibe se tem intervalo.
+                                  if (reminder.intervalDays != null ||
+                                      reminder.intervalKm != null) ...[
+                                    const SizedBox(width: AppSpacing.xs),
+                                    Tooltip(
+                                      message: 'Lembrete recorrente',
+                                      child: Text(
+                                        '\u{1F501}',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: context.inkMuted,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
                             ),
                             const SizedBox(width: AppSpacing.sm),

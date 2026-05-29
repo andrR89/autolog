@@ -24,6 +24,9 @@ _Reminder _$ReminderFromJson(Map<String, dynamic> json) => _Reminder(
   syncStatus: const SyncStatusConverter().fromJson(
     json['sync_status'] as String,
   ),
+  intervalDays: (json['interval_days'] as num?)?.toInt(),
+  intervalKm: (json['interval_km'] as num?)?.toInt(),
+  parentReminderId: json['parent_reminder_id'] as String?,
 );
 
 Map<String, dynamic> _$ReminderToJson(_Reminder instance) => <String, dynamic>{
@@ -38,4 +41,7 @@ Map<String, dynamic> _$ReminderToJson(_Reminder instance) => <String, dynamic>{
   'updated_at': instance.updatedAt.toIso8601String(),
   'deleted_at': instance.deletedAt?.toIso8601String(),
   'sync_status': const SyncStatusConverter().toJson(instance.syncStatus),
+  'interval_days': instance.intervalDays,
+  'interval_km': instance.intervalKm,
+  'parent_reminder_id': instance.parentReminderId,
 };

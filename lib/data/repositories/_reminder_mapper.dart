@@ -23,6 +23,9 @@ Reminder reminderToDomain(ReminderRow row) {
     updatedAt: row.updatedAt.toUtc(),
     deletedAt: row.deletedAt?.toUtc(),
     syncStatus: row.syncStatus,
+    intervalDays: row.intervalDays,
+    intervalKm: row.intervalKm,
+    parentReminderId: row.parentReminderId,
   );
 }
 
@@ -42,5 +45,8 @@ RemindersCompanion reminderToCompanion(Reminder r) {
     updatedAt: Value(r.updatedAt),
     deletedAt: Value(r.deletedAt),
     syncStatus: Value(r.syncStatus),
+    intervalDays: Value(r.intervalDays),
+    intervalKm: Value(r.intervalKm),
+    parentReminderId: Value(r.parentReminderId),
   );
 }

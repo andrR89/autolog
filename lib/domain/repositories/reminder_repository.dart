@@ -24,4 +24,21 @@ abstract class ReminderRepository {
 
   /// Stream reativo da mesma lista (Drift watch). Emite a cada mudança.
   Stream<List<Reminder>> watchByVehicle(String vehicleId);
+
+  /// Marca o lembrete como done (idempotente).
+  ///
+  /// Se o lembrete tiver intervalo configurado (intervalDays ou intervalKm),
+  /// cria o próximo automaticamente na mesma transação.
+  ///
+  /// [currentOdometerKm] é usado para calcular dueKm do próximo quando
+  /// intervalKm está definido. Se null, usa fallback (dueKm + intervalKm).
+  ///
+  /// Retorna o [Reminder] marcado como done. O próximo (se criado) pode ser
+  /// lido via [listByVehicle] / [watchByVehicle].
+  Future<Reminder> markDone(
+    String id, {
+    int? currentOdometerKm,
+    required DateTime now,
+    required String Function() generateId,
+  });
 }

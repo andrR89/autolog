@@ -3021,6 +3021,39 @@ class $RemindersTable extends Reminders
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _intervalDaysMeta = const VerificationMeta(
+    'intervalDays',
+  );
+  @override
+  late final GeneratedColumn<int> intervalDays = GeneratedColumn<int>(
+    'interval_days',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _intervalKmMeta = const VerificationMeta(
+    'intervalKm',
+  );
+  @override
+  late final GeneratedColumn<int> intervalKm = GeneratedColumn<int>(
+    'interval_km',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _parentReminderIdMeta = const VerificationMeta(
+    'parentReminderId',
+  );
+  @override
+  late final GeneratedColumn<String> parentReminderId = GeneratedColumn<String>(
+    'parent_reminder_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -3073,6 +3106,9 @@ class $RemindersTable extends Reminders
     dueKm,
     dueDate,
     isDone,
+    intervalDays,
+    intervalKm,
+    parentReminderId,
     createdAt,
     updatedAt,
     deletedAt,
@@ -3127,6 +3163,30 @@ class $RemindersTable extends Reminders
       context.handle(
         _isDoneMeta,
         isDone.isAcceptableOrUnknown(data['is_done']!, _isDoneMeta),
+      );
+    }
+    if (data.containsKey('interval_days')) {
+      context.handle(
+        _intervalDaysMeta,
+        intervalDays.isAcceptableOrUnknown(
+          data['interval_days']!,
+          _intervalDaysMeta,
+        ),
+      );
+    }
+    if (data.containsKey('interval_km')) {
+      context.handle(
+        _intervalKmMeta,
+        intervalKm.isAcceptableOrUnknown(data['interval_km']!, _intervalKmMeta),
+      );
+    }
+    if (data.containsKey('parent_reminder_id')) {
+      context.handle(
+        _parentReminderIdMeta,
+        parentReminderId.isAcceptableOrUnknown(
+          data['parent_reminder_id']!,
+          _parentReminderIdMeta,
+        ),
       );
     }
     if (data.containsKey('created_at')) {
@@ -3190,6 +3250,18 @@ class $RemindersTable extends Reminders
         DriftSqlType.bool,
         data['${effectivePrefix}is_done'],
       )!,
+      intervalDays: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}interval_days'],
+      ),
+      intervalKm: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}interval_km'],
+      ),
+      parentReminderId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}parent_reminder_id'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -3230,6 +3302,9 @@ class ReminderRow extends DataClass implements Insertable<ReminderRow> {
   final int? dueKm;
   final DateTime? dueDate;
   final bool isDone;
+  final int? intervalDays;
+  final int? intervalKm;
+  final String? parentReminderId;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -3242,6 +3317,9 @@ class ReminderRow extends DataClass implements Insertable<ReminderRow> {
     this.dueKm,
     this.dueDate,
     required this.isDone,
+    this.intervalDays,
+    this.intervalKm,
+    this.parentReminderId,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -3265,6 +3343,15 @@ class ReminderRow extends DataClass implements Insertable<ReminderRow> {
       map['due_date'] = Variable<DateTime>(dueDate);
     }
     map['is_done'] = Variable<bool>(isDone);
+    if (!nullToAbsent || intervalDays != null) {
+      map['interval_days'] = Variable<int>(intervalDays);
+    }
+    if (!nullToAbsent || intervalKm != null) {
+      map['interval_km'] = Variable<int>(intervalKm);
+    }
+    if (!nullToAbsent || parentReminderId != null) {
+      map['parent_reminder_id'] = Variable<String>(parentReminderId);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
@@ -3291,6 +3378,15 @@ class ReminderRow extends DataClass implements Insertable<ReminderRow> {
           ? const Value.absent()
           : Value(dueDate),
       isDone: Value(isDone),
+      intervalDays: intervalDays == null && nullToAbsent
+          ? const Value.absent()
+          : Value(intervalDays),
+      intervalKm: intervalKm == null && nullToAbsent
+          ? const Value.absent()
+          : Value(intervalKm),
+      parentReminderId: parentReminderId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(parentReminderId),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -3313,6 +3409,9 @@ class ReminderRow extends DataClass implements Insertable<ReminderRow> {
       dueKm: serializer.fromJson<int?>(json['dueKm']),
       dueDate: serializer.fromJson<DateTime?>(json['dueDate']),
       isDone: serializer.fromJson<bool>(json['isDone']),
+      intervalDays: serializer.fromJson<int?>(json['intervalDays']),
+      intervalKm: serializer.fromJson<int?>(json['intervalKm']),
+      parentReminderId: serializer.fromJson<String?>(json['parentReminderId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -3330,6 +3429,9 @@ class ReminderRow extends DataClass implements Insertable<ReminderRow> {
       'dueKm': serializer.toJson<int?>(dueKm),
       'dueDate': serializer.toJson<DateTime?>(dueDate),
       'isDone': serializer.toJson<bool>(isDone),
+      'intervalDays': serializer.toJson<int?>(intervalDays),
+      'intervalKm': serializer.toJson<int?>(intervalKm),
+      'parentReminderId': serializer.toJson<String?>(parentReminderId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -3345,6 +3447,9 @@ class ReminderRow extends DataClass implements Insertable<ReminderRow> {
     Value<int?> dueKm = const Value.absent(),
     Value<DateTime?> dueDate = const Value.absent(),
     bool? isDone,
+    Value<int?> intervalDays = const Value.absent(),
+    Value<int?> intervalKm = const Value.absent(),
+    Value<String?> parentReminderId = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
@@ -3357,6 +3462,11 @@ class ReminderRow extends DataClass implements Insertable<ReminderRow> {
     dueKm: dueKm.present ? dueKm.value : this.dueKm,
     dueDate: dueDate.present ? dueDate.value : this.dueDate,
     isDone: isDone ?? this.isDone,
+    intervalDays: intervalDays.present ? intervalDays.value : this.intervalDays,
+    intervalKm: intervalKm.present ? intervalKm.value : this.intervalKm,
+    parentReminderId: parentReminderId.present
+        ? parentReminderId.value
+        : this.parentReminderId,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -3371,6 +3481,15 @@ class ReminderRow extends DataClass implements Insertable<ReminderRow> {
       dueKm: data.dueKm.present ? data.dueKm.value : this.dueKm,
       dueDate: data.dueDate.present ? data.dueDate.value : this.dueDate,
       isDone: data.isDone.present ? data.isDone.value : this.isDone,
+      intervalDays: data.intervalDays.present
+          ? data.intervalDays.value
+          : this.intervalDays,
+      intervalKm: data.intervalKm.present
+          ? data.intervalKm.value
+          : this.intervalKm,
+      parentReminderId: data.parentReminderId.present
+          ? data.parentReminderId.value
+          : this.parentReminderId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -3390,6 +3509,9 @@ class ReminderRow extends DataClass implements Insertable<ReminderRow> {
           ..write('dueKm: $dueKm, ')
           ..write('dueDate: $dueDate, ')
           ..write('isDone: $isDone, ')
+          ..write('intervalDays: $intervalDays, ')
+          ..write('intervalKm: $intervalKm, ')
+          ..write('parentReminderId: $parentReminderId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -3407,6 +3529,9 @@ class ReminderRow extends DataClass implements Insertable<ReminderRow> {
     dueKm,
     dueDate,
     isDone,
+    intervalDays,
+    intervalKm,
+    parentReminderId,
     createdAt,
     updatedAt,
     deletedAt,
@@ -3423,6 +3548,9 @@ class ReminderRow extends DataClass implements Insertable<ReminderRow> {
           other.dueKm == this.dueKm &&
           other.dueDate == this.dueDate &&
           other.isDone == this.isDone &&
+          other.intervalDays == this.intervalDays &&
+          other.intervalKm == this.intervalKm &&
+          other.parentReminderId == this.parentReminderId &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
@@ -3437,6 +3565,9 @@ class RemindersCompanion extends UpdateCompanion<ReminderRow> {
   final Value<int?> dueKm;
   final Value<DateTime?> dueDate;
   final Value<bool> isDone;
+  final Value<int?> intervalDays;
+  final Value<int?> intervalKm;
+  final Value<String?> parentReminderId;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -3450,6 +3581,9 @@ class RemindersCompanion extends UpdateCompanion<ReminderRow> {
     this.dueKm = const Value.absent(),
     this.dueDate = const Value.absent(),
     this.isDone = const Value.absent(),
+    this.intervalDays = const Value.absent(),
+    this.intervalKm = const Value.absent(),
+    this.parentReminderId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -3464,6 +3598,9 @@ class RemindersCompanion extends UpdateCompanion<ReminderRow> {
     this.dueKm = const Value.absent(),
     this.dueDate = const Value.absent(),
     this.isDone = const Value.absent(),
+    this.intervalDays = const Value.absent(),
+    this.intervalKm = const Value.absent(),
+    this.parentReminderId = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
@@ -3483,6 +3620,9 @@ class RemindersCompanion extends UpdateCompanion<ReminderRow> {
     Expression<int>? dueKm,
     Expression<DateTime>? dueDate,
     Expression<bool>? isDone,
+    Expression<int>? intervalDays,
+    Expression<int>? intervalKm,
+    Expression<String>? parentReminderId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -3497,6 +3637,9 @@ class RemindersCompanion extends UpdateCompanion<ReminderRow> {
       if (dueKm != null) 'due_km': dueKm,
       if (dueDate != null) 'due_date': dueDate,
       if (isDone != null) 'is_done': isDone,
+      if (intervalDays != null) 'interval_days': intervalDays,
+      if (intervalKm != null) 'interval_km': intervalKm,
+      if (parentReminderId != null) 'parent_reminder_id': parentReminderId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -3513,6 +3656,9 @@ class RemindersCompanion extends UpdateCompanion<ReminderRow> {
     Value<int?>? dueKm,
     Value<DateTime?>? dueDate,
     Value<bool>? isDone,
+    Value<int?>? intervalDays,
+    Value<int?>? intervalKm,
+    Value<String?>? parentReminderId,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -3527,6 +3673,9 @@ class RemindersCompanion extends UpdateCompanion<ReminderRow> {
       dueKm: dueKm ?? this.dueKm,
       dueDate: dueDate ?? this.dueDate,
       isDone: isDone ?? this.isDone,
+      intervalDays: intervalDays ?? this.intervalDays,
+      intervalKm: intervalKm ?? this.intervalKm,
+      parentReminderId: parentReminderId ?? this.parentReminderId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -3561,6 +3710,15 @@ class RemindersCompanion extends UpdateCompanion<ReminderRow> {
     if (isDone.present) {
       map['is_done'] = Variable<bool>(isDone.value);
     }
+    if (intervalDays.present) {
+      map['interval_days'] = Variable<int>(intervalDays.value);
+    }
+    if (intervalKm.present) {
+      map['interval_km'] = Variable<int>(intervalKm.value);
+    }
+    if (parentReminderId.present) {
+      map['parent_reminder_id'] = Variable<String>(parentReminderId.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -3591,6 +3749,9 @@ class RemindersCompanion extends UpdateCompanion<ReminderRow> {
           ..write('dueKm: $dueKm, ')
           ..write('dueDate: $dueDate, ')
           ..write('isDone: $isDone, ')
+          ..write('intervalDays: $intervalDays, ')
+          ..write('intervalKm: $intervalKm, ')
+          ..write('parentReminderId: $parentReminderId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -10526,6 +10687,9 @@ typedef $$RemindersTableCreateCompanionBuilder =
       Value<int?> dueKm,
       Value<DateTime?> dueDate,
       Value<bool> isDone,
+      Value<int?> intervalDays,
+      Value<int?> intervalKm,
+      Value<String?> parentReminderId,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<DateTime?> deletedAt,
@@ -10541,6 +10705,9 @@ typedef $$RemindersTableUpdateCompanionBuilder =
       Value<int?> dueKm,
       Value<DateTime?> dueDate,
       Value<bool> isDone,
+      Value<int?> intervalDays,
+      Value<int?> intervalKm,
+      Value<String?> parentReminderId,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -10590,6 +10757,21 @@ class $$RemindersTableFilterComposer
 
   ColumnFilters<bool> get isDone => $composableBuilder(
     column: $table.isDone,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get intervalDays => $composableBuilder(
+    column: $table.intervalDays,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get intervalKm => $composableBuilder(
+    column: $table.intervalKm,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get parentReminderId => $composableBuilder(
+    column: $table.parentReminderId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -10659,6 +10841,21 @@ class $$RemindersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get intervalDays => $composableBuilder(
+    column: $table.intervalDays,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get intervalKm => $composableBuilder(
+    column: $table.intervalKm,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get parentReminderId => $composableBuilder(
+    column: $table.parentReminderId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -10709,6 +10906,21 @@ class $$RemindersTableAnnotationComposer
 
   GeneratedColumn<bool> get isDone =>
       $composableBuilder(column: $table.isDone, builder: (column) => column);
+
+  GeneratedColumn<int> get intervalDays => $composableBuilder(
+    column: $table.intervalDays,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get intervalKm => $composableBuilder(
+    column: $table.intervalKm,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get parentReminderId => $composableBuilder(
+    column: $table.parentReminderId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -10764,6 +10976,9 @@ class $$RemindersTableTableManager
                 Value<int?> dueKm = const Value.absent(),
                 Value<DateTime?> dueDate = const Value.absent(),
                 Value<bool> isDone = const Value.absent(),
+                Value<int?> intervalDays = const Value.absent(),
+                Value<int?> intervalKm = const Value.absent(),
+                Value<String?> parentReminderId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -10777,6 +10992,9 @@ class $$RemindersTableTableManager
                 dueKm: dueKm,
                 dueDate: dueDate,
                 isDone: isDone,
+                intervalDays: intervalDays,
+                intervalKm: intervalKm,
+                parentReminderId: parentReminderId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -10792,6 +11010,9 @@ class $$RemindersTableTableManager
                 Value<int?> dueKm = const Value.absent(),
                 Value<DateTime?> dueDate = const Value.absent(),
                 Value<bool> isDone = const Value.absent(),
+                Value<int?> intervalDays = const Value.absent(),
+                Value<int?> intervalKm = const Value.absent(),
+                Value<String?> parentReminderId = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -10805,6 +11026,9 @@ class $$RemindersTableTableManager
                 dueKm: dueKm,
                 dueDate: dueDate,
                 isDone: isDone,
+                intervalDays: intervalDays,
+                intervalKm: intervalKm,
+                parentReminderId: parentReminderId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,

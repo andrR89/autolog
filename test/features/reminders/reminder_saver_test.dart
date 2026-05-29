@@ -38,6 +38,15 @@ class _FakeReminderRepository implements ReminderRepository {
   @override
   Stream<List<Reminder>> watchByVehicle(String vehicleId) =>
       const Stream.empty();
+  @override
+  Future<Reminder> markDone(
+    String id, {
+    int? currentOdometerKm,
+    required DateTime now,
+    required String Function() generateId,
+  }) async {
+    throw UnimplementedError('markDone não usado neste teste');
+  }
 }
 
 void main() {

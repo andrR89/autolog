@@ -36,6 +36,8 @@ class ReminderSaver {
     int? dueKm,
     DateTime? dueDate,
     bool isDone = false,
+    int? intervalDays,
+    int? intervalKm,
   }) async {
     final now = DateTime.now().toUtc();
     final reminder = Reminder(
@@ -49,6 +51,8 @@ class ReminderSaver {
       createdAt: now,
       updatedAt: now,
       syncStatus: SyncStatus.pending,
+      intervalDays: intervalDays,
+      intervalKm: intervalKm,
     );
     final saved = await _repo.create(reminder);
     if (_scheduler != null) {
@@ -71,6 +75,8 @@ class ReminderSaver {
     int? dueKm,
     DateTime? dueDate,
     required bool isDone,
+    int? intervalDays,
+    int? intervalKm,
   }) async {
     final updated = existing.copyWith(
       type: type,
@@ -78,6 +84,8 @@ class ReminderSaver {
       dueKm: dueKm,
       dueDate: dueDate,
       isDone: isDone,
+      intervalDays: intervalDays,
+      intervalKm: intervalKm,
       // id, vehicleId, createdAt → intocados pelo copyWith.
     );
     final saved = await _repo.update(updated);
@@ -90,15 +98,32 @@ class ReminderSaver {
 
   /// Atalho para toggle do checkbox de "feito" na lista.
   ///
-  /// Equivale a `update(existing, ...mesmos campos..., isDone: !existing.isDone)`.
-  Future<Reminder> toggleDone(Reminder existing) {
+  /// Quando marcando como done (isDone: false → true) E o lembrete tem intervalo,
+  /// delega para [ReminderRepository.markDone] que cria o próximo automaticamente.
+  /// Quando desmarcando (done → não-done) ou sem intervalo, usa [update] simples.
+  Future<Reminder> toggleDone(Reminder existing) async {
+    final newDone = !existing.isDone;
+
+    // Marcando como done com intervalo: usa markDone para criar o próximo.
+    if (newDone &&
+        (existing.intervalDays != null || existing.intervalKm != null)) {
+      return _repo.markDone(
+        existing.id,
+        now: DateTime.now().toUtc(),
+        generateId: _generateId,
+      );
+    }
+
+    // Caso simples: sem intervalo ou desmarcando.
     return update(
       existing,
       type: existing.type,
       title: existing.title,
       dueKm: existing.dueKm,
       dueDate: existing.dueDate,
-      isDone: !existing.isDone,
+      isDone: newDone,
+      intervalDays: existing.intervalDays,
+      intervalKm: existing.intervalKm,
     );
   }
 

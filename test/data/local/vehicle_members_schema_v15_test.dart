@@ -7,9 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('Schema v15', () {
-    test('schemaVersion é 17 (v17 com onboarding_seen, Sprint 6.GG)', () {
+    test('schemaVersion é 18 (v18 com recorrência em reminders, Sprint 6.MM)', () {
       final db = AppDatabase(NativeDatabase.memory());
-      expect(db.schemaVersion, 17);
+      expect(db.schemaVersion, 18);
       db.close();
     });
 

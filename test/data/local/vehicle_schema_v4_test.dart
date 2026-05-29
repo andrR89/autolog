@@ -15,7 +15,7 @@ void main() {
   group('Vehicles schema v4', () {
     test('schemaVersion bumped to 4', () {
       final db = AppDatabase(NativeDatabase.memory());
-      expect(db.schemaVersion, 17); // v17 com onboarding_seen (Sprint 6.GG)
+      expect(db.schemaVersion, 18); // v17 com onboarding_seen (Sprint 6.GG)
       db.close();
     });
 

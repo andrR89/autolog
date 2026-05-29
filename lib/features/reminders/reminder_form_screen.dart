@@ -57,6 +57,11 @@ class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
 
   Timer? _dueKmDebounce;
 
+  // Recorrência
+  bool _recorrente = false;
+  int? _intervalDays;
+  late final TextEditingController _intervalKmCtrl;
+
   bool get _isEditing => widget.initial != null;
 
   @override
@@ -70,6 +75,14 @@ class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
     _dueDate = r?.dueDate ?? DateTime.now().add(const Duration(days: 30));
     _isDone = r?.isDone ?? false;
 
+    // Recorrência — carrega do lembrete existente se houver.
+    final hasInterval = (r?.intervalDays != null) || (r?.intervalKm != null);
+    _recorrente = hasInterval;
+    _intervalDays = r?.intervalDays;
+    _intervalKmCtrl = TextEditingController(
+      text: r?.intervalKm?.toString() ?? '',
+    );
+
     _dueKmCtrl.addListener(_onDueKmChanged);
   }
 
@@ -79,6 +92,7 @@ class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
     _dueKmCtrl.removeListener(_onDueKmChanged);
     _titleCtrl.dispose();
     _dueKmCtrl.dispose();
+    _intervalKmCtrl.dispose();
     super.dispose();
   }
 
@@ -175,6 +189,19 @@ class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
           : null;
       final DateTime? dueDate = _type == ReminderType.porData ? _dueDate : null;
 
+      // Intervalos de recorrência — null se switch desligado ou campo não aplicável.
+      int? intervalDays;
+      int? intervalKm;
+      if (_recorrente) {
+        if (_type == ReminderType.porData && _intervalDays != null) {
+          intervalDays = _intervalDays;
+        }
+        if (_type == ReminderType.porKm) {
+          final raw = _intervalKmCtrl.text.trim();
+          intervalKm = int.tryParse(raw);
+        }
+      }
+
       if (_isEditing) {
         await saver.update(
           widget.initial!,
@@ -183,6 +210,8 @@ class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
           dueKm: dueKm,
           dueDate: dueDate,
           isDone: _isDone,
+          intervalDays: intervalDays,
+          intervalKm: intervalKm,
         );
       } else {
         await saver.create(
@@ -192,6 +221,8 @@ class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
           dueKm: dueKm,
           dueDate: dueDate,
           isDone: false,
+          intervalDays: intervalDays,
+          intervalKm: intervalKm,
         );
       }
 
@@ -340,6 +371,52 @@ class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
                             value: _isDone,
                             onChanged: (v) => setState(() => _isDone = v),
                           ),
+                        ],
+                      ],
+                    ),
+
+                    // ── Seção 3: Recorrência ─────────────────────────────────
+                    FormSectionCard(
+                      eyebrow: 'Recorrência',
+                      children: [
+                        SwitchListTile.adaptive(
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text('Repetir automaticamente'),
+                          subtitle: const Text(
+                            'Quando marcar como feito, criamos o próximo automaticamente',
+                          ),
+                          value: _recorrente,
+                          onChanged: (v) => setState(() {
+                            _recorrente = v;
+                            if (!v) {
+                              _intervalDays = null;
+                              _intervalKmCtrl.clear();
+                            }
+                          }),
+                        ),
+                        if (_recorrente) ...[
+                          const SizedBox(height: AppSpacing.md),
+                          // Por data: dropdown de presets de dias.
+                          if (_type == ReminderType.porData)
+                            _IntervalDaysDropdown(
+                              value: _intervalDays,
+                              onChanged: (v) =>
+                                  setState(() => _intervalDays = v),
+                            ),
+                          // Por km: campo numérico livre.
+                          if (_type == ReminderType.porKm)
+                            TextFormField(
+                              controller: _intervalKmCtrl,
+                              decoration: const InputDecoration(
+                                labelText: 'Repetir a cada (km)',
+                                hintText: '10000',
+                                suffixText: 'km',
+                              ),
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                            ),
                         ],
                       ],
                     ),
@@ -636,6 +713,107 @@ class _DoneToggle extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Dropdown de intervalo em dias
+// ---------------------------------------------------------------------------
+
+/// Dropdown de presets de intervalo em dias para lembretes recorrentes por data.
+///
+/// Opções: 30, 90, 180, 365 dias; mais "Personalizado" que habilita campo livre.
+class _IntervalDaysDropdown extends StatefulWidget {
+  const _IntervalDaysDropdown({required this.value, required this.onChanged});
+
+  final int? value;
+  final ValueChanged<int?> onChanged;
+
+  @override
+  State<_IntervalDaysDropdown> createState() => _IntervalDaysDropdownState();
+}
+
+class _IntervalDaysDropdownState extends State<_IntervalDaysDropdown> {
+  static const _presets = [30, 90, 180, 365];
+  late bool _isCustom;
+  late final TextEditingController _customCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _isCustom = widget.value != null && !_presets.contains(widget.value);
+    _customCtrl = TextEditingController(
+      text: _isCustom ? widget.value.toString() : '',
+    );
+    _customCtrl.addListener(_onCustomChanged);
+  }
+
+  @override
+  void dispose() {
+    _customCtrl.removeListener(_onCustomChanged);
+    _customCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onCustomChanged() {
+    final v = int.tryParse(_customCtrl.text.trim());
+    widget.onChanged(v);
+  }
+
+  String _presetLabel(int days) {
+    return switch (days) {
+      30 => '30 dias (mensal)',
+      90 => '90 dias (trimestral)',
+      180 => '180 dias (semestral)',
+      365 => '365 dias (anual)',
+      _ => '$days dias',
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isPreset = !_isCustom;
+    final dropdownValue = isPreset ? widget.value : null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DropdownButtonFormField<int?>(
+          initialValue: _isCustom ? null : dropdownValue,
+          decoration: const InputDecoration(labelText: 'Repetir a cada'),
+          items: [
+            for (final p in _presets)
+              DropdownMenuItem(value: p, child: Text(_presetLabel(p))),
+            const DropdownMenuItem(value: null, child: Text('Personalizado')),
+          ],
+          onChanged: (v) {
+            if (v != null) {
+              setState(() {
+                _isCustom = false;
+                _customCtrl.clear();
+              });
+              widget.onChanged(v);
+            } else {
+              setState(() => _isCustom = true);
+              widget.onChanged(null);
+            }
+          },
+        ),
+        if (_isCustom) ...[
+          const SizedBox(height: AppSpacing.md),
+          TextFormField(
+            controller: _customCtrl,
+            decoration: const InputDecoration(
+              labelText: 'Intervalo personalizado (dias)',
+              hintText: 'Ex.: 45',
+              suffixText: 'dias',
+            ),
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          ),
+        ],
+      ],
     );
   }
 }

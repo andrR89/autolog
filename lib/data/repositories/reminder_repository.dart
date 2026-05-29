@@ -3,6 +3,7 @@ import 'package:autolog/data/repositories/_reminder_mapper.dart';
 import 'package:autolog/domain/models/enums.dart';
 import 'package:autolog/domain/models/reminder.dart';
 import 'package:autolog/domain/repositories/reminder_repository.dart';
+import 'package:autolog/features/reminders/recurring/next_reminder_factory.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -148,6 +149,74 @@ class DriftReminderRepository implements ReminderRepository {
             .get();
 
     return rows.map(reminderToDomain).toList();
+  }
+
+  // -------------------------------------------------------------------------
+  // markDone
+  // -------------------------------------------------------------------------
+
+  @override
+  Future<Reminder> markDone(
+    String id, {
+    int? currentOdometerKm,
+    required DateTime now,
+    required String Function() generateId,
+  }) async {
+    return _db.transaction<Reminder>(() async {
+      // Carrega o lembrete atual (sem filtro de deletedAt para poder checar estado).
+      final existing = await (_db.select(
+        _db.reminders,
+      )..where((t) => t.id.equals(id))).getSingleOrNull();
+
+      if (existing == null) {
+        throw StateError('Lembrete não encontrado: $id');
+      }
+      if (existing.deletedAt != null) {
+        throw StateError('Lembrete soft-deletado não pode ser marcado: $id');
+      }
+
+      // Idempotência: já estava done → retorna sem criar duplicata.
+      if (existing.isDone) {
+        return reminderToDomain(existing);
+      }
+
+      final timestamp = _now();
+
+      // Marca como done.
+      await (_db.update(_db.reminders)..where((t) => t.id.equals(id))).write(
+        RemindersCompanion(
+          isDone: const Value(true),
+          updatedAt: Value(timestamp),
+          syncStatus: const Value(SyncStatus.pending),
+        ),
+      );
+
+      final doneRow = await (_db.select(
+        _db.reminders,
+      )..where((t) => t.id.equals(id))).getSingle();
+      final doneReminder = reminderToDomain(doneRow);
+
+      // Tenta criar o próximo lembrete se houver intervalo.
+      final next = createNextReminder(
+        doneReminder: doneReminder,
+        currentOdometerKm: currentOdometerKm,
+        now: now,
+        nextId: generateId(),
+      );
+
+      if (next != null) {
+        final nextCompanion = reminderToCompanion(
+          next.copyWith(
+            createdAt: timestamp,
+            updatedAt: timestamp,
+            syncStatus: SyncStatus.pending,
+          ),
+        );
+        await _db.into(_db.reminders).insert(nextCompanion);
+      }
+
+      return doneReminder;
+    });
   }
 
   // -------------------------------------------------------------------------

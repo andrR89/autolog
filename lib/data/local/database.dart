@@ -12,25 +12,27 @@ import 'package:path_provider/path_provider.dart';
 
 part 'database.g.dart';
 
-@DriftDatabase(tables: [
-  Vehicles,
-  FuelEntries,
-  Expenses,
-  Reminders,
-  UsageQuota,
-  FipeCache,
-  FipeHistory,
-  UserProfile,
-  Fines,
-  Insurances,
-  ChatMessages,
-  NotificationsLog,
-  FiscalLookupCache,
-  UserSettings,
-  Trips,
-  VehicleMembers,
-  CalendarEventLinks,
-])
+@DriftDatabase(
+  tables: [
+    Vehicles,
+    FuelEntries,
+    Expenses,
+    Reminders,
+    UsageQuota,
+    FipeCache,
+    FipeHistory,
+    UserProfile,
+    Fines,
+    Insurances,
+    ChatMessages,
+    NotificationsLog,
+    FiscalLookupCache,
+    UserSettings,
+    Trips,
+    VehicleMembers,
+    CalendarEventLinks,
+  ],
+)
 class AppDatabase extends _$AppDatabase {
   /// Construtor testável: aceita qualquer [QueryExecutor].
   /// Em testes usa-se [NativeDatabase.memory()]; em produção usa-se um
@@ -38,7 +40,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 18;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -106,6 +108,11 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 17) {
         await m.addColumn(userSettings, userSettings.onboardingSeen);
+      }
+      if (from < 18) {
+        await m.addColumn(reminders, reminders.intervalDays);
+        await m.addColumn(reminders, reminders.intervalKm);
+        await m.addColumn(reminders, reminders.parentReminderId);
       }
     },
   );

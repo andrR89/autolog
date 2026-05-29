@@ -20,6 +20,12 @@ abstract class Reminder with _$Reminder {
     required DateTime updatedAt,
     DateTime? deletedAt,
     @SyncStatusConverter() required SyncStatus syncStatus,
+    // Recorrência (Sprint 6.MM) — ambos null = one-shot (comportamento original).
+    // intervalDays exige dueDate; intervalKm exige dueKm.
+    int? intervalDays,
+    int? intervalKm,
+    // Id do lembrete anterior que gerou este (rastreabilidade).
+    String? parentReminderId,
   }) = _Reminder;
 
   factory Reminder.fromJson(Map<String, dynamic> json) =>

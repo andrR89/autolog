@@ -20,8 +20,9 @@ class Vehicles extends Table {
   IntColumn get year => integer().nullable()();
   TextColumn get uf => text().nullable()();
   TextColumn get color => text().nullable()();
-  TextColumn get type =>
-      text().map(const VehicleTypeConverter()).withDefault(const Constant('carro'))();
+  TextColumn get type => text()
+      .map(const VehicleTypeConverter())
+      .withDefault(const Constant('carro'))();
   IntColumn get engineDisplacementCc => integer().nullable()();
   TextColumn get tankCapacityL =>
       text().map(const DecimalConverter()).nullable()();
@@ -118,6 +119,11 @@ class Reminders extends Table {
   IntColumn get dueKm => integer().nullable()();
   DateTimeColumn get dueDate => dateTime().nullable()();
   BoolColumn get isDone => boolean().withDefault(const Constant(false))();
+
+  // Recorrência (Sprint 6.MM)
+  IntColumn get intervalDays => integer().nullable()();
+  IntColumn get intervalKm => integer().nullable()();
+  TextColumn get parentReminderId => text().nullable()();
 
   // Campos de sync
   DateTimeColumn get createdAt => dateTime()();
@@ -217,7 +223,8 @@ class Fines extends Table {
 class Insurances extends Table {
   TextColumn get id => text()();
   TextColumn get vehicleId => text()();
-  TextColumn get insurer => text().nullable()(); // "Porto Seguro", "Bradesco"...
+  TextColumn get insurer =>
+      text().nullable()(); // "Porto Seguro", "Bradesco"...
   TextColumn get policyNumber => text().nullable()();
   DateTimeColumn get startsAt => dateTime()();
   DateTimeColumn get endsAt => dateTime()();
