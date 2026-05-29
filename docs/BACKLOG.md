@@ -211,6 +211,7 @@ Patch corretivo pós-homologação:
 - [ ] **6.5** Paywall + gating: cota de scan (5/mês free), veículos extras, relatórios avançados.
 - [ ] **6.6** Restaurar compras / sincronizar status entre devices e plataformas.
 - [ ] **6.7** ⚠️ Antes de publicar: revisar Payments policy (Play) atual. Garantir que NÃO há link de pagamento externo dentro do app.
+- [ ] **6.LL.iOS** ⚠️ **Antes do release iOS** (não bloqueia Android): ativar Apple Sign In de fato. Requer conta Apple Developer paga ($99/ano). Passos: (a) Xcode → Runner target → Signing & Capabilities → `+ Sign In with Apple`; (b) Apple Developer Portal → criar Services ID (ex.: `io.supabase.autolog.signin`), habilitar Sign In with Apple, return URL `https://vdtlldfklcrtpuumfkbm.supabase.co/auth/v1/callback`, gerar Key `.p8`; (c) Supabase Dashboard → Auth → Providers → Apple: colar Service ID + Team ID + Key ID + `.p8`. Código Dart + entitlement já prontos (commit `f153385`); Apple **rejeita app iOS com outros providers se não tiver Apple Sign In**.
 
 ## Sprint 7 — Polimento e lançamento
 - [ ] **7.1** Onboarding (primeiro veículo + explicar o scan = primeiro "aha moment").
