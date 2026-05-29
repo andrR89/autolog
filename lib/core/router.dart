@@ -28,6 +28,7 @@ import 'package:autolog/features/recap/recap_data.dart';
 import 'package:autolog/features/recap/recap_screen.dart';
 import 'package:autolog/features/reminders/reminder_form_screen.dart';
 import 'package:autolog/features/reminders/reminders_list_screen.dart';
+import 'package:autolog/features/reports/compare/period_compare_screen.dart';
 import 'package:autolog/features/reports/fuel_economy_screen.dart';
 import 'package:autolog/features/reports/reports_screen.dart';
 import 'package:autolog/features/settings/settings_screen.dart';
@@ -187,14 +188,23 @@ final List<RouteBase> appRoutes = [
     ),
   ),
 
+  // Comparar período (mês vs mês anterior, ano vs ano anterior).
+  GoRoute(
+    path: '/vehicles/:vehicleId/reports/compare',
+    pageBuilder: (context, state) => appTransitionPage(
+      state: state,
+      child: _VehicleCompareLoader(
+        vehicleId: state.pathParameters['vehicleId']!,
+      ),
+    ),
+  ),
+
   // Calculadora etanol × gasolina — só para veículos flex.
   GoRoute(
     path: '/vehicles/:vehicleId/fuel-economy',
     pageBuilder: (context, state) => appTransitionPage(
       state: state,
-      child: _FuelEconomyLoader(
-        vehicleId: state.pathParameters['vehicleId']!,
-      ),
+      child: _FuelEconomyLoader(vehicleId: state.pathParameters['vehicleId']!),
     ),
   ),
 
@@ -236,9 +246,7 @@ final List<RouteBase> appRoutes = [
     path: '/vehicles/:vehicleId/insights/chat',
     pageBuilder: (context, state) => appTransitionPage(
       state: state,
-      child: _VehicleChatLoader(
-        vehicleId: state.pathParameters['vehicleId']!,
-      ),
+      child: _VehicleChatLoader(vehicleId: state.pathParameters['vehicleId']!),
     ),
   ),
 
@@ -247,28 +255,22 @@ final List<RouteBase> appRoutes = [
   // Tela principal de documentos.
   GoRoute(
     path: '/personal-documents',
-    pageBuilder: (context, state) => appTransitionPage(
-      state: state,
-      child: const PersonalDocumentsScreen(),
-    ),
+    pageBuilder: (context, state) =>
+        appTransitionPage(state: state, child: const PersonalDocumentsScreen()),
   ),
 
   // Formulário de CNH.
   GoRoute(
     path: '/personal-documents/cnh',
-    pageBuilder: (context, state) => appTransitionPage(
-      state: state,
-      child: const CnhFormScreen(),
-    ),
+    pageBuilder: (context, state) =>
+        appTransitionPage(state: state, child: const CnhFormScreen()),
   ),
 
   // Formulário de nova multa.
   GoRoute(
     path: '/personal-documents/fines/new',
-    pageBuilder: (context, state) => appTransitionPage(
-      state: state,
-      child: const FineFormScreen(),
-    ),
+    pageBuilder: (context, state) =>
+        appTransitionPage(state: state, child: const FineFormScreen()),
   ),
 
   // Formulário de edição de multa (com loader).
@@ -283,10 +285,8 @@ final List<RouteBase> appRoutes = [
   // Formulário de nova apólice.
   GoRoute(
     path: '/personal-documents/insurances/new',
-    pageBuilder: (context, state) => appTransitionPage(
-      state: state,
-      child: const InsuranceFormScreen(),
-    ),
+    pageBuilder: (context, state) =>
+        appTransitionPage(state: state, child: const InsuranceFormScreen()),
   ),
 
   // Formulário de edição de apólice (com loader).
@@ -365,9 +365,7 @@ final List<RouteBase> appRoutes = [
     path: '/vehicles/:vehicleId/share',
     pageBuilder: (context, state) => appTransitionPage(
       state: state,
-      child: _VehicleShareLoader(
-        vehicleId: state.pathParameters['vehicleId']!,
-      ),
+      child: _VehicleShareLoader(vehicleId: state.pathParameters['vehicleId']!),
     ),
   ),
 
@@ -378,9 +376,7 @@ final List<RouteBase> appRoutes = [
     path: '/vehicles/:vehicleId/trips',
     pageBuilder: (context, state) => appTransitionPage(
       state: state,
-      child: _VehicleTripsLoader(
-        vehicleId: state.pathParameters['vehicleId']!,
-      ),
+      child: _VehicleTripsLoader(vehicleId: state.pathParameters['vehicleId']!),
     ),
   ),
 
@@ -1014,6 +1010,43 @@ class _VehicleReportsLoader extends ConsumerWidget {
           );
         }
         return ReportsScreen(vehicle: snapshot.data!);
+      },
+    );
+  }
+}
+
+/// Carrega o [Vehicle] por id e abre a tela de comparar período.
+///
+/// Mesma estratégia do `_VehicleReportsLoader`.
+class _VehicleCompareLoader extends ConsumerWidget {
+  const _VehicleCompareLoader({required this.vehicleId});
+
+  final String vehicleId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final future = Future(() async {
+      final repo = ref.read(vehicleRepositoryProvider);
+      return repo.getById(vehicleId);
+    });
+
+    return FutureBuilder(
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snapshot.hasError || snapshot.data == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) context.go('/vehicles');
+          });
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        return PeriodCompareScreen(vehicle: snapshot.data!);
       },
     );
   }

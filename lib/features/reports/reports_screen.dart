@@ -72,7 +72,15 @@ class ReportsScreen extends ConsumerWidget {
         ),
         // Recap sempre acessível por ✨ no AppBar (3 opções de período),
         // mesmo quando o banner contextual não está visível.
-        actions: const [_RecapMenuAction()],
+        actions: [
+          IconButton(
+            tooltip: 'Comparar período',
+            icon: const Icon(Icons.compare_arrows_rounded),
+            onPressed: () =>
+                context.push('/vehicles/${vehicle.id}/reports/compare'),
+          ),
+          const _RecapMenuAction(),
+        ],
       ),
       body: CustomScrollView(
         slivers: [
@@ -381,7 +389,8 @@ class _SectionSkeletonState extends State<_SectionSkeleton>
     );
   }
 
-  Widget _bar(BuildContext context, {
+  Widget _bar(
+    BuildContext context, {
     required double width,
     required double height,
     required double alpha,
@@ -457,11 +466,7 @@ class _MyStationsCard extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(
-              Icons.chevron_right,
-              color: context.inkSoft,
-              size: 20,
-            ),
+            Icon(Icons.chevron_right, color: context.inkSoft, size: 20),
           ],
         ),
       ),
@@ -515,10 +520,12 @@ class _RecapBanner extends ConsumerWidget {
     final firstPrevMonth = DateTime(now.year, now.month - 1);
 
     int countInMonth(DateTime ref) =>
-        fuels.where((e) =>
-            e.date.year == ref.year && e.date.month == ref.month).length +
-        expenses.where((e) =>
-            e.date.year == ref.year && e.date.month == ref.month).length;
+        fuels
+            .where((e) => e.date.year == ref.year && e.date.month == ref.month)
+            .length +
+        expenses
+            .where((e) => e.date.year == ref.year && e.date.month == ref.month)
+            .length;
 
     final decision = shouldShowRecapBanner(
       now: now,
@@ -550,38 +557,40 @@ class _RecapBanner extends ConsumerWidget {
         onTap: () => context.push('/recap?period=$period'),
         child: Padding(
           padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg, vertical: AppSpacing.md,
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.md,
           ),
           child: Row(
-              children: [
-                Container(
-                  width: 32, height: 32,
-                  decoration: const BoxDecoration(
-                    color: AppColors.info,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.auto_awesome_rounded,
-                    size: 18,
-                    color: Colors.white,
-                  ),
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: const BoxDecoration(
+                  color: AppColors.info,
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: AppTypography.body(
-                      14,
-                      weight: FontWeight.w600,
-                      color: AppColors.info,
-                    ),
-                  ),
-                ),
-                Icon(
-                  Icons.arrow_forward_rounded,
+                child: const Icon(
+                  Icons.auto_awesome_rounded,
                   size: 18,
-                  color: AppColors.info.withValues(alpha: 0.7),
+                  color: Colors.white,
                 ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Text(
+                  label,
+                  style: AppTypography.body(
+                    14,
+                    weight: FontWeight.w600,
+                    color: AppColors.info,
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_rounded,
+                size: 18,
+                color: AppColors.info.withValues(alpha: 0.7),
+              ),
             ],
           ),
         ),
