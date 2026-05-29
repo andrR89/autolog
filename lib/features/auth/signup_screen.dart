@@ -1,3 +1,4 @@
+import 'package:autolog/features/auth/apple_sign_in_repository.dart';
 import 'package:autolog/features/auth/auth_service.dart';
 import 'package:autolog/features/auth/validators.dart';
 import 'package:autolog/features/auth/widgets/auth_widgets.dart';
@@ -33,6 +34,20 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _signInWithApple() async {
+    setState(() => _loading = true);
+    try {
+      await ref.read(appleSignInRepositoryProvider).signInWithApple();
+    } on AppleSignInException catch (e) {
+      if (e.message == 'Login com Apple cancelado.') return;
+      if (mounted) _showError(e.message);
+    } catch (_) {
+      if (mounted) _showError('Erro ao iniciar login com Apple.');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   Future<void> _signUp() async {
@@ -190,7 +205,12 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
               // Botão Google
               GoogleButton(onPressed: _signInWithGoogle, loading: _loading),
-              const SizedBox(height: AppSpacing.xxl),
+              const SizedBox(height: AppSpacing.md),
+
+              // Botão Apple — visível apenas em iOS 13+ (AppleButton oculta automaticamente)
+              AppleButton(onPressed: _signInWithApple, loading: _loading),
+
+              const SizedBox(height: AppSpacing.xl),
 
               // Toggle para login
               AuthToggleLink(

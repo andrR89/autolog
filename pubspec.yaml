@@ -78,6 +78,10 @@ dependencies:
   googleapis: ^14.0.0
   googleapis_auth: ^2.0.0
 
+  # Apple Sign In (Sprint 6.LL) — iOS 13+, Android sempre retorna isAvailable=false.
+  # Web: suportado via redirect, implementado na Sprint 8 (2ª onda).
+  sign_in_with_apple: ^6.1.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
