@@ -29,6 +29,8 @@
 // (Lembretes, Despesas, Relatórios, Editar) e FAB extended manda
 // para o formulário.
 
+import 'dart:async';
+
 import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
@@ -38,6 +40,8 @@ import 'package:autolog/domain/models/enums.dart';
 import 'package:autolog/domain/models/fuel_entry.dart';
 import 'package:autolog/domain/models/vehicle.dart';
 import 'package:autolog/domain/services/consumption_calculator.dart';
+import 'package:autolog/features/fuel/filters/fuel_filter_providers.dart';
+import 'package:autolog/features/fuel/filters/fuel_filter_state.dart';
 import 'package:autolog/features/fuel/fuel_entry_saver.dart';
 import 'package:autolog/features/fuel/fuel_history_helpers.dart';
 import 'package:autolog/features/fuel/widgets/favorite_station_card.dart';
@@ -109,13 +113,14 @@ class _FuelHistoryScreenState extends ConsumerState<FuelHistoryScreen> {
     }
 
     // Paginação: ao chegar a 200px do fim da lista, carrega mais 25 entradas.
+    // Usa a lista filtrada como referência de total.
     if (_scrollController.hasClients) {
       final maxScroll = _scrollController.position.maxScrollExtent;
       if (_scrollController.offset >= maxScroll - 200) {
-        final entriesAsync = ref.read(
-          fuelEntriesByVehicleProvider(widget.vehicle.id),
+        final filteredAsync = ref.read(
+          filteredFuelEntriesProvider(widget.vehicle.id),
         );
-        final totalEntries = entriesAsync.value?.length ?? 0;
+        final totalEntries = filteredAsync.value?.length ?? 0;
         if (_visibleCount < totalEntries) {
           setState(() => _visibleCount += _kPageSize);
         }
@@ -126,37 +131,54 @@ class _FuelHistoryScreenState extends ConsumerState<FuelHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final vehicle = widget.vehicle;
-    final entriesAsync = ref.watch(fuelEntriesByVehicleProvider(vehicle.id));
 
-    // Reseta paginação se a lista mudou de tamanho.
-    entriesAsync.whenData((entries) {
+    // Usamos o stream completo para o hero/stats (cálculo de consumo sagrado)
+    // e o filtrado para a timeline.
+    final allEntriesAsync = ref.watch(fuelEntriesByVehicleProvider(vehicle.id));
+    final filteredAsync = ref.watch(filteredFuelEntriesProvider(vehicle.id));
+    final filterState = ref.watch(fuelFilterStateProvider(vehicle.id));
+
+    // Reseta paginação se a lista filtrada mudou de tamanho.
+    filteredAsync.whenData((entries) {
       if (entries.length < _visibleCount) {
         _visibleCount = _kPageSize;
       }
     });
 
+    // Paginação: ao chegar ao fim, incrementa no listener (usa lista filtrada).
+    // (Atualizado em _onScroll via filteredAsync)
+
     return Scaffold(
-      body: entriesAsync.when(
+      body: allEntriesAsync.when(
         loading: () => _ScaffoldedBody(
           vehicle: vehicle,
           appBarSealed: _appBarSealed,
+          filterState: filterState,
           child: const _FuelHistorySkeleton(),
         ),
         error: (_, _) => _ScaffoldedBody(
           vehicle: vehicle,
           appBarSealed: _appBarSealed,
+          filterState: filterState,
           child: _ErrorState(
             onRetry: () =>
                 ref.invalidate(fuelEntriesByVehicleProvider(vehicle.id)),
           ),
         ),
-        data: (entries) => _DataBody(
-          vehicle: vehicle,
-          entries: entries,
-          scrollController: _scrollController,
-          appBarSealed: _appBarSealed,
-          visibleCount: entries.length <= _kPageSize ? null : _visibleCount,
-        ),
+        data: (allEntries) {
+          final filteredEntries = filteredAsync.value ?? const [];
+          return _DataBody(
+            vehicle: vehicle,
+            allEntries: allEntries,
+            filteredEntries: filteredEntries,
+            scrollController: _scrollController,
+            appBarSealed: _appBarSealed,
+            filterState: filterState,
+            visibleCount: filteredEntries.length <= _kPageSize
+                ? null
+                : _visibleCount,
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/vehicles/${vehicle.id}/fuel/new'),
@@ -180,18 +202,24 @@ class _ScaffoldedBody extends StatelessWidget {
   const _ScaffoldedBody({
     required this.vehicle,
     required this.appBarSealed,
+    required this.filterState,
     required this.child,
   });
 
   final Vehicle vehicle;
   final bool appBarSealed;
+  final FuelFilterState filterState;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     return CustomScrollView(
       slivers: [
-        _AppBar(vehicle: vehicle, sealed: appBarSealed),
+        _AppBar(
+          vehicle: vehicle,
+          sealed: appBarSealed,
+          filterState: filterState,
+        ),
         SliverFillRemaining(hasScrollBody: false, child: child),
       ],
     );
@@ -203,16 +231,25 @@ class _ScaffoldedBody extends StatelessWidget {
 class _DataBody extends ConsumerWidget {
   const _DataBody({
     required this.vehicle,
-    required this.entries,
+    required this.allEntries,
+    required this.filteredEntries,
     required this.scrollController,
     required this.appBarSealed,
+    required this.filterState,
     this.visibleCount,
   });
 
   final Vehicle vehicle;
-  final List<FuelEntry> entries;
+
+  /// Histórico completo (para cálculo de consumo — sagrado).
+  final List<FuelEntry> allEntries;
+
+  /// Histórico filtrado (para timeline).
+  final List<FuelEntry> filteredEntries;
+
   final ScrollController scrollController;
   final bool appBarSealed;
+  final FuelFilterState filterState;
 
   /// Quando não-null, limita quantas entradas são renderizadas na timeline
   /// (lazy load). Null = sem limite (lista pequena, <=25 entradas).
@@ -221,9 +258,9 @@ class _DataBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Para consumo usamos sempre o histórico completo (cálculo é sagrado).
-    final rows = computeForDisplay(entries);
+    final rows = computeForDisplay(allEntries);
     final hero = pickHeroKmPerLiter(rows);
-    final monthStats = computeCurrentMonthStats(entries);
+    final monthStats = computeCurrentMonthStats(allEntries);
 
     final heroLabel = hero == null ? 'aguardando baseline' : 'último consumo';
 
@@ -232,10 +269,14 @@ class _DataBody extends ConsumerWidget {
     // e suficiente para o volume típico (poucas dezenas de abastecimentos).
     //
     // Paginação lazy: exibimos apenas as primeiras [visibleCount] entradas
-    // do histórico quando a lista é grande (>25 entradas). O cálculo de
-    // consumo sempre usa o histórico completo — apenas a renderização é
+    // do histórico filtrado quando a lista é grande (>25 entradas). O cálculo
+    // de consumo sempre usa o histórico completo — apenas a renderização é
     // limitada.
-    final allItems = _buildTimelineItems(rows);
+    //
+    // A timeline usa os filteredEntries; computeForDisplay usa allEntries para
+    // preservar a regra de consumo sagrado.
+    final filteredRows = _buildFilteredRows(filteredEntries, rows);
+    final allItems = _buildTimelineItems(filteredRows);
     final items = visibleCount != null && visibleCount! < allItems.length
         ? _limitItems(allItems, visibleCount!)
         : allItems;
@@ -244,7 +285,11 @@ class _DataBody extends ConsumerWidget {
     return CustomScrollView(
       controller: scrollController,
       slivers: [
-        _AppBar(vehicle: vehicle, sealed: appBarSealed),
+        _AppBar(
+          vehicle: vehicle,
+          sealed: appBarSealed,
+          filterState: filterState,
+        ),
         SliverToBoxAdapter(
           child: VehicleHeroHeader(
             vehicle: vehicle,
@@ -258,8 +303,9 @@ class _DataBody extends ConsumerWidget {
         // Gráfico FIPE — só aparece se o veículo tem código FIPE configurado.
         if (vehicle.fipeCode != null)
           SliverToBoxAdapter(child: FipeHistoryChart(vehicleId: vehicle.id)),
-        // Cards de custo por km e tendência — só se há ao menos 1 entry.
-        if (entries.isNotEmpty) ...[
+        // Cards de custo por km e tendência — só se há ao menos 1 entry no
+        // histórico completo (não dependem do filtro).
+        if (allEntries.isNotEmpty) ...[
           SliverToBoxAdapter(child: CostPerKmCard(vehicle: vehicle)),
           SliverToBoxAdapter(child: TrendCard(vehicle: vehicle)),
           SliverToBoxAdapter(child: Co2Card(vehicle: vehicle)),
@@ -275,9 +321,16 @@ class _DataBody extends ConsumerWidget {
         if (items.isEmpty)
           SliverFillRemaining(
             hasScrollBody: false,
-            child: _EmptyState(
-              onAdd: () => context.push('/vehicles/${vehicle.id}/fuel/new'),
-            ),
+            child: filterState.hasActiveFilters
+                ? _FilteredEmptyState(
+                    onClear: () => ref
+                        .read(fuelFilterStateProvider(vehicle.id).notifier)
+                        .clear(),
+                  )
+                : _EmptyState(
+                    onAdd: () =>
+                        context.push('/vehicles/${vehicle.id}/fuel/new'),
+                  ),
           )
         else ...[
           const SliverToBoxAdapter(child: _HistoryHeader()),
@@ -334,6 +387,22 @@ class _DataBody extends ConsumerWidget {
         ],
       ],
     );
+  }
+
+  /// Filtra [allComputedRows] para conter apenas as entries que estão em
+  /// [filteredEntries], preservando os dados de consumo calculados.
+  ///
+  /// Necessário porque o consumo é calculado sobre o histórico completo, mas
+  /// a timeline deve mostrar apenas as entries filtradas.
+  static List<ConsumptionRow> _buildFilteredRows(
+    List<FuelEntry> filteredEntries,
+    List<ConsumptionRow> allComputedRows,
+  ) {
+    if (filteredEntries.isEmpty) return const [];
+    final filteredIds = {for (final e in filteredEntries) e.id};
+    return allComputedRows
+        .where((row) => filteredIds.contains(row.entry.id))
+        .toList();
   }
 
   /// Achata [rows] em uma sequência alternada de [_MonthHeaderItem] e
@@ -437,14 +506,19 @@ class _FuelHistorySkeleton extends StatelessWidget {
 // AppBar
 // ============================================================================
 
-class _AppBar extends StatelessWidget {
-  const _AppBar({required this.vehicle, required this.sealed});
+class _AppBar extends ConsumerWidget {
+  const _AppBar({
+    required this.vehicle,
+    required this.sealed,
+    required this.filterState,
+  });
 
   final Vehicle vehicle;
   final bool sealed;
+  final FuelFilterState filterState;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     // Quando NÃO selada, o app bar fica sobre o painel brand: ícones
     // claros e título oculto. Quando selada (após scroll), vira AppBar
     // canônica com fundo surface + título.
@@ -497,6 +571,12 @@ class _AppBar extends StatelessWidget {
         ),
       ),
       actions: [
+        // Botão de filtro com badge
+        _FilterButton(
+          vehicle: vehicle,
+          filterState: filterState,
+          foreground: foreground,
+        ),
         IconButton(
           icon: const Icon(Icons.auto_awesome_outlined),
           color: foreground,
@@ -535,6 +615,74 @@ class _AppBar extends StatelessWidget {
         ),
         const SizedBox(width: AppSpacing.xs),
       ],
+    );
+  }
+}
+
+// ============================================================================
+// Botão de filtro com badge de contagem
+// ============================================================================
+
+class _FilterButton extends ConsumerWidget {
+  const _FilterButton({
+    required this.vehicle,
+    required this.filterState,
+    required this.foreground,
+  });
+
+  final Vehicle vehicle;
+  final FuelFilterState filterState;
+  final Color foreground;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final count = filterState.activeCount;
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.tune_rounded),
+          color: foreground,
+          tooltip: 'Filtros',
+          onPressed: () => _openFilterSheet(context, ref),
+        ),
+        if (count > 0)
+          Positioned(
+            top: 8,
+            right: 8,
+            child: IgnorePointer(
+              child: Container(
+                width: 16,
+                height: 16,
+                decoration: const BoxDecoration(
+                  color: AppColors.accent,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    '$count',
+                    style: const TextStyle(
+                      color: AppColors.accentInk,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      height: 1,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  void _openFilterSheet(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) =>
+          _FilterSheet(vehicleId: vehicle.id, initialState: filterState),
     );
   }
 }
@@ -692,6 +840,71 @@ class _ErrorState extends StatelessWidget {
               child: const Text('Tentar novamente'),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Empty state quando há filtros ativos mas nenhuma entry satisfaz.
+class _FilteredEmptyState extends StatelessWidget {
+  const _FilteredEmptyState({required this.onClear});
+
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return SingleChildScrollView(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 360),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xxxl),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: context.surfaceSunken,
+                    borderRadius: AppRadius.allLg,
+                  ),
+                  child: Icon(
+                    Icons.filter_list_off,
+                    size: 30,
+                    color: context.inkMuted,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                Text(
+                  'Nenhum abastecimento com esses filtros.',
+                  style: AppTypography.display(
+                    22,
+                    weight: FontWeight.w700,
+                    height: 1.2,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Tente ampliar o período ou remover alguns critérios.',
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: context.inkMuted,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.xxl),
+                OutlinedButton.icon(
+                  onPressed: onClear,
+                  icon: const Icon(Icons.clear_all),
+                  label: const Text('Limpar filtros'),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -954,6 +1167,471 @@ class _FuelEconomyBannerCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ============================================================================
+// Bottom Sheet: Filtros
+// ============================================================================
+
+/// Bottom sheet de filtros do histórico de abastecimentos.
+///
+/// Trabalha com estado local até o usuário apertar "Aplicar" — garante que
+/// mudanças parciais não afetem a lista antes de confirmação.
+class _FilterSheet extends ConsumerStatefulWidget {
+  const _FilterSheet({required this.vehicleId, required this.initialState});
+
+  final String vehicleId;
+  final FuelFilterState initialState;
+
+  @override
+  ConsumerState<_FilterSheet> createState() => _FilterSheetState();
+}
+
+class _FilterSheetState extends ConsumerState<_FilterSheet> {
+  late FuelFilterState _draft;
+  late final TextEditingController _searchController;
+
+  // Debounce para o campo de busca
+  Timer? _debounceTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _draft = widget.initialState;
+    _searchController = TextEditingController(
+      text: widget.initialState.textQuery ?? '',
+    );
+  }
+
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String value) {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        setState(
+          () =>
+              _draft = _draft.copyWith(textQuery: value.isEmpty ? null : value),
+        );
+      }
+    });
+  }
+
+  void _apply() {
+    ref.read(fuelFilterStateProvider(widget.vehicleId).notifier).apply(_draft);
+    Navigator.of(context).pop();
+  }
+
+  void _clear() {
+    setState(() {
+      _draft = FuelFilterState();
+      _searchController.clear();
+    });
+  }
+
+  Future<void> _pickCustomPeriod() async {
+    final now = DateTime.now();
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2000),
+      lastDate: now,
+      initialDateRange: _draft.period != null
+          ? DateTimeRange(start: _draft.period!.start, end: _draft.period!.end)
+          : null,
+      locale: const Locale('pt', 'BR'),
+      helpText: 'Selecione o período',
+      cancelText: 'Cancelar',
+      confirmText: 'Confirmar',
+      saveText: 'Salvar',
+    );
+    if (picked != null && mounted) {
+      setState(() => _draft = _draft.copyWith(period: picked));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final viewInsets = MediaQuery.viewInsetsOf(context);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: context.surface,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(AppRadius.lg),
+        ),
+      ),
+      padding: EdgeInsets.only(bottom: viewInsets.bottom),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Handle
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.md),
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: context.hairline,
+                    borderRadius: AppRadius.allSm,
+                  ),
+                ),
+              ),
+            ),
+            // Título + botão limpar
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.lg,
+                AppSpacing.md,
+                AppSpacing.sm,
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    'Filtros',
+                    style: textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const Spacer(),
+                  if (_draft.hasActiveFilters)
+                    TextButton(
+                      onPressed: _clear,
+                      child: const Text('Limpar tudo'),
+                    ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(context).pop(),
+                    tooltip: 'Fechar',
+                  ),
+                ],
+              ),
+            ),
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // --- Busca livre ---
+                    TextField(
+                      controller: _searchController,
+                      onChanged: _onSearchChanged,
+                      decoration: InputDecoration(
+                        hintText: 'Buscar por posto ou combustível…',
+                        prefixIcon: const Icon(Icons.search),
+                        filled: true,
+                        fillColor: context.surfaceSunken,
+                        border: const OutlineInputBorder(
+                          borderRadius: AppRadius.allSm,
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.md,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
+
+                    // --- Tipo de combustível ---
+                    Text(
+                      'Tipo de combustível',
+                      style: textTheme.labelLarge?.copyWith(
+                        color: context.inkMuted,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Wrap(
+                      spacing: AppSpacing.sm,
+                      children: [
+                        _FuelTypeChip(
+                          label: 'Gasolina',
+                          value: 'gasolina',
+                          selected: _draft.fuelType == 'gasolina',
+                          onSelected: (v) => setState(
+                            () => _draft = _draft.copyWith(
+                              fuelType: v ? 'gasolina' : null,
+                            ),
+                          ),
+                        ),
+                        _FuelTypeChip(
+                          label: 'Etanol',
+                          value: 'etanol',
+                          selected: _draft.fuelType == 'etanol',
+                          onSelected: (v) => setState(
+                            () => _draft = _draft.copyWith(
+                              fuelType: v ? 'etanol' : null,
+                            ),
+                          ),
+                        ),
+                        _FuelTypeChip(
+                          label: 'Diesel',
+                          value: 'diesel',
+                          selected: _draft.fuelType == 'diesel',
+                          onSelected: (v) => setState(
+                            () => _draft = _draft.copyWith(
+                              fuelType: v ? 'diesel' : null,
+                            ),
+                          ),
+                        ),
+                        _FuelTypeChip(
+                          label: 'GNV',
+                          value: 'gnv',
+                          selected: _draft.fuelType == 'gnv',
+                          onSelected: (v) => setState(
+                            () => _draft = _draft.copyWith(
+                              fuelType: v ? 'gnv' : null,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
+
+                    // --- Período ---
+                    Text(
+                      'Período',
+                      style: textTheme.labelLarge?.copyWith(
+                        color: context.inkMuted,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Wrap(
+                      spacing: AppSpacing.sm,
+                      children: [
+                        _PeriodPresetChip(
+                          label: 'Últimos 30 dias',
+                          isActive: _isLast30Days(),
+                          onTap: () {
+                            final now = DateTime.now();
+                            setState(
+                              () => _draft = _draft.copyWith(
+                                period: DateTimeRange(
+                                  start: now.subtract(const Duration(days: 30)),
+                                  end: now,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        _PeriodPresetChip(
+                          label: 'Este mês',
+                          isActive: _isCurrentMonth(),
+                          onTap: () {
+                            final now = DateTime.now();
+                            setState(
+                              () => _draft = _draft.copyWith(
+                                period: DateTimeRange(
+                                  start: DateTime(now.year, now.month, 1),
+                                  end: now,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        _PeriodPresetChip(
+                          label: _customPeriodLabel(),
+                          isActive:
+                              _draft.period != null &&
+                              !_isLast30Days() &&
+                              !_isCurrentMonth(),
+                          onTap: _pickCustomPeriod,
+                        ),
+                        if (_draft.period != null)
+                          ActionChip(
+                            label: const Text('Limpar período'),
+                            avatar: const Icon(Icons.close, size: 16),
+                            onPressed: () => setState(
+                              () => _draft = _draft.copyWith(period: null),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
+
+                    // --- Tanque cheio ---
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Só tanque cheio', style: textTheme.bodyLarge),
+                        Switch.adaptive(
+                          value: _draft.onlyFullTank,
+                          onChanged: (v) => setState(
+                            () => _draft = _draft.copyWith(onlyFullTank: v),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
+
+                    // --- Ordenação ---
+                    Text(
+                      'Ordenar por',
+                      style: textTheme.labelLarge?.copyWith(
+                        color: context.inkMuted,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    DropdownButtonFormField<FuelSortBy>(
+                      key: ValueKey(_draft.sortBy),
+                      initialValue: _draft.sortBy,
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: context.surfaceSunken,
+                        border: const OutlineInputBorder(
+                          borderRadius: AppRadius.allSm,
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.md,
+                        ),
+                      ),
+                      items: FuelSortBy.values
+                          .map(
+                            (v) => DropdownMenuItem(
+                              value: v,
+                              child: Text(v.label),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (v) {
+                        if (v != null) {
+                          setState(() => _draft = _draft.copyWith(sortBy: v));
+                        }
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
+                  ],
+                ),
+              ),
+            ),
+            // Botão "Aplicar"
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.sm,
+                AppSpacing.lg,
+                AppSpacing.lg,
+              ),
+              child: FilledButton(
+                onPressed: _apply,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.brand,
+                  foregroundColor: AppColors.brandInk,
+                  minimumSize: const Size.fromHeight(48),
+                ),
+                child: const Text('Aplicar'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  bool _isLast30Days() {
+    if (_draft.period == null) return false;
+    final now = DateTime.now();
+    final expected30 = now.subtract(const Duration(days: 30));
+    final start = _draft.period!.start;
+    return start.year == expected30.year &&
+        start.month == expected30.month &&
+        start.day == expected30.day;
+  }
+
+  bool _isCurrentMonth() {
+    if (_draft.period == null) return false;
+    final now = DateTime.now();
+    final start = _draft.period!.start;
+    return start.year == now.year && start.month == now.month && start.day == 1;
+  }
+
+  String _customPeriodLabel() {
+    if (_draft.period != null && !_isLast30Days() && !_isCurrentMonth()) {
+      final fmt = DateFormat('dd/MM/yy');
+      return '${fmt.format(_draft.period!.start)} – ${fmt.format(_draft.period!.end)}';
+    }
+    return 'Personalizado';
+  }
+}
+
+// ============================================================================
+// Chips auxiliares do FilterSheet
+// ============================================================================
+
+class _FuelTypeChip extends StatelessWidget {
+  const _FuelTypeChip({
+    required this.label,
+    required this.value,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final String label;
+  final String value;
+  final bool selected;
+  final ValueChanged<bool> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return FilterChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: onSelected,
+      selectedColor: AppColors.brand,
+      checkmarkColor: AppColors.brandInk,
+      labelStyle: TextStyle(
+        color: selected ? AppColors.brandInk : context.ink,
+        fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+      ),
+      side: BorderSide(color: selected ? AppColors.brand : context.hairline),
+      backgroundColor: context.surfaceSunken,
+    );
+  }
+}
+
+class _PeriodPresetChip extends StatelessWidget {
+  const _PeriodPresetChip({
+    required this.label,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return FilterChip(
+      label: Text(label),
+      selected: isActive,
+      onSelected: (_) => onTap(),
+      selectedColor: AppColors.brand,
+      checkmarkColor: AppColors.brandInk,
+      labelStyle: TextStyle(
+        color: isActive ? AppColors.brandInk : context.ink,
+        fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+      ),
+      side: BorderSide(color: isActive ? AppColors.brand : context.hairline),
+      backgroundColor: context.surfaceSunken,
     );
   }
 }
