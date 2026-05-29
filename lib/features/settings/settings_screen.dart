@@ -1,5 +1,6 @@
 import 'package:autolog/data/repositories/user_settings_repository.dart';
 import 'package:autolog/domain/repositories/user_settings_repository.dart';
+import 'package:autolog/features/auth/account_deletion/widgets/delete_account_section.dart';
 import 'package:autolog/features/calendar/google_calendar_service.dart';
 import 'package:autolog/features/export/widgets/export_card.dart';
 import 'package:autolog/features/settings/notif_prefs_providers.dart';
@@ -39,6 +40,8 @@ class SettingsScreen extends ConsumerWidget {
           const _GoogleCalendarCard(),
           const SizedBox(height: 8),
           const ExportCard(),
+          const SizedBox(height: 8),
+          const DeleteAccountSection(),
           const SizedBox(height: 8),
         ],
       ),

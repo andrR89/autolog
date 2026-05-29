@@ -47,7 +47,7 @@ import 'package:autolog/features/fuel/fuel_history_helpers.dart';
 import 'package:autolog/features/fuel/widgets/favorite_station_card.dart';
 import 'package:autolog/features/fuel/widgets/fuel_entry_card.dart';
 import 'package:autolog/features/fuel/widgets/vehicle_hero_header.dart';
-import 'package:autolog/features/reports/widgets/co2_card.dart';
+import 'package:autolog/features/insights/co2/widgets/co2_card.dart';
 import 'package:autolog/features/reports/widgets/cost_per_km_card.dart';
 import 'package:autolog/features/reports/widgets/trend_card.dart';
 import 'package:autolog/features/vehicles/widgets/fipe_history_chart.dart';
@@ -308,7 +308,7 @@ class _DataBody extends ConsumerWidget {
         if (allEntries.isNotEmpty) ...[
           SliverToBoxAdapter(child: CostPerKmCard(vehicle: vehicle)),
           SliverToBoxAdapter(child: TrendCard(vehicle: vehicle)),
-          SliverToBoxAdapter(child: Co2Card(vehicle: vehicle)),
+          SliverToBoxAdapter(child: Co2InsightCard(vehicle: vehicle)),
           SliverToBoxAdapter(child: FavoriteStationCard(vehicle: vehicle)),
           // Card de viagens — acesso rápido ao modo viagem.
           SliverToBoxAdapter(child: _TripsBannerCard(vehicleId: vehicle.id)),

@@ -17,6 +17,7 @@
 
 import 'package:autolog/domain/models/vehicle.dart';
 import 'package:autolog/features/export/csv_export_providers.dart';
+import 'package:autolog/features/export/pdf/widgets/generate_pdf_button.dart';
 import 'package:autolog/features/vehicles/vehicles_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -349,6 +350,12 @@ class _ExportSheetState extends ConsumerState<_ExportSheet> {
               onPressed: () => _export(_ExportType.all),
               primary: true,
             ),
+            const SizedBox(height: 16),
+            const Divider(height: 1),
+            const SizedBox(height: 16),
+            // PDF "Histórico do veículo" (Sprint 6.Y) — pro veículo selecionado.
+            if (_selectedVehicle != null)
+              GeneratePdfButton(vehicleId: _selectedVehicle!.id),
           ],
         ],
       ),
