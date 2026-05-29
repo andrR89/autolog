@@ -72,6 +72,10 @@ dependencies:
   # Export — CSV Backup (Sprint 6.II).
   share_plus: ^10.0.0
 
+  # Export — PDF Histórico do Veículo (Sprint 6.Y).
+  pdf: ^3.11.1
+  printing: ^5.13.4
+
   # Google Calendar integration (Sprint 6.EE).
   # Mock é o default até o OAuth estar configurado (docs/google-calendar-setup.md).
   google_sign_in: ^7.0.0
