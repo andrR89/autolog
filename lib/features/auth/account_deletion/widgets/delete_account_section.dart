@@ -189,6 +189,16 @@ class _ConfirmDeleteDialogState extends State<_ConfirmDeleteDialog> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return AlertDialog(
+      // Explícito pra dark-aware (DialogTheme global tava sendo override por
+      // surfaceTint do M3 — bug homolog 04/06, dialog vinha branco no dark).
+      backgroundColor: colorScheme.surface,
+      surfaceTintColor: Colors.transparent,
+      titleTextStyle: Theme.of(
+        context,
+      ).textTheme.titleLarge?.copyWith(color: colorScheme.onSurface),
+      contentTextStyle: Theme.of(
+        context,
+      ).textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface),
       title: Row(
         children: [
           Icon(Icons.warning_amber_rounded, color: colorScheme.error),
@@ -242,6 +252,15 @@ class _ConfirmDeleteDialogState extends State<_ConfirmDeleteDialog> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return AlertDialog(
+      // Idem step 1 — fix dark mode.
+      backgroundColor: colorScheme.surface,
+      surfaceTintColor: Colors.transparent,
+      titleTextStyle: Theme.of(
+        context,
+      ).textTheme.titleLarge?.copyWith(color: colorScheme.onSurface),
+      contentTextStyle: Theme.of(
+        context,
+      ).textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface),
       title: const Text('Confirmação final'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
