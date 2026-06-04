@@ -82,10 +82,11 @@ class _AutoLogAppState extends ConsumerState<AutoLogApp> {
         // 1. Onboarding gate — avaliado ANTES do auth gate.
         //    Onboarding é marketing pré-login: aparece quando o usuário nunca
         //    viu E não está logado. Lê do SharedPreferences (sem userId).
+        //    Provider é síncrono (SharedPreferences pré-carregado no main).
         //    Não redireciona se já está em /onboarding.
         if (location != '/onboarding') {
-          final needed = ref.read(onboardingNeededProvider).valueOrNull;
-          if (needed == true) return '/onboarding';
+          final needed = ref.read(onboardingNeededProvider);
+          if (needed) return '/onboarding';
         }
 
         // 2. Auth gate — redireciona para /login se não logado fora de rota

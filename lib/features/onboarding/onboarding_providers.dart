@@ -3,26 +3,31 @@ import 'package:autolog/features/onboarding/onboarding_gate.dart';
 import 'package:autolog/features/onboarding/onboarding_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Stream de "está logado?" para invalidar o provider quando a sessão muda.
-final _onboardingAuthProvider = StreamProvider<bool>((ref) {
-  return ref.watch(authServiceProvider).authStateChanges;
+/// Estado síncrono de "está logado?" derivado do [authServiceProvider].
+///
+/// Separado em provider próprio para ser overrideable em testes sem
+/// precisar mockar authServiceProvider inteiro.
+final authIsLoggedInProvider = Provider<bool>((ref) {
+  return ref.watch(authServiceProvider).isLoggedIn;
 });
 
 /// Emite `true` se o onboarding deve ser exibido.
 ///
-/// Lógica nova (fix caso B — onboarding é marketing pré-login):
-/// - Lê `seen` do [OnboardingRepository] (SharedPreferences, pré-login).
-/// - Lê `isLoggedIn` do stream de auth.
-/// - Delega decisão ao [shouldShowOnboarding] puro.
+/// **Síncrono** (`Provider<bool>`, não `FutureProvider`): depende de
+/// [sharedPreferencesProvider] que é pré-carregado no main() antes do
+/// runApp. Isso elimina a race condition em cold boot onde o redirect do
+/// GoRouter avaliava FutureProvider.valueOrNull → null antes do future
+/// resolver → caía no auth gate → /login.
 ///
-/// Retorna `false` enquanto o estado ainda não foi carregado para evitar flash.
-final onboardingNeededProvider = FutureProvider<bool>((ref) async {
-  // isLoggedIn pode ser false mesmo antes da sessão estar estabelecida — ok,
-  // pois o gate agora exibe para não-logados que nunca viram.
-  final isLoggedIn = ref.watch(_onboardingAuthProvider).valueOrNull ?? false;
-
-  final repo = ref.read(onboardingRepositoryProvider);
-  final seen = await repo.hasSeenOnboarding();
-
-  return shouldShowOnboarding(seen: seen, isLoggedIn: isLoggedIn);
+/// Lógica:
+/// - Já viu → false.
+/// - Logado → false (já é usuário; passou da fase de conversão).
+/// - Nunca viu E não logado → true.
+final onboardingNeededProvider = Provider<bool>((ref) {
+  final repo = ref.watch(onboardingRepositoryProvider);
+  final isLoggedIn = ref.watch(authIsLoggedInProvider);
+  return shouldShowOnboarding(
+    seen: repo.hasSeenOnboarding(),
+    isLoggedIn: isLoggedIn,
+  );
 });

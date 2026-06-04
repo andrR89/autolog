@@ -4,8 +4,10 @@
 
 import 'package:autolog/app.dart';
 import 'package:autolog/features/auth/auth_service.dart';
+import 'package:autolog/features/onboarding/onboarding_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Implementação falsa de [AuthService] para uso em testes de widget.
 ///
@@ -34,12 +36,23 @@ void main() {
   testWidgets('AutoLogApp constrói sem erros e exibe título', (
     WidgetTester tester,
   ) async {
+    // SharedPreferences precisa de override porque onboardingNeededProvider
+    // é agora síncrono e depende de sharedPreferencesProvider pré-carregado.
+    // Marca onboarding como já visto para que o router vá para /login onde
+    // o AppLogo exibe o wordmark "AutoLog".
+    SharedPreferences.setMockInitialValues({'onboarding_seen': true});
+    final prefs = await SharedPreferences.getInstance();
+
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [authServiceProvider.overrideWithValue(FakeAuthService())],
+        overrides: [
+          authServiceProvider.overrideWithValue(FakeAuthService()),
+          sharedPreferencesProvider.overrideWithValue(prefs),
+        ],
         child: const AutoLogApp(),
       ),
     );
+    await tester.pumpAndSettle();
     expect(find.text('AutoLog'), findsOneWidget);
   });
 }
