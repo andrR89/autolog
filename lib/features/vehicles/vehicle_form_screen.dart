@@ -1,5 +1,6 @@
 import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
+import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/data/remote/fipe_models.dart';
 import 'package:autolog/data/repositories/fipe_history_repository.dart';
 import 'package:autolog/domain/models/enums.dart';
@@ -112,11 +113,13 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
     // No modo criar, usa _draftId — o veículo será salvo com o mesmo id.
     // Erros são silenciosos: não bloquear o preenchimento do formulário.
     try {
-      await ref.read(fipeHistoryRepositoryProvider).saveSnapshot(
-        vehicleId: _draftId,
-        month: result.referenceMonth,
-        value: result.priceValue,
-      );
+      await ref
+          .read(fipeHistoryRepositoryProvider)
+          .saveSnapshot(
+            vehicleId: _draftId,
+            month: result.referenceMonth,
+            value: result.priceValue,
+          );
     } catch (_) {
       // Falha ao salvar snapshot não deve interromper o fluxo do usuário.
     }
@@ -236,12 +239,14 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
 
     setState(() => _inferring = true);
     try {
-      final result = await ref.read(vehicleSpecsInferenceServiceProvider).infer(
-        type: _vehicleType,
-        make: _makeCtrl.text.trim(),
-        model: _modelCtrl.text.trim(),
-        year: year,
-      );
+      final result = await ref
+          .read(vehicleSpecsInferenceServiceProvider)
+          .infer(
+            type: _vehicleType,
+            make: _makeCtrl.text.trim(),
+            model: _modelCtrl.text.trim(),
+            year: year,
+          );
 
       if (!mounted) return;
 
@@ -267,10 +272,7 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
             ? 'Confira os dados sugeridos'
             : 'Sugestão com baixa confiança — revise antes de salvar';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            behavior: SnackBarBehavior.floating,
-          ),
+          SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
         );
       }
     } on QuotaExhaustedException {
@@ -581,7 +583,9 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
                             ? const SizedBox(
                                 width: 18,
                                 height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : const Icon(Icons.document_scanner, size: 18),
                         label: const Text('Escanear CRLV'),
@@ -748,7 +752,8 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
                                   // óbvio pelo tamanho. (regressão 26/05/2026)
                                   counterText: '',
                                 ),
-                                textCapitalization: TextCapitalization.characters,
+                                textCapitalization:
+                                    TextCapitalization.characters,
                                 maxLength: 2,
                                 inputFormatters: [
                                   FilteringTextInputFormatter.allow(
@@ -786,7 +791,8 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
                       horsepowerCtrl: _horsepowerCtrl,
                       inferring: _inferring,
                       onInferSpecs: _onInferSpecs,
-                      initiallyExpanded: _isEditing &&
+                      initiallyExpanded:
+                          _isEditing &&
                           (widget.initial?.engineDisplacementCc != null ||
                               widget.initial?.tankCapacityL != null ||
                               widget.initial?.horsepower != null),
@@ -1110,10 +1116,31 @@ class _TechnicalSpecsSectionState extends State<_TechnicalSpecsSection> {
                         ? const SizedBox(
                             width: 18,
                             height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation(
+                                AppColors.brand,
+                              ),
+                            ),
                           )
-                        : const Icon(Icons.auto_awesome, size: 18),
+                        : const Icon(
+                            Icons.auto_awesome,
+                            size: 18,
+                            color: AppColors.brand,
+                          ),
                     label: const Text('Preencher com IA'),
+                    // Styling explícito — não herda do ChipTheme nem da
+                    // DefaultTextStyle do ExpansionTile (que vazava branco no
+                    // tema claro, bug homolog 04/06).
+                    labelStyle: AppTypography.body(
+                      13,
+                      weight: FontWeight.w600,
+                      color: AppColors.brand,
+                    ),
+                    backgroundColor: AppColors.brand.withValues(alpha: 0.10),
+                    side: BorderSide(
+                      color: AppColors.brand.withValues(alpha: 0.25),
+                    ),
                     onPressed: widget.inferring ? null : widget.onInferSpecs,
                   ),
                 ),
