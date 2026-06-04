@@ -76,6 +76,9 @@ dependencies:
   pdf: ^3.11.1
   printing: ^5.13.4
 
+  # Onboarding state (Sprint 6.GG fix) — pré-login, independente de userId.
+  shared_preferences: ^2.3.0
+
   # Google Calendar integration (Sprint 6.EE).
   # Mock é o default até o OAuth estar configurado (docs/google-calendar-setup.md).
   google_sign_in: ^7.0.0

@@ -1,61 +1,64 @@
-import 'package:autolog/data/local/database.dart';
-import 'package:autolog/data/repositories/user_settings_repository.dart';
-import 'package:autolog/domain/repositories/user_settings_repository.dart';
-import 'package:drift/native.dart';
+import 'package:autolog/features/onboarding/onboarding_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-/// Testes de repositório para onboardingSeen (Sprint 6.GG).
 void main() {
-  late AppDatabase db;
-  late UserSettingsRepository repo;
+  // ── InMemoryOnboardingRepository ──────────────────────────────────────────
 
-  setUp(() {
-    db = AppDatabase(NativeDatabase.memory());
-    repo = DriftUserSettingsRepository(db);
+  group('InMemoryOnboardingRepository', () {
+    late InMemoryOnboardingRepository repo;
+
+    setUp(() {
+      repo = InMemoryOnboardingRepository();
+    });
+
+    test('padrão é false — não viu onboarding', () async {
+      expect(await repo.hasSeenOnboarding(), isFalse);
+    });
+
+    test('markSeen → hasSeenOnboarding retorna true', () async {
+      await repo.markSeen();
+      expect(await repo.hasSeenOnboarding(), isTrue);
+    });
+
+    test('markSeen é idempotente — chamar duas vezes mantém true', () async {
+      await repo.markSeen();
+      await repo.markSeen();
+      expect(await repo.hasSeenOnboarding(), isTrue);
+    });
   });
 
-  tearDown(() => db.close());
+  // ── SharedPrefsOnboardingRepository ──────────────────────────────────────
 
-  group('getOnboardingSeen', () {
-    test('retorna false para usuário novo (sem registro)', () async {
-      final seen = await repo.getOnboardingSeen('user-1');
-      expect(seen, isFalse);
+  group('SharedPrefsOnboardingRepository', () {
+    late SharedPrefsOnboardingRepository repo;
+
+    setUp(() {
+      // Mock de SharedPreferences sem estado prévio.
+      SharedPreferences.setMockInitialValues({});
+      repo = SharedPrefsOnboardingRepository();
     });
 
-    test('retorna false antes de chamar setOnboardingSeen', () async {
-      // Cria um registro via outro setter (simula usuário que já usou o app).
-      await repo.setThemeMode('user-1', ThemeModeEnum.dark);
-
-      final seen = await repo.getOnboardingSeen('user-1');
-      expect(seen, isFalse);
-    });
-  });
-
-  group('setOnboardingSeen', () {
-    test('marca como visto — getOnboardingSeen retorna true', () async {
-      await repo.setOnboardingSeen('user-1');
-      expect(await repo.getOnboardingSeen('user-1'), isTrue);
+    test('padrão é false sem valor prévio', () async {
+      expect(await repo.hasSeenOnboarding(), isFalse);
     });
 
-    test('idempotente — chamar duas vezes mantém true', () async {
-      await repo.setOnboardingSeen('user-1');
-      await repo.setOnboardingSeen('user-1');
-      expect(await repo.getOnboardingSeen('user-1'), isTrue);
+    test('markSeen → hasSeenOnboarding retorna true', () async {
+      await repo.markSeen();
+      expect(await repo.hasSeenOnboarding(), isTrue);
     });
 
-    test('não afeta outros campos — theme ainda existe', () async {
-      await repo.setThemeMode('user-1', ThemeModeEnum.dark);
-      await repo.setOnboardingSeen('user-1');
-
-      expect(await repo.getThemeMode('user-1'), ThemeModeEnum.dark);
-      expect(await repo.getOnboardingSeen('user-1'), isTrue);
+    test('markSeen é idempotente', () async {
+      await repo.markSeen();
+      await repo.markSeen();
+      expect(await repo.hasSeenOnboarding(), isTrue);
     });
 
-    test('isolamento por userId', () async {
-      await repo.setOnboardingSeen('user-1');
-
-      expect(await repo.getOnboardingSeen('user-1'), isTrue);
-      expect(await repo.getOnboardingSeen('user-2'), isFalse);
+    test('persiste entre chamadas distintas ao getInstance', () async {
+      // Simula reinicialização do singleton sem limpar prefs.
+      SharedPreferences.setMockInitialValues({'onboarding_seen': true});
+      final repo2 = SharedPrefsOnboardingRepository();
+      expect(await repo2.hasSeenOnboarding(), isTrue);
     });
   });
 }

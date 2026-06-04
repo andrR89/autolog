@@ -1,7 +1,6 @@
-import 'package:autolog/data/repositories/user_settings_repository.dart';
 import 'package:autolog/features/auth/auth_service.dart';
 import 'package:autolog/features/onboarding/onboarding_gate.dart';
-import 'package:autolog/features/vehicles/vehicles_provider.dart';
+import 'package:autolog/features/onboarding/onboarding_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Stream de "está logado?" para invalidar o provider quando a sessão muda.
@@ -9,24 +8,21 @@ final _onboardingAuthProvider = StreamProvider<bool>((ref) {
   return ref.watch(authServiceProvider).authStateChanges;
 });
 
-/// Emite `true` se o onboarding deve ser exibido ao usuário atual.
+/// Emite `true` se o onboarding deve ser exibido.
 ///
-/// Derivação: logado E onboardingSeen == false.
-/// Retorna false enquanto a sessão ainda não foi estabelecida (evita flash).
+/// Lógica nova (fix caso B — onboarding é marketing pré-login):
+/// - Lê `seen` do [OnboardingRepository] (SharedPreferences, pré-login).
+/// - Lê `isLoggedIn` do stream de auth.
+/// - Delega decisão ao [shouldShowOnboarding] puro.
+///
+/// Retorna `false` enquanto o estado ainda não foi carregado para evitar flash.
 final onboardingNeededProvider = FutureProvider<bool>((ref) async {
-  final isLoggedIn =
-      ref.watch(_onboardingAuthProvider).valueOrNull ?? false;
+  // isLoggedIn pode ser false mesmo antes da sessão estar estabelecida — ok,
+  // pois o gate agora exibe para não-logados que nunca viram.
+  final isLoggedIn = ref.watch(_onboardingAuthProvider).valueOrNull ?? false;
 
-  if (!isLoggedIn) return false;
+  final repo = ref.read(onboardingRepositoryProvider);
+  final seen = await repo.hasSeenOnboarding();
 
-  String userId;
-  try {
-    userId = ref.read(currentUserIdProvider);
-  } catch (_) {
-    return false;
-  }
-
-  final repo = ref.read(userSettingsRepositoryProvider);
-  final seen = await repo.getOnboardingSeen(userId);
   return shouldShowOnboarding(seen: seen, isLoggedIn: isLoggedIn);
 });

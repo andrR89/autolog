@@ -2,11 +2,13 @@
 ///
 /// Separada de qualquer framework para facilitar testes unitários.
 ///
-/// Regras:
-/// - Não logado → false (a tela de auth tem precedência).
-/// - Logado + já viu → false.
-/// - Logado + nunca viu → true.
+/// Regras NOVAS (fix caso B — onboarding é marketing pré-login):
+/// - Já viu → false (nunca mais, independente do estado de auth).
+/// - Logado → false (já é usuário; passou da fase de conversão).
+/// - Nunca viu E não logado → true (fluxo pré-login é exatamente o ponto de exibição).
 bool shouldShowOnboarding({required bool seen, required bool isLoggedIn}) {
-  if (!isLoggedIn) return false;
-  return !seen;
+  if (seen) return false;
+  // Já é usuário — onboarding é marketing pré-login, não tutorial pós-login.
+  if (isLoggedIn) return false;
+  return true;
 }

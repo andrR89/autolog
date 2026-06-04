@@ -1,8 +1,7 @@
 import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
-import 'package:autolog/data/repositories/user_settings_repository.dart';
-import 'package:autolog/features/vehicles/vehicles_provider.dart';
+import 'package:autolog/features/onboarding/onboarding_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -36,8 +35,7 @@ const _slides = [
     icon: Icons.local_gas_station_rounded,
     secondaryIcon: Icons.edit_note_rounded,
     title: 'Registre rápido',
-    subtitle:
-        'Cada abastecimento em 10 segundos.\nManual ou foto do cupom.',
+    subtitle: 'Cada abastecimento em 10 segundos.\nManual ou foto do cupom.',
   ),
   _SlideData(
     icon: Icons.insights_rounded,
@@ -48,8 +46,7 @@ const _slides = [
   _SlideData(
     icon: Icons.notifications_active_rounded,
     title: 'Nunca esqueça',
-    subtitle:
-        'IPVA, licenciamento, troca de óleo.\nLembretes automáticos.',
+    subtitle: 'IPVA, licenciamento, troca de óleo.\nLembretes automáticos.',
   ),
 ];
 
@@ -75,20 +72,22 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     super.dispose();
   }
 
-  Future<void> _markDoneAndNavigate() async {
+  /// Marca onboarding como visto (SharedPreferences) e navega para [dest].
+  ///
+  /// Em caso de falha de persistência, navega mesmo assim — o pior caso é
+  /// exibir o onboarding novamente na próxima abertura.
+  Future<void> _markSeenAndNavigate(String dest) async {
     if (_completing) return;
     setState(() => _completing = true);
 
     try {
-      final userId = ref.read(currentUserIdProvider);
-      final repo = ref.read(userSettingsRepositoryProvider);
-      await repo.setOnboardingSeen(userId);
+      final repo = ref.read(onboardingRepositoryProvider);
+      await repo.markSeen();
     } catch (_) {
-      // Em caso de falha (ex.: sem sessão), navega mesmo assim.
-      // O flag será marcado na próxima tentativa.
+      // Falha silenciosa — não bloqueia a navegação.
     }
 
-    if (mounted) context.go('/home');
+    if (mounted) context.go(dest);
   }
 
   void _nextPage() {
@@ -97,9 +96,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         duration: const Duration(milliseconds: 350),
         curve: Curves.easeInOut,
       );
-    } else {
-      _markDoneAndNavigate();
     }
+    // No último slide não há "Próximo" — os botões do CTA tratam a navegação.
   }
 
   @override
@@ -117,7 +115,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         actions: [
           if (!isLast)
             TextButton(
-              onPressed: _markDoneAndNavigate,
+              onPressed: () => _markSeenAndNavigate('/login'),
               child: Text(
                 'Pular',
                 style: AppTypography.body(
@@ -142,28 +140,28 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             ),
           ),
 
-          // Área inferior: dots + botão CTA
+          // Área inferior: dots + botão(ões) CTA
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
             child: Column(
               children: [
                 // Indicador de dots
-                _DotsIndicator(
-                  count: _slides.length,
-                  current: _currentPage,
-                ),
+                _DotsIndicator(count: _slides.length, current: _currentPage),
                 const SizedBox(height: 32),
 
-                // CTA bottom-right
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    FilledButton(
-                      onPressed: _completing ? null : _nextPage,
+                if (isLast) ...[
+                  // Último slide: dois CTAs — "Criar conta" (primário) e
+                  // "Já tenho conta" (text button secundário abaixo).
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: _completing
+                          ? null
+                          : () => _markSeenAndNavigate('/signup'),
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.accent,
                         foregroundColor: AppColors.accentInk,
-                        minimumSize: const Size(140, 52),
+                        minimumSize: const Size(double.infinity, 52),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
@@ -180,7 +178,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                               ),
                             )
                           : Text(
-                              isLast ? 'Começar' : 'Próximo',
+                              'Criar conta',
                               style: AppTypography.body(
                                 16,
                                 weight: FontWeight.w700,
@@ -188,8 +186,48 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                               ),
                             ),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: _completing
+                        ? null
+                        : () => _markSeenAndNavigate('/login'),
+                    child: Text(
+                      'Já tenho conta',
+                      style: AppTypography.body(
+                        15,
+                        weight: FontWeight.w500,
+                        color: context.inkMuted,
+                      ),
+                    ),
+                  ),
+                ] else ...[
+                  // Slides intermediários: "Próximo" alinhado à direita.
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      FilledButton(
+                        onPressed: _completing ? null : _nextPage,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.accent,
+                          foregroundColor: AppColors.accentInk,
+                          minimumSize: const Size(140, 52),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: Text(
+                          'Próximo',
+                          style: AppTypography.body(
+                            16,
+                            weight: FontWeight.w700,
+                            color: AppColors.accentInk,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -269,11 +307,7 @@ class _HeroIcons extends StatelessWidget {
           color: primaryColor.withValues(alpha: 0.10),
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Icon(
-          data.icon,
-          size: 44,
-          color: primaryColor,
-        ),
+        child: Icon(data.icon, size: 44, color: primaryColor),
       );
     }
 
@@ -287,11 +321,7 @@ class _HeroIcons extends StatelessWidget {
             color: primaryColor.withValues(alpha: 0.10),
             borderRadius: BorderRadius.circular(18),
           ),
-          child: Icon(
-            data.icon,
-            size: 38,
-            color: primaryColor,
-          ),
+          child: Icon(data.icon, size: 38, color: primaryColor),
         ),
         const SizedBox(width: 12),
         Container(
@@ -337,9 +367,7 @@ class _DotsIndicator extends StatelessWidget {
           width: isActive ? 24 : 8,
           height: 8,
           decoration: BoxDecoration(
-            color: isActive
-                ? primaryColor
-                : context.hairline,
+            color: isActive ? primaryColor : context.hairline,
             borderRadius: BorderRadius.circular(4),
           ),
         );

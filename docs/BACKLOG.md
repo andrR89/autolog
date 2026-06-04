@@ -233,6 +233,7 @@ Patch corretivo pós-homologação:
 ---
 
 ## Dívida técnica / pós-MVP (não fazer agora)
+- **Remover `onboarding_seen` de `user_settings`** — após fix de 04/06/2026 (6.GG re-homolog), o estado vive em SharedPreferences (key `onboarding_seen`). A coluna no Drift virou morta; remover em schema bump futuro para não acumular dívida. Métodos `getOnboardingSeen`/`setOnboardingSeen` em `UserSettingsRepository` marcados `@Deprecated`.
 - iOS (3ª onda — reavaliar regras de "reader app" / billing na época).
 - Resolução de conflito mais robusta que last-write-wins (se multi-device pesar).
 - Guardar imagem de cupom para reauditoria (decidir storage).

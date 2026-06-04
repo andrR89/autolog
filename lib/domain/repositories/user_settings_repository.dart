@@ -22,12 +22,12 @@ class NotificationPreferences {
   ///
   /// Categorias desconhecidas retornam `true` (permissivo por padrão).
   bool enabled(String category) => switch (category) {
-        'consumption_drop' => consumptionDrop,
-        'cnh' => cnh,
-        'fiscal' => fiscal,
-        'recap_ready' => recapReady,
-        _ => true,
-      };
+    'consumption_drop' => consumptionDrop,
+    'cnh' => cnh,
+    'fiscal' => fiscal,
+    'recap_ready' => recapReady,
+    _ => true,
+  };
 }
 
 /// Repositório de configurações locais do usuário.
@@ -64,14 +64,18 @@ abstract class UserSettingsRepository {
   Stream<NotificationPreferences> watchNotifPrefs(String userId);
 
   // ---------------------------------------------------------------------------
-  // Onboarding (Sprint 6.GG)
+  // Onboarding (Sprint 6.GG) — DEPRECATED
   // ---------------------------------------------------------------------------
 
-  /// Retorna true se o usuário já concluiu o tour de onboarding.
+  /// @deprecated Use [OnboardingRepository.hasSeenOnboarding] (SharedPreferences).
   ///
-  /// Default: false (nunca viu).
+  /// Após fix de 04/06/2026, o estado de onboarding vive em SharedPreferences
+  /// (key `onboarding_seen`). Esta coluna no Drift virou morta — remover em
+  /// schema bump futuro. Ver BACKLOG: "Remover onboarding_seen de user_settings".
+  @Deprecated('Use OnboardingRepository — agora em SharedPreferences')
   Future<bool> getOnboardingSeen(String userId);
 
-  /// Marca o tour como concluído para [userId].
+  /// @deprecated Use [OnboardingRepository.markSeen] (SharedPreferences).
+  @Deprecated('Use OnboardingRepository — agora em SharedPreferences')
   Future<void> setOnboardingSeen(String userId);
 }

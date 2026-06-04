@@ -1,53 +1,9 @@
-import 'package:autolog/data/repositories/user_settings_repository.dart';
-import 'package:autolog/domain/repositories/user_settings_repository.dart';
+import 'package:autolog/features/onboarding/onboarding_repository.dart';
 import 'package:autolog/features/onboarding/onboarding_screen.dart';
-import 'package:autolog/features/vehicles/vehicles_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-
-// ---------------------------------------------------------------------------
-// Stub do repositório para evitar Drift em memória neste widget test.
-// ---------------------------------------------------------------------------
-
-class _FakeUserSettingsRepo implements UserSettingsRepository {
-  bool _onboardingSeen = false;
-
-  @override
-  Future<bool> getOnboardingSeen(String userId) async => _onboardingSeen;
-
-  @override
-  Future<void> setOnboardingSeen(String userId) async {
-    _onboardingSeen = true;
-  }
-
-  @override
-  Future<ThemeModeEnum> getThemeMode(String userId) async =>
-      ThemeModeEnum.system;
-
-  @override
-  Future<void> setThemeMode(String userId, ThemeModeEnum mode) async {}
-
-  @override
-  Stream<ThemeModeEnum> watchThemeMode(String userId) =>
-      Stream.value(ThemeModeEnum.system);
-
-  @override
-  Future<NotificationPreferences> getNotifPrefs(String userId) async =>
-      const NotificationPreferences();
-
-  @override
-  Future<void> setNotifPref(
-    String userId,
-    String category,
-    bool enabled,
-  ) async {}
-
-  @override
-  Stream<NotificationPreferences> watchNotifPrefs(String userId) =>
-      Stream.value(const NotificationPreferences());
-}
 
 // ---------------------------------------------------------------------------
 // Helper de montagem
@@ -62,16 +18,22 @@ Widget _buildOnboarding() {
         builder: (context, _) => const OnboardingScreen(),
       ),
       GoRoute(
-        path: '/home',
-        builder: (context, _) => const Scaffold(body: Text('Home')),
+        path: '/login',
+        builder: (context, _) => const Scaffold(body: Text('Login')),
+      ),
+      GoRoute(
+        path: '/signup',
+        builder: (context, _) => const Scaffold(body: Text('Signup')),
       ),
     ],
   );
 
   return ProviderScope(
     overrides: [
-      currentUserIdProvider.overrideWithValue('test-user'),
-      userSettingsRepositoryProvider.overrideWithValue(_FakeUserSettingsRepo()),
+      // Usa repositório em memória — sem SharedPreferences real no teste.
+      onboardingRepositoryProvider.overrideWithValue(
+        InMemoryOnboardingRepository(),
+      ),
     ],
     child: MaterialApp.router(routerConfig: router),
   );
@@ -121,8 +83,25 @@ void main() {
       expect(find.text('Nunca esqueça'), findsOneWidget);
     });
 
-    testWidgets('último slide exibe "Começar" em vez de "Próximo"',
-        (tester) async {
+    testWidgets(
+      'último slide exibe "Criar conta" e "Já tenho conta" em vez de "Próximo"',
+      (tester) async {
+        await tester.pumpWidget(_buildOnboarding());
+        await tester.pumpAndSettle();
+
+        // Avança até o último slide
+        for (var i = 0; i < 3; i++) {
+          await tester.tap(find.text('Próximo'));
+          await tester.pumpAndSettle();
+        }
+
+        expect(find.text('Criar conta'), findsOneWidget);
+        expect(find.text('Já tenho conta'), findsOneWidget);
+        expect(find.text('Próximo'), findsNothing);
+      },
+    );
+
+    testWidgets('"Criar conta" navega para /signup', (tester) async {
       await tester.pumpWidget(_buildOnboarding());
       await tester.pumpAndSettle();
 
@@ -132,11 +111,13 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      expect(find.text('Começar'), findsOneWidget);
-      expect(find.text('Próximo'), findsNothing);
+      await tester.tap(find.text('Criar conta'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Signup'), findsOneWidget);
     });
 
-    testWidgets('"Começar" navega para home', (tester) async {
+    testWidgets('"Já tenho conta" navega para /login', (tester) async {
       await tester.pumpWidget(_buildOnboarding());
       await tester.pumpAndSettle();
 
@@ -146,14 +127,15 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      await tester.tap(find.text('Começar'));
+      await tester.tap(find.text('Já tenho conta'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Home'), findsOneWidget);
+      expect(find.text('Login'), findsOneWidget);
     });
 
-    testWidgets('"Pular" aparece nos slides 1-3 e navega para home',
-        (tester) async {
+    testWidgets('"Pular" aparece nos slides 1-3 e navega para /login', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildOnboarding());
       await tester.pumpAndSettle();
 
@@ -163,7 +145,7 @@ void main() {
       await tester.tap(find.text('Pular'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Home'), findsOneWidget);
+      expect(find.text('Login'), findsOneWidget);
     });
 
     testWidgets('"Pular" não aparece no último slide', (tester) async {

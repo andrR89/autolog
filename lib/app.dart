@@ -79,19 +79,23 @@ class _AutoLogAppState extends ConsumerState<AutoLogApp> {
         final isLoggedIn = ref.read(authServiceProvider).isLoggedIn;
         final location = state.uri.toString();
 
-        // 1. Auth gate — redireciona para /login se não logado (ou para /home
-        //    se logado num route de auth).
-        final authDest = authRedirect(isLoggedIn: isLoggedIn, location: location);
-        if (authDest != null) return authDest;
-
-        // 2. Onboarding gate — só aciona quando o usuário está autenticado e
-        //    não está já no onboarding.
-        if (isLoggedIn && location != '/onboarding') {
-          final needed = ref
-              .read(onboardingNeededProvider)
-              .valueOrNull;
+        // 1. Onboarding gate — avaliado ANTES do auth gate.
+        //    Onboarding é marketing pré-login: aparece quando o usuário nunca
+        //    viu E não está logado. Lê do SharedPreferences (sem userId).
+        //    Não redireciona se já está em /onboarding.
+        if (location != '/onboarding') {
+          final needed = ref.read(onboardingNeededProvider).valueOrNull;
           if (needed == true) return '/onboarding';
         }
+
+        // 2. Auth gate — redireciona para /login se não logado fora de rota
+        //    pública/auth; redireciona para /home se logado em rota de auth.
+        //    /onboarding é rota pública e não é bloqueada aqui.
+        final authDest = authRedirect(
+          isLoggedIn: isLoggedIn,
+          location: location,
+        );
+        if (authDest != null) return authDest;
 
         return null;
       },
