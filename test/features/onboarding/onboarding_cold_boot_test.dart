@@ -91,5 +91,34 @@ void main() {
       final needed = container.read(onboardingNeededProvider);
       expect(needed, isFalse);
     });
+
+    test(
+      'regressão homolog 04/06 #3: após markSeen + invalidate, '
+      'provider retorna false (sem loop no redirect)',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        final container = ProviderContainer(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+            authIsLoggedInProvider.overrideWithValue(false),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        // Estado inicial: precisa de onboarding.
+        expect(container.read(onboardingNeededProvider), isTrue);
+
+        // User clicou em "Criar conta" / "Já tenho conta" → markSeen.
+        await container.read(onboardingRepositoryProvider).markSeen();
+
+        // Sem invalidate, o cache do Provider mantém o valor antigo —
+        // redirect manda de volta pra /onboarding → loop.
+        container.invalidate(onboardingNeededProvider);
+
+        // Após invalidate, lê valor novo do SharedPrefs → false.
+        expect(container.read(onboardingNeededProvider), isFalse);
+      },
+    );
   });
 }

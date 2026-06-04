@@ -1,6 +1,7 @@
 import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
+import 'package:autolog/features/onboarding/onboarding_providers.dart';
 import 'package:autolog/features/onboarding/onboarding_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -86,6 +87,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     } catch (_) {
       // Falha silenciosa — não bloqueia a navegação.
     }
+
+    // Invalida o provider pra que o redirect leia o novo valor (true) ao
+    // avaliar a próxima rota. Sem isso, o cache do Provider mantém
+    // needed=true e o redirect manda de volta pra /onboarding → loop
+    // (bug homolog 04/06 #3, ref. botões "Criar conta"/"Já tenho conta").
+    ref.invalidate(onboardingNeededProvider);
 
     if (mounted) context.go(dest);
   }
