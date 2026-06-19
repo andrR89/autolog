@@ -222,7 +222,8 @@ ThemeData buildLightTheme() {
     ),
 
     // ------------------------------------------------------------------
-    // Inputs — fundo "sunken" quente, sem borda externa, foco com brand
+    // Inputs — fundo "sunken" quente, hairline 1px pra destacar dentro de
+    // FormSectionCard (sem hairline o input se confunde com o card no light).
     // ------------------------------------------------------------------
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
@@ -242,11 +243,11 @@ ThemeData buildLightTheme() {
       suffixIconColor: AppColors.inkMuted,
       border: const OutlineInputBorder(
         borderRadius: AppRadius.allMd,
-        borderSide: BorderSide.none,
+        borderSide: BorderSide(color: AppColors.hairline, width: 1),
       ),
       enabledBorder: const OutlineInputBorder(
         borderRadius: AppRadius.allMd,
-        borderSide: BorderSide.none,
+        borderSide: BorderSide(color: AppColors.hairline, width: 1),
       ),
       focusedBorder: const OutlineInputBorder(
         borderRadius: AppRadius.allMd,
@@ -603,7 +604,8 @@ ThemeData buildDarkTheme() {
     ),
 
     // ------------------------------------------------------------------
-    // Inputs — fundo sunken escuro
+    // Inputs — fundo sunken escuro + hairline pra destacar dentro de
+    // FormSectionCard (espelha o light pra consistência cross-theme).
     // ------------------------------------------------------------------
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
@@ -623,11 +625,11 @@ ThemeData buildDarkTheme() {
       suffixIconColor: _DarkColors.inkMuted,
       border: const OutlineInputBorder(
         borderRadius: AppRadius.allMd,
-        borderSide: BorderSide.none,
+        borderSide: BorderSide(color: _DarkColors.hairline, width: 1),
       ),
       enabledBorder: const OutlineInputBorder(
         borderRadius: AppRadius.allMd,
-        borderSide: BorderSide.none,
+        borderSide: BorderSide(color: _DarkColors.hairline, width: 1),
       ),
       focusedBorder: const OutlineInputBorder(
         borderRadius: AppRadius.allMd,
