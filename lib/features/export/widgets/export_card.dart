@@ -154,6 +154,19 @@ class _ExportSheetState extends ConsumerState<_ExportSheet> {
       return;
     }
 
+    // Capturar messenger antes de qualquer await — depois de awaits o
+    // BottomSheet pode estar desmontado e ScaffoldMessenger.of(context)
+    // fica inalcançável (root cause do CSV "silencioso" em iOS 26).
+    final messenger = ScaffoldMessenger.of(context);
+
+    // sharePositionOrigin defensivo: iPhone grandes em iOS 26 podem rotear o
+    // UIActivityViewController via popoverPresentationController e exigir
+    // sourceRect — sem isso o share volta com erro silencioso.
+    final box = context.findRenderObject() as RenderBox?;
+    final origin = box != null
+        ? box.localToGlobal(Offset.zero) & box.size
+        : Rect.zero;
+
     setState(() => _loading = true);
     try {
       final svc = ref.read(csvExportServiceProvider);
@@ -169,22 +182,37 @@ class _ExportSheetState extends ConsumerState<_ExportSheet> {
           path = await svc.exportAll(vehicle.id, from: from, to: to);
       }
 
-      if (!mounted) return;
+      final result = await Share.shareXFiles(
+        [XFile(path, mimeType: 'text/csv')],
+        subject: 'AutoLog — dados exportados',
+        sharePositionOrigin: origin,
+      );
 
-      await Share.shareXFiles([
-        XFile(path, mimeType: 'text/csv'),
-      ], subject: 'AutoLog — dados exportados');
-
-      if (mounted) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Arquivo exportado com sucesso.')),
-        );
+      switch (result.status) {
+        case ShareResultStatus.success:
+          messenger.showSnackBar(
+            const SnackBar(content: Text('Arquivo exportado com sucesso.')),
+          );
+        case ShareResultStatus.dismissed:
+          // Usuário fechou sem compartilhar — não polui com erro.
+          break;
+        case ShareResultStatus.unavailable:
+          messenger.showSnackBar(
+            SnackBar(
+              content: const Text(
+                'Compartilhamento indisponível neste dispositivo.',
+              ),
+              backgroundColor: Colors.red[700],
+            ),
+          );
       }
     } catch (e) {
-      if (mounted) {
-        _showError('Erro ao gerar arquivo: $e');
-      }
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Erro ao gerar arquivo: $e'),
+          backgroundColor: Colors.red[700],
+        ),
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }

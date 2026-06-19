@@ -1,6 +1,7 @@
 import 'package:autolog/data/repositories/user_settings_repository.dart';
 import 'package:autolog/domain/repositories/user_settings_repository.dart';
 import 'package:autolog/features/auth/account_deletion/widgets/delete_account_section.dart';
+import 'package:autolog/features/auth/auth_service.dart';
 import 'package:autolog/features/calendar/google_calendar_service.dart';
 import 'package:autolog/features/export/widgets/export_card.dart';
 import 'package:autolog/features/settings/notif_prefs_providers.dart';
@@ -41,9 +42,33 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 8),
           const ExportCard(),
           const SizedBox(height: 8),
+          const _SignOutCard(),
+          const SizedBox(height: 8),
           const DeleteAccountSection(),
           const SizedBox(height: 8),
         ],
+      ),
+    );
+  }
+}
+
+class _SignOutCard extends ConsumerWidget {
+  const _SignOutCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.logout),
+        title: const Text('Sair'),
+        subtitle: const Text('Faz logout da conta neste dispositivo.'),
+        onTap: () async {
+          try {
+            await ref.read(authServiceProvider).signOut();
+          } catch (_) {
+            // Estado local já foi limpo — falha de rede não bloqueia logout.
+          }
+        },
       ),
     );
   }
