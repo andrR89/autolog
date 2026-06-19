@@ -95,12 +95,26 @@ class _PersonalDocumentsScreenState
         child: CustomScrollView(
           slivers: [
             // ── CNH ─────────────────────────────────────────────────────────
+            //
+            // "Editar" só aparece quando há CNH cadastrada — sem isso, o botão
+            // confunde (não há o que editar) e duplica o CTA "Cadastrar CNH"
+            // da própria seção (UX 19/06).
             SliverToBoxAdapter(
               child: _SectionHeader(
                 title: 'Minha CNH',
-                action: TextButton(
-                  onPressed: () => context.push('/personal-documents/cnh'),
-                  child: const Text('Editar'),
+                action: profileAsync.maybeWhen(
+                  data: (p) {
+                    final hasCnh = p != null &&
+                        (p.cnhNumber != null ||
+                            p.cnhCategory != null ||
+                            p.cnhExpiresAt != null);
+                    if (!hasCnh) return null;
+                    return TextButton(
+                      onPressed: () => context.push('/personal-documents/cnh'),
+                      child: const Text('Editar'),
+                    );
+                  },
+                  orElse: () => null,
                 ),
               ),
             ),
@@ -200,25 +214,40 @@ class _PersonalDocumentsScreenState
 
     final now = DateTime.now();
 
-    // Busca dados necessários.
-    final profile = await profileRepo.getById(userId);
-    final vehicles = await vehicleRepo.listByUser(userId);
-
+    final UserProfile? profile;
+    final List<Vehicle> vehicles;
     final allFines = <Fine>[];
     final allInsurances = <Insurance>[];
     final allReminders = <Reminder>[];
 
-    for (final v in vehicles) {
-      final fines = await fineRepo.listByVehicle(v.id);
-      allFines.addAll(fines.where((f) => !f.paid));
+    try {
+      // Busca dados necessários.
+      profile = await profileRepo.getById(userId);
+      vehicles = await vehicleRepo.listByUser(userId);
 
-      final insurances = await insuranceRepo.listByVehicle(v.id);
-      allInsurances.addAll(
-        insurances.where((i) => i.deletedAt == null && i.endsAt.isAfter(now)),
+      for (final v in vehicles) {
+        final fines = await fineRepo.listByVehicle(v.id);
+        allFines.addAll(fines.where((f) => !f.paid));
+
+        final insurances = await insuranceRepo.listByVehicle(v.id);
+        allInsurances.addAll(
+          insurances.where((i) => i.deletedAt == null && i.endsAt.isAfter(now)),
+        );
+
+        final reminders = await reminderRepo.listByVehicle(v.id);
+        allReminders.addAll(reminders);
+      }
+    } catch (_) {
+      if (!mounted) return;
+      scaffoldMessenger.showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Não foi possível carregar seus dados. Tente novamente.',
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
-
-      final reminders = await reminderRepo.listByVehicle(v.id);
-      allReminders.addAll(reminders);
+      return;
     }
 
     final proposals = suggestDocumentReminders(
@@ -233,9 +262,19 @@ class _PersonalDocumentsScreenState
     if (!mounted) return;
 
     if (deduped.isEmpty) {
+      // Quando o usuário não tem CNH / apólice / multa cadastradas, a
+      // sugestão fica vazia "naturalmente" — mostramos uma mensagem
+      // orientadora em vez do snackbar genérico (UX 19/06).
+      final hasAnyDoc = profile?.cnhExpiresAt != null ||
+          allInsurances.isNotEmpty ||
+          allFines.isNotEmpty;
       scaffoldMessenger.showSnackBar(
-        const SnackBar(
-          content: Text('Nenhum lembrete novo para sugerir no momento.'),
+        SnackBar(
+          content: Text(
+            hasAnyDoc
+                ? 'Nenhum lembrete novo para sugerir no momento.'
+                : 'Cadastre uma CNH, apólice ou multa pra eu sugerir lembretes.',
+          ),
           behavior: SnackBarBehavior.floating,
         ),
       );

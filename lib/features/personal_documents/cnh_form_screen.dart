@@ -64,6 +64,23 @@ class _CnhFormScreenState extends ConsumerState<CnhFormScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // CNH é um agregado opcional, mas salvar com tudo vazio cria registro
+    // fantasma sem feedback — bloqueia o submit cedo (UX 19/06).
+    final numberFilled = _cnhNumberCtrl.text.trim().isNotEmpty;
+    final hasAnything =
+        numberFilled || _cnhCategory != null || _cnhExpiresAt != null;
+    if (!hasAnything) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Preencha ao menos um campo (número, categoria ou validade).',
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
     setState(() => _saving = true);
 
     try {
@@ -73,9 +90,7 @@ class _CnhFormScreenState extends ConsumerState<CnhFormScreen> {
       final existing = await repo.getOrCreate(userId);
       await repo.update(
         existing.copyWith(
-          cnhNumber: _cnhNumberCtrl.text.trim().isEmpty
-              ? null
-              : _cnhNumberCtrl.text.trim(),
+          cnhNumber: numberFilled ? _cnhNumberCtrl.text.trim() : null,
           cnhCategory: _cnhCategory,
           cnhExpiresAt: _cnhExpiresAt,
           syncStatus: SyncStatus.pending,
