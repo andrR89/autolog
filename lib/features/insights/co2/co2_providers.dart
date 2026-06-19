@@ -18,16 +18,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 // ---------------------------------------------------------------------------
 
 /// Argumento do provider mensal: identifica veículo + mês/ano.
+///
+/// [vehicleInitialOdometer] é usado como segundo ponto pra calcular
+/// km no período quando há apenas 1 abastecimento (caso comum: usuário
+/// novo). Sem isso, gCO₂/km cairia em "—" sempre que o mês tem 1 entry.
 class Co2MonthArgs {
   const Co2MonthArgs({
     required this.vehicleId,
     required this.year,
     required this.month,
+    this.vehicleInitialOdometer,
   });
 
   final String vehicleId;
   final int year;
   final int month;
+  final int? vehicleInitialOdometer;
 
   @override
   bool operator ==(Object other) =>
@@ -35,10 +41,51 @@ class Co2MonthArgs {
       other is Co2MonthArgs &&
           vehicleId == other.vehicleId &&
           year == other.year &&
-          month == other.month;
+          month == other.month &&
+          vehicleInitialOdometer == other.vehicleInitialOdometer;
 
   @override
-  int get hashCode => Object.hash(vehicleId, year, month);
+  int get hashCode =>
+      Object.hash(vehicleId, year, month, vehicleInitialOdometer);
+}
+
+/// Argumento do provider anual: vehicleId + odômetro inicial (opcional)
+/// usado quando há apenas 1 abastecimento no ano.
+class Co2YearArgs {
+  const Co2YearArgs({
+    required this.vehicleId,
+    this.vehicleInitialOdometer,
+  });
+
+  final String vehicleId;
+  final int? vehicleInitialOdometer;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Co2YearArgs &&
+          vehicleId == other.vehicleId &&
+          vehicleInitialOdometer == other.vehicleInitialOdometer;
+
+  @override
+  int get hashCode => Object.hash(vehicleId, vehicleInitialOdometer);
+}
+
+/// Calcula `totalKmInPeriod` a partir das entries do período + um possível
+/// odômetro inicial do veículo (fallback quando há apenas 1 entry).
+int computePeriodKm(List<dynamic> entries, int? vehicleInitialOdometer) {
+  if (entries.length >= 2) {
+    final sorted = List.of(entries)
+      ..sort(
+        (a, b) => (a.odometer as int).compareTo(b.odometer as int),
+      );
+    return (sorted.last.odometer as int) - (sorted.first.odometer as int);
+  }
+  if (entries.length == 1 && vehicleInitialOdometer != null) {
+    final delta = (entries.first.odometer as int) - vehicleInitialOdometer;
+    if (delta > 0) return delta;
+  }
+  return 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -65,13 +112,10 @@ final co2ForMonthProvider =
             )
             .toList();
 
-        // Calcula distância percorrida no período pelo delta de odômetro.
-        int totalKm = 0;
-        if (monthEntries.length >= 2) {
-          final sorted = List.of(monthEntries)
-            ..sort((a, b) => a.odometer.compareTo(b.odometer));
-          totalKm = sorted.last.odometer - sorted.first.odometer;
-        }
+        final totalKm = computePeriodKm(
+          monthEntries,
+          args.vehicleInitialOdometer,
+        );
 
         return computeCo2(entries: monthEntries, totalKmInPeriod: totalKm);
       });
@@ -86,25 +130,23 @@ final co2ForMonthProvider =
 /// - Filtra pelo ano atual (DateTime.now().year).
 /// - [totalKmInPeriod]: delta de odômetro dos abastecimentos do ano.
 /// - Reativo ao stream de abastecimentos.
-final co2ForYearProvider = Provider.family<AsyncValue<Co2Result>, String>((
-  ref,
-  vehicleId,
-) {
-  final entriesAsync = ref.watch(fuelEntriesByVehicleProvider(vehicleId));
+final co2ForYearProvider =
+    Provider.family<AsyncValue<Co2Result>, Co2YearArgs>((ref, args) {
+      final entriesAsync = ref.watch(
+        fuelEntriesByVehicleProvider(args.vehicleId),
+      );
 
-  return entriesAsync.whenData((entries) {
-    final currentYear = DateTime.now().year;
-    final yearEntries = entries
-        .where((e) => e.date.year == currentYear)
-        .toList();
+      return entriesAsync.whenData((entries) {
+        final currentYear = DateTime.now().year;
+        final yearEntries = entries
+            .where((e) => e.date.year == currentYear)
+            .toList();
 
-    int totalKm = 0;
-    if (yearEntries.length >= 2) {
-      final sorted = List.of(yearEntries)
-        ..sort((a, b) => a.odometer.compareTo(b.odometer));
-      totalKm = sorted.last.odometer - sorted.first.odometer;
-    }
+        final totalKm = computePeriodKm(
+          yearEntries,
+          args.vehicleInitialOdometer,
+        );
 
-    return computeCo2(entries: yearEntries, totalKmInPeriod: totalKm);
-  });
-});
+        return computeCo2(entries: yearEntries, totalKmInPeriod: totalKm);
+      });
+    });

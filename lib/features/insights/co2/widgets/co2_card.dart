@@ -59,10 +59,18 @@ class _Co2InsightCardState extends ConsumerState<Co2InsightCard> {
             vehicleId: widget.vehicle.id,
             year: now.year,
             month: now.month,
+            vehicleInitialOdometer: widget.vehicle.initialOdometer,
           ),
         ),
       ),
-      _Period.year => ref.watch(co2ForYearProvider(widget.vehicle.id)),
+      _Period.year => ref.watch(
+        co2ForYearProvider(
+          Co2YearArgs(
+            vehicleId: widget.vehicle.id,
+            vehicleInitialOdometer: widget.vehicle.initialOdometer,
+          ),
+        ),
+      ),
     };
 
     return resultAsync.when(
