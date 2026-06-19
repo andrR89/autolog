@@ -69,6 +69,10 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
   bool _saving = false;
   bool _scanning = false;
 
+  // Banner pós-scan — fechado no dispose pra não vazar via ScaffoldMessenger.
+  ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason>?
+  _scanBanner;
+
   bool get _isEditing => widget.initial != null;
 
   @override
@@ -86,6 +90,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
 
   @override
   void dispose() {
+    _scanBanner?.close();
     _descriptionCtrl.dispose();
     _amountCtrl.dispose();
     _odometerCtrl.dispose();
@@ -165,7 +170,14 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
         }
       });
 
-      showScanSuccessBanner(context);
+      _scanBanner?.close();
+      final extractedAnything =
+          scanned.amount != null ||
+          scanned.category != null ||
+          (scanned.description != null && scanned.description!.isNotEmpty);
+      _scanBanner = extractedAnything
+          ? showScanSuccessBanner(context)
+          : showScanEmptyBanner(context);
     } on QuotaExhaustedException {
       if (mounted) {
         showQuotaExhaustedBanner(

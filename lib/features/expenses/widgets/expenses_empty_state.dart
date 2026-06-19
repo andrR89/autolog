@@ -9,53 +9,46 @@ import 'package:autolog/core/design/typography.dart';
 import 'package:flutter/material.dart';
 
 class ExpensesEmptyState extends StatelessWidget {
-  const ExpensesEmptyState({super.key, required this.onAdd});
-
-  final VoidCallback onAdd;
+  const ExpensesEmptyState({super.key});
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 360),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xxxl),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _ReceiptFrame(),
-              const SizedBox(height: AppSpacing.xxl),
-              Text(
-                'Sem despesas registradas ainda.',
-                style: AppTypography.display(
-                  26,
-                  weight: FontWeight.w700,
-                  height: 1.15,
+    // Scroll + Center: fica centralizado quando cabe; scrollável quando o
+    // conteúdo é maior que o viewport (telas curtas, banner empurrando, etc).
+    return SingleChildScrollView(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 360),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xxxl),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _ReceiptFrame(),
+                const SizedBox(height: AppSpacing.xxl),
+                Text(
+                  'Sem despesas registradas ainda.',
+                  style: AppTypography.display(
+                    26,
+                    weight: FontWeight.w700,
+                    height: 1.15,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                'Toque em + pra começar a controlar os gastos do seu carro.',
-                style: textTheme.bodyMedium?.copyWith(
-                  color: context.inkMuted,
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Toque em "Nova despesa" pra começar a controlar os gastos do seu carro.',
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: context.inkMuted,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              FilledButton.icon(
-                onPressed: onAdd,
-                icon: const Icon(Icons.add, size: 20),
-                label: const Text('Nova despesa'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.accent,
-                  foregroundColor: AppColors.accentInk,
-                ),
-              ),
-            ],
+                // CTA único: FAB "Nova despesa" do Scaffold.
+              ],
+            ),
           ),
         ),
       ),

@@ -164,10 +164,8 @@ class _Body extends ConsumerWidget {
         children: [
           // SafeArea top só nesta primeira coluna — o hero cobre a status bar.
           hero,
-          Expanded(
-            child: ExpensesEmptyState(
-              onAdd: () => context.push('/vehicles/${vehicle.id}/expenses/new'),
-            ),
+          const Expanded(
+            child: ExpensesEmptyState(),
           ),
         ],
       );
