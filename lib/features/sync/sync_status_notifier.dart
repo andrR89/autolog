@@ -132,13 +132,23 @@ class SyncStatusNotifier extends Notifier<SyncStatusState> {
       final globalResult = await globalService.sync(userId);
 
       // Mapeia GlobalSyncResult → SyncResult sintético para manter API pública.
+      // Anexa a mensagem do primeiro erro real ao wrapper — sem isso, o
+      // snackbar diagnóstico só mostra os nomes das entidades e a causa-raiz
+      // (RLS, schema, PostgrestException) fica perdida.
+      Object? wrappedError;
+      if (globalResult.errors.isNotEmpty) {
+        final firstKey = globalResult.errors.keys.first;
+        final firstErr = globalResult.errors[firstKey];
+        wrappedError = StateError(
+          'sync errors: ${globalResult.errors.keys.join(", ")} '
+          '— $firstKey: $firstErr',
+        );
+      }
       result = SyncResult(
         pushed: globalResult.totalPushed,
         pulled: globalResult.totalPulled,
         pushFailures: globalResult.totalPushFailures,
-        pullError: globalResult.errors.isEmpty
-            ? null
-            : StateError('sync errors: ${globalResult.errors.keys.join(", ")}'),
+        pullError: wrappedError,
       );
     } catch (e) {
       // O GlobalSyncService nunca deveria lançar, mas como precaução geramos

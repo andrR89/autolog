@@ -47,10 +47,36 @@ class SyncIndicator extends ConsumerWidget {
         );
 
       case SyncDisplayStatus.offline:
+        final err = state.lastResult?.pullError;
         return IconButton(
           icon: Icon(Icons.cloud_off, color: colorScheme.error),
           tooltip: 'Sem conexão — toque pra tentar',
-          onPressed: () => ref.read(syncStatusProvider.notifier).triggerSync(),
+          onPressed: () {
+            if (err != null) {
+              final errMsg = err.toString();
+              final shortened = errMsg.length > 500
+                  ? '${errMsg.substring(0, 500)}…'
+                  : errMsg;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Sync falhou: $shortened',
+                    style: const TextStyle(fontSize: 11),
+                  ),
+                  duration: const Duration(seconds: 15),
+                  behavior: SnackBarBehavior.floating,
+                  action: SnackBarAction(
+                    label: 'Tentar',
+                    onPressed: () => ref
+                        .read(syncStatusProvider.notifier)
+                        .triggerSync(),
+                  ),
+                ),
+              );
+            } else {
+              ref.read(syncStatusProvider.notifier).triggerSync();
+            }
+          },
         );
     }
   }
