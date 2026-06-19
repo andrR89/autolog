@@ -143,10 +143,11 @@ class _SinglePointState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // FIPE sem centavos (R$ 39.978) — alinha com o card da garagem.
     final fmt = NumberFormat.currency(
       locale: 'pt_BR',
       symbol: r'R$',
-      decimalDigits: 2,
+      decimalDigits: 0,
     );
     final formatted = fmt.format(snapshot.value.toDouble());
     final monthLabel = _monthShortPtBr(snapshot.month);

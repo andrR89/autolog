@@ -19,9 +19,7 @@ import 'package:autolog/core/design/typography.dart';
 import 'package:flutter/material.dart';
 
 class VehiclesEmptyState extends StatelessWidget {
-  const VehiclesEmptyState({super.key, required this.onAdd});
-
-  final VoidCallback onAdd;
+  const VehiclesEmptyState({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -58,16 +56,8 @@ class VehiclesEmptyState extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: AppSpacing.xl),
-              FilledButton.icon(
-                onPressed: onAdd,
-                icon: const Icon(Icons.add, size: 20),
-                label: const Text('Adicionar veículo'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.accent,
-                  foregroundColor: AppColors.accentInk,
-                ),
-              ),
+              // CTA único: FloatingActionButton "Novo veículo" no Scaffold
+              // (evita 2 botões redundantes apontando pra mesma ação).
             ],
           ),
         ),
