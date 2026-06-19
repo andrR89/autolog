@@ -9,9 +9,7 @@ import 'package:autolog/core/design/typography.dart';
 import 'package:flutter/material.dart';
 
 class RemindersEmptyState extends StatelessWidget {
-  const RemindersEmptyState({super.key, required this.onAdd});
-
-  final VoidCallback onAdd;
+  const RemindersEmptyState({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -39,23 +37,14 @@ class RemindersEmptyState extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                'Lembretes te ajudam a não esquecer manutenções, '
+                'Toque em "Novo lembrete" pra não esquecer manutenções, '
                 'seguros e datas importantes do seu carro.',
                 style: textTheme.bodyMedium?.copyWith(
                   color: context.inkMuted,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: AppSpacing.xl),
-              FilledButton.icon(
-                onPressed: onAdd,
-                icon: const Icon(Icons.add, size: 20),
-                label: const Text('Novo lembrete'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.accent,
-                  foregroundColor: AppColors.accentInk,
-                ),
-              ),
+              // CTA único: FAB "Novo lembrete" do Scaffold.
             ],
           ),
         ),

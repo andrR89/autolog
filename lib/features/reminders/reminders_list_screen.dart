@@ -120,11 +120,8 @@ class _Body extends ConsumerWidget {
       return Column(
         children: [
           hero,
-          Expanded(
-            child: RemindersEmptyState(
-              onAdd: () =>
-                  context.push('/vehicles/${vehicle.id}/reminders/new'),
-            ),
+          const Expanded(
+            child: RemindersEmptyState(),
           ),
         ],
       );

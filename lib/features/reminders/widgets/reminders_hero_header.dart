@@ -46,9 +46,12 @@ class RemindersHeroHeader extends StatelessWidget {
     final allDone = totalCount > 0 && pendingCount == 0;
     final empty = totalCount == 0;
 
+    // Slot do topo em fonte display 44 — frases longas truncam com elipse
+    // ("Nenhum lembr…"). Mantemos um STAT curto e numérico quando vazio,
+    // alinhando com o padrão de Despesas ("R$ 0,00") (UX 19/06 — m2).
     final heroText = switch ((allDone, empty)) {
       (true, _) => 'Tudo em dia',
-      (_, true) => 'Nenhum lembrete',
+      (_, true) => '0 pendentes',
       _ => switch (pendingCount) {
         1 => '1 pendente',
         _ => '$pendingCount pendentes',
