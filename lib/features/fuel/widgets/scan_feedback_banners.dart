@@ -71,6 +71,61 @@ showScanSuccessBanner(BuildContext context) {
   return banner;
 }
 
+/// Banner âmbar pra quando a IA não conseguiu extrair nada do cupom
+/// (foto borrada, ângulo ruim, ou não era um cupom). Convida a preencher
+/// manualmente ou tentar outra foto.
+ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason>
+showScanEmptyBanner(BuildContext context) {
+  final textTheme = Theme.of(context).textTheme;
+  late ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason>
+  banner;
+  banner = ScaffoldMessenger.of(context).showMaterialBanner(
+    MaterialBanner(
+      backgroundColor: AppColors.warningSoft,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      dividerColor: Colors.transparent,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
+      leading: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: AppColors.warning.withValues(alpha: 0.18),
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(
+          Icons.image_search_rounded,
+          size: 18,
+          color: AppColors.warning,
+        ),
+      ),
+      content: RichText(
+        text: TextSpan(
+          style: textTheme.bodyMedium?.copyWith(color: context.ink),
+          children: const [
+            TextSpan(text: 'Não consegui ler o cupom. '),
+            TextSpan(
+              text: 'Tente outra foto ou preencha manualmente.',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => banner.close(),
+          style: TextButton.styleFrom(foregroundColor: AppColors.warning),
+          child: const Text('Entendi'),
+        ),
+      ],
+    ),
+  );
+  return banner;
+}
+
 /// Mostra o banner "sua cota acabou". [onSeePremium] é chamado quando o
 /// usuário toca em "Ver Premium" (e o banner é fechado automaticamente).
 ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason>

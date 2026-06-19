@@ -571,47 +571,85 @@ class _AppBar extends ConsumerWidget {
         ),
       ),
       actions: [
-        // Botão de filtro com badge
+        // Filtro fica inline (contextual a esta lista, com badge de count).
         _FilterButton(
           vehicle: vehicle,
           filterState: filterState,
           foreground: foreground,
         ),
-        IconButton(
-          icon: const Icon(Icons.auto_awesome_outlined),
-          color: foreground,
-          tooltip: 'Insights',
-          onPressed: () => context.push('/vehicles/${vehicle.id}/insights'),
-        ),
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined),
-          color: foreground,
-          tooltip: 'Lembretes',
-          onPressed: () => context.push('/vehicles/${vehicle.id}/reminders'),
-        ),
-        IconButton(
-          icon: const Icon(Icons.attach_money),
-          color: foreground,
-          tooltip: 'Despesas',
-          onPressed: () => context.push('/vehicles/${vehicle.id}/expenses'),
-        ),
-        IconButton(
-          icon: const Icon(Icons.bar_chart),
-          color: foreground,
-          tooltip: 'Relatórios',
-          onPressed: () => context.push('/vehicles/${vehicle.id}/reports'),
-        ),
-        IconButton(
-          icon: const Icon(Icons.share_outlined),
-          color: foreground,
-          tooltip: 'Compartilhar',
-          onPressed: () => context.push('/vehicles/${vehicle.id}/share'),
-        ),
-        IconButton(
-          icon: const Icon(Icons.edit),
-          color: foreground,
-          tooltip: 'Editar veículo',
-          onPressed: () => context.push('/vehicles/${vehicle.id}/edit'),
+        // Demais navegações (lembretes, despesas, relatórios, insights,
+        // compartilhar, editar) ficam num overflow "Mais" — antes eram 6
+        // ícones lado a lado sem rótulo (fidelidade UX 19/06 — M2).
+        PopupMenuButton<String>(
+          icon: Icon(Icons.more_vert, color: foreground),
+          tooltip: 'Mais',
+          onSelected: (value) {
+            switch (value) {
+              case 'reports':
+                context.push('/vehicles/${vehicle.id}/reports');
+              case 'expenses':
+                context.push('/vehicles/${vehicle.id}/expenses');
+              case 'reminders':
+                context.push('/vehicles/${vehicle.id}/reminders');
+              case 'insights':
+                context.push('/vehicles/${vehicle.id}/insights');
+              case 'share':
+                context.push('/vehicles/${vehicle.id}/share');
+              case 'edit':
+                context.push('/vehicles/${vehicle.id}/edit');
+            }
+          },
+          itemBuilder: (_) => const [
+            PopupMenuItem(
+              value: 'reports',
+              child: ListTile(
+                leading: Icon(Icons.bar_chart),
+                title: Text('Relatórios'),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+            PopupMenuItem(
+              value: 'expenses',
+              child: ListTile(
+                leading: Icon(Icons.attach_money),
+                title: Text('Despesas'),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+            PopupMenuItem(
+              value: 'reminders',
+              child: ListTile(
+                leading: Icon(Icons.notifications_outlined),
+                title: Text('Lembretes'),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+            PopupMenuItem(
+              value: 'insights',
+              child: ListTile(
+                leading: Icon(Icons.auto_awesome_outlined),
+                title: Text('Insights'),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+            PopupMenuDivider(),
+            PopupMenuItem(
+              value: 'share',
+              child: ListTile(
+                leading: Icon(Icons.share_outlined),
+                title: Text('Compartilhar'),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+            PopupMenuItem(
+              value: 'edit',
+              child: ListTile(
+                leading: Icon(Icons.edit),
+                title: Text('Editar veículo'),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+          ],
         ),
         const SizedBox(width: AppSpacing.xs),
       ],
@@ -763,7 +801,11 @@ class _EmptyState extends StatelessWidget {
     // SingleChildScrollView evita overflow quando SliverFillRemaining dá
     // altura insuficiente pra ícone + título + corpo (regressão 28/05/2026:
     // 14px overflow em alguns devices).
-    return SingleChildScrollView(
+    // SliverFillRemaining(hasScrollBody:false) dá altura fixa — Padding aqui
+     // reduz a área útil, fazendo o Center subir o conteúdo acima do FAB
+     // extended (≈80px + 16px margem) que mora no Scaffold.
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 96),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 360),
@@ -773,19 +815,7 @@ class _EmptyState extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: context.surfaceSunken,
-                    borderRadius: AppRadius.allLg,
-                  ),
-                  child: Icon(
-                    Icons.local_gas_station_outlined,
-                    size: 30,
-                    color: context.inkMuted,
-                  ),
-                ),
+                _PumpFrame(),
                 const SizedBox(height: AppSpacing.lg),
                 Text(
                   'Nenhum abastecimento aqui ainda.',
@@ -798,7 +828,7 @@ class _EmptyState extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  'Toque em + pra começar a história deste carro.',
+                  'Toque em "Novo abastecimento" pra começar a história deste carro.',
                   style: textTheme.bodyMedium?.copyWith(
                     color: context.inkMuted,
                   ),
@@ -1634,4 +1664,68 @@ class _PeriodPresetChip extends StatelessWidget {
       backgroundColor: context.surfaceSunken,
     );
   }
+}
+
+/// Moldura tracejada do empty state — espelha _ReceiptFrame (despesas) e
+/// _BellFrame (lembretes) pra unificar o padrão visual dos empty states
+/// (fidelidade UX 19/06 — m1).
+class _PumpFrame extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _DashedRoundedRectPainter(
+        color: context.hairline,
+        radius: AppRadius.lg,
+      ),
+      child: SizedBox(
+        height: 130,
+        child: Center(
+          child: Icon(
+            Icons.local_gas_station_outlined,
+            size: 56,
+            color: context.ink.withValues(alpha: 0.30),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DashedRoundedRectPainter extends CustomPainter {
+  _DashedRoundedRectPainter({required this.color, required this.radius});
+
+  final Color color;
+  final double radius;
+  static const double _dashWidth = 6;
+  static const double _dashSpace = 5;
+  static const double _strokeWidth = 1.2;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = _strokeWidth;
+    final rect = RRect.fromRectAndRadius(
+      Offset.zero & size,
+      Radius.circular(radius),
+    );
+    final path = Path()..addRRect(rect);
+    final metrics = path.computeMetrics().toList();
+    for (final metric in metrics) {
+      var distance = 0.0;
+      while (distance < metric.length) {
+        final next = distance + _dashWidth;
+        canvas.drawPath(
+          metric.extractPath(distance, next.clamp(0, metric.length)),
+          paint,
+        );
+        distance = next + _dashSpace;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DashedRoundedRectPainter old) =>
+      old.color != color || old.radius != radius;
 }

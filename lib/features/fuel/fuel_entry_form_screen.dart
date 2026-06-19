@@ -79,6 +79,11 @@ class _FuelEntryFormScreenState extends ConsumerState<FuelEntryFormScreen> {
 
   Timer? _odometerDebounce;
 
+  // Controller do banner pós-scan — armazenado pra ser fechado no dispose,
+  // evitando que o banner "vaze" pra outras telas via ScaffoldMessenger global.
+  ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason>?
+  _scanBanner;
+
   bool get _isEditing => widget.initial != null;
 
   // Campo que está sendo auto-calculado (o que NÃO está em _lastTwoTouched).
@@ -151,6 +156,7 @@ class _FuelEntryFormScreenState extends ConsumerState<FuelEntryFormScreen> {
 
   @override
   void dispose() {
+    _scanBanner?.close();
     _odometerDebounce?.cancel();
     _odometerCtrl.dispose();
     _litersCtrl.dispose();
@@ -209,11 +215,11 @@ class _FuelEntryFormScreenState extends ConsumerState<FuelEntryFormScreen> {
       totalCost: _parseField(_totalCtrl),
     );
 
-    // Calcula o campo faltante.
-    final result = computeMissingTriplet(triplet);
-
-    // Atualiza o campo "auto" programaticamente sem disparar o listener.
+    // Passa o campo auto via exclude — força recomputação mesmo quando os
+    // 3 controllers têm valor (o auto pode estar com valor stale, populado
+    // por um cálculo anterior).
     final auto = _autoField;
+    final result = computeMissingTriplet(triplet, exclude: auto);
     if (auto != null) {
       final computed = switch (auto) {
         FuelField.liters => result.liters,
@@ -364,10 +370,18 @@ class _FuelEntryFormScreenState extends ConsumerState<FuelEntryFormScreen> {
       _scannedFromCamera = true;
     });
 
-    // Exibe banner PT-BR solicitando revisão antes de salvar.
-    if (mounted) {
-      showScanSuccessBanner(context);
-    }
+    if (!mounted) return;
+
+    // Se o cupom não rendeu NENHUM campo útil, mostra warning âmbar em vez
+    // do verde "extraídos com sucesso" (regressão UX 18/06).
+    final extractedAnything =
+        receipt.liters != null ||
+        receipt.pricePerLiter != null ||
+        receipt.fuelType != null;
+    _scanBanner?.close();
+    _scanBanner = extractedAnything
+        ? showScanSuccessBanner(context)
+        : showScanEmptyBanner(context);
   }
 
   // ---------------------------------------------------------------------------
@@ -393,7 +407,17 @@ class _FuelEntryFormScreenState extends ConsumerState<FuelEntryFormScreen> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      // Sem feedback global, o erro inline do odômetro era a única pista;
+      // litros/preço com hint vermelho ficavam fora do foco (homolog UX 19/06).
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Verifique os campos obrigatórios destacados.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
 
     final tripletError = _validateTriplet();
     if (tripletError != null) {
@@ -556,6 +580,9 @@ class _FuelEntryFormScreenState extends ConsumerState<FuelEntryFormScreen> {
       ),
       body: Form(
         key: _formKey,
+        // onUserInteraction: depois do primeiro submit, cada validator
+        // refaz-se on-change → erros somem ao consertar o campo.
+        autovalidateMode: AutovalidateMode.onUserInteraction,
         child: Column(
           children: [
             // Scrollable content — cresce até o limite; TotalActionBar fica sticky.

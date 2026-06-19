@@ -43,23 +43,24 @@ List<FuelType> availableFuelTypesFor(FuelType vehicleType) {
 /// Calcula o campo faltante quando exatamente 2 dos 3 estão presentes.
 ///
 /// - n < 2: retorna [input] inalterado.
-/// - n == 3: retorna [input] inalterado (user override manual).
+/// - n == 3 e [exclude] null: retorna [input] inalterado (override manual).
+/// - n == 3 e [exclude] setado: anula o campo [exclude] e recomputa
+///   (caso "campo auto stale" do form de abastecimento).
 /// - n == 2: calcula o campo ausente e retorna novo [FuelTriplet].
 ///
 /// Divisão usa `.toDecimal(scaleOnInfinitePrecision: 4).round(scale: 4)`.
-/// Multiplicação é exata (sem arredondamento).
+/// Multiplicação (total = liters × price) é arredondada a 2 casas — currency
+/// BRL é sempre 2 casas; sem isso o Total exibido e gravado vaza precisão
+/// (ex.: 13,987 × 7,15 = 100,00705 em vez de 100,01).
 /// Denominador zero → retorna inalterado (defensivo).
-///
-/// [exclude] não é usado no caso n==2, pois o campo faltante é determinado
-/// univocamente. É reservado para futura extensão (n==3 com override).
 FuelTriplet computeMissingTriplet(FuelTriplet input, {FuelField? exclude}) {
-  final liters = input.liters;
-  final price = input.pricePerLiter;
-  final total = input.totalCost;
+  final liters = exclude == FuelField.liters ? null : input.liters;
+  final price = exclude == FuelField.pricePerLiter ? null : input.pricePerLiter;
+  final total = exclude == FuelField.totalCost ? null : input.totalCost;
 
   final n = [liters, price, total].where((v) => v != null).length;
 
-  if (n != 2) return input; // <2 ou 3 presentes → inalterado
+  if (n != 2) return input; // <2 (não computável) ou 3 sem exclude (override)
 
   // Exatamente 2 presentes — calcula o faltante.
   if (liters == null) {
@@ -77,11 +78,11 @@ FuelTriplet computeMissingTriplet(FuelTriplet input, {FuelField? exclude}) {
         .round(scale: 4);
     return FuelTriplet(liters: liters, pricePerLiter: result, totalCost: total);
   } else {
-    // total faltando → total = liters × price (exato)
+    // total faltando → total = liters × price, arredondado a 2 casas (BRL).
     return FuelTriplet(
       liters: liters,
       pricePerLiter: price,
-      totalCost: liters * price,
+      totalCost: (liters * price).round(scale: 2),
     );
   }
 }
