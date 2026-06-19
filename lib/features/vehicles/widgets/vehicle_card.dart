@@ -45,12 +45,17 @@ class VehicleCard extends StatelessWidget {
     required this.onTap,
     required this.onEdit,
     required this.onDelete,
+    this.currentOdometer,
   });
 
   final Vehicle vehicle;
   final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+
+  /// Odômetro atual (último abastecimento). Quando null cai pra
+  /// `vehicle.initialOdometer` — sem abastecimentos, o inicial é o atual.
+  final int? currentOdometer;
 
   String _formatOdometer(int km) {
     // Formata 45312 -> "45 312" (separador "fino" não-quebrável). Não
@@ -322,7 +327,10 @@ class VehicleCard extends StatelessWidget {
                                 textBaseline: TextBaseline.alphabetic,
                                 children: [
                                   Text(
-                                    _formatOdometer(vehicle.initialOdometer),
+                                    _formatOdometer(
+                                      currentOdometer ??
+                                          vehicle.initialOdometer,
+                                    ),
                                     style: AppTypography.metric(
                                       15,
                                       weight: FontWeight.w600,

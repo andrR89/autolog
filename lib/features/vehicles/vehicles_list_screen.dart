@@ -30,6 +30,7 @@ import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/core/design/widgets/skeleton.dart';
 import 'package:autolog/domain/models/vehicle.dart';
 import 'package:autolog/features/auth/auth_service.dart';
+import 'package:autolog/features/fuel/fuel_history_screen.dart' show fuelEntriesByVehicleProvider;
 import 'package:autolog/features/sync/sync_indicator.dart';
 import 'package:autolog/features/sync/sync_status_notifier.dart';
 import 'package:autolog/features/vehicles/vehicle_saver.dart';
@@ -140,13 +141,11 @@ class _Body extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (vehicles.isEmpty) {
-      return Column(
+      return const Column(
         children: [
-          const _Header(count: 0),
+          _Header(count: 0),
           Expanded(
-            child: VehiclesEmptyState(
-              onAdd: () => context.push('/vehicles/new'),
-            ),
+            child: VehiclesEmptyState(),
           ),
         ],
       );
@@ -268,6 +267,17 @@ class _DismissibleVehicleCard extends ConsumerWidget {
       },
       child: VehicleCard(
         vehicle: vehicle,
+        // Último odômetro conhecido (max dos abastecimentos). Quando não há
+        // abastecimentos ou o stream ainda não carregou, cai no inicial via
+        // null no VehicleCard.
+        currentOdometer: ref
+            .watch(fuelEntriesByVehicleProvider(vehicle.id))
+            .valueOrNull
+            ?.fold<int?>(
+              null,
+              (acc, e) =>
+                  acc == null || e.odometer > acc ? e.odometer : acc,
+            ),
         onTap: () => context.push('/vehicles/${vehicle.id}'),
         onEdit: () => context.push('/vehicles/${vehicle.id}/edit'),
         onDelete: () => _deleteFromMenu(context, ref),
