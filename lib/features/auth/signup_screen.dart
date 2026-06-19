@@ -1,4 +1,5 @@
 import 'package:autolog/features/auth/apple_sign_in_repository.dart';
+import 'package:autolog/features/auth/auth_error_mapper.dart';
 import 'package:autolog/features/auth/auth_service.dart';
 import 'package:autolog/features/auth/validators.dart';
 import 'package:autolog/features/auth/widgets/auth_widgets.dart';
@@ -71,7 +72,16 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         );
       }
     } on AuthException catch (e) {
-      if (mounted) _showError(_mapAuthError(e));
+      if (!mounted) return;
+      final msg = e.message.toLowerCase();
+      if (msg.contains('user already registered') ||
+          msg.contains('email address is already registered')) {
+        _showError('Este e-mail já está cadastrado.');
+      } else if (msg.contains('password should be at least')) {
+        _showError('A senha deve ter ao menos 6 caracteres.');
+      } else {
+        _showError(mapAuthErrorToUserMessage(e));
+      }
     } catch (_) {
       if (mounted) _showError('Erro ao criar conta. Tente novamente.');
     } finally {
@@ -84,7 +94,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     try {
       await ref.read(authServiceProvider).signInWithGoogle();
     } on AuthException catch (e) {
-      if (mounted) _showError(_mapAuthError(e));
+      if (mounted) _showError(mapAuthErrorToUserMessage(e));
     } catch (_) {
       if (mounted) _showError('Erro ao iniciar login com Google.');
     } finally {
@@ -96,21 +106,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
-  }
-
-  String _mapAuthError(AuthException e) {
-    final message = e.message.toLowerCase();
-    if (message.contains('user already registered') ||
-        message.contains('email address is already registered')) {
-      return 'Este e-mail já está cadastrado.';
-    }
-    if (message.contains('password should be at least')) {
-      return 'A senha deve ter ao menos 6 caracteres.';
-    }
-    if (message.contains('too many requests')) {
-      return 'Muitas tentativas. Aguarde alguns minutos.';
-    }
-    return 'Erro ao criar conta: ${e.message}';
   }
 
   @override

@@ -1,4 +1,5 @@
 import 'package:autolog/features/auth/apple_sign_in_repository.dart';
+import 'package:autolog/features/auth/auth_error_mapper.dart';
 import 'package:autolog/features/auth/auth_service.dart';
 import 'package:autolog/features/auth/validators.dart';
 import 'package:autolog/features/auth/widgets/auth_widgets.dart';
@@ -63,7 +64,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             _passwordController.text,
           );
     } on AuthException catch (e) {
-      if (mounted) _showError(_mapAuthError(e));
+      if (mounted) _showError(mapAuthErrorToUserMessage(e));
     } catch (_) {
       if (mounted) _showError('Erro ao conectar. Tente novamente.');
     } finally {
@@ -76,7 +77,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       await ref.read(authServiceProvider).signInWithGoogle();
     } on AuthException catch (e) {
-      if (mounted) _showError(_mapAuthError(e));
+      if (mounted) _showError(mapAuthErrorToUserMessage(e));
     } catch (_) {
       if (mounted) _showError('Erro ao iniciar login com Google.');
     } finally {
@@ -88,21 +89,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
-  }
-
-  String _mapAuthError(AuthException e) {
-    final message = e.message.toLowerCase();
-    if (message.contains('invalid login credentials') ||
-        message.contains('invalid email or password')) {
-      return 'E-mail ou senha incorretos.';
-    }
-    if (message.contains('email not confirmed')) {
-      return 'Confirme seu e-mail antes de entrar.';
-    }
-    if (message.contains('too many requests')) {
-      return 'Muitas tentativas. Aguarde alguns minutos.';
-    }
-    return 'Erro de autenticação: ${e.message}';
   }
 
   @override
