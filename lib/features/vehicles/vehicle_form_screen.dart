@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
@@ -43,6 +45,9 @@ class VehicleFormScreen extends ConsumerStatefulWidget {
 
 class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
   final _formKey = GlobalKey<FormState>();
+
+  final _nicknameFieldKey = GlobalKey();
+  final _odometerFieldKey = GlobalKey();
 
   late final TextEditingController _nicknameCtrl;
   late final TextEditingController _makeCtrl;
@@ -373,8 +378,37 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
     super.dispose();
   }
 
+  GlobalKey? _firstInvalidFieldKey() {
+    final pairs = [
+      (_nicknameFieldKey, validateNickname(_nicknameCtrl.text)),
+      (_odometerFieldKey, validateInitialOdometer(_odometerCtrl.text)),
+    ];
+    for (final (key, error) in pairs) {
+      if (error != null) return key;
+    }
+    return null;
+  }
+
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Verifique os campos obrigatórios destacados.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      final invalidKey = _firstInvalidFieldKey();
+      if (invalidKey?.currentContext != null) {
+        unawaited(
+          Scrollable.ensureVisible(
+            invalidKey!.currentContext!,
+            duration: const Duration(milliseconds: 300),
+            alignment: 0.3,
+          ),
+        );
+      }
+      return;
+    }
 
     setState(() => _saving = true);
 
@@ -507,6 +541,8 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
       ),
       body: Form(
         key: _formKey,
+        // Pós-1º submit os erros limpam on-change (não precisam de novo submit).
+        autovalidateMode: AutovalidateMode.onUserInteraction,
         child: Column(
           children: [
             // Scrollable content — cresce até o limite; botão fica sticky no fundo.
@@ -599,6 +635,7 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
                       children: [
                         // Apelido — campo obrigatório e mais importante.
                         TextFormField(
+                          key: _nicknameFieldKey,
                           controller: _nicknameCtrl,
                           decoration: const InputDecoration(
                             labelText: 'Apelido',
@@ -814,6 +851,7 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
 
                         // Odômetro inicial — digit-only.
                         TextFormField(
+                          key: _odometerFieldKey,
                           controller: _odometerCtrl,
                           decoration: const InputDecoration(
                             labelText: 'Odômetro inicial (km)',
@@ -898,6 +936,10 @@ class _SaveActionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Espelha o layout do TotalActionBar do fuel form: pílula à direita
+    // (mesma altura/padding do FilledButton do fuel), sem o bloco de TOTAL
+    // (veículo não tem total calculado). Alinhamento de design system
+    // — fidelidade UX 19/06 (M1+M6).
     return SafeArea(
       top: false,
       child: Container(
@@ -911,21 +953,29 @@ class _SaveActionBar extends StatelessWidget {
           AppSpacing.lg,
           AppSpacing.md,
         ),
-        child: FilledButton(
-          onPressed: saving ? null : onSave,
-          style: FilledButton.styleFrom(
-            minimumSize: const Size(double.infinity, 52),
-          ),
-          child: saving
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.brandInk,
-                  ),
-                )
-              : Text(isEditing ? 'Salvar alterações' : 'Adicionar veículo'),
+        child: Row(
+          children: [
+            const Spacer(),
+            FilledButton(
+              onPressed: saving ? null : onSave,
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.xl,
+                  vertical: AppSpacing.md,
+                ),
+              ),
+              child: saving
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.brandInk,
+                      ),
+                    )
+                  : Text(isEditing ? 'Salvar alterações' : 'Adicionar veículo'),
+            ),
+          ],
         ),
       ),
     );
