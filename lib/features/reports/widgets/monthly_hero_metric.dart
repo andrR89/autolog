@@ -189,7 +189,8 @@ class _DeltaBadge extends StatelessWidget {
     final isNeutral = delta.abs() < 0.5;
 
     final sign = isNeutral ? '' : (isPositive ? '+' : '');
-    final label = '$sign${delta.toStringAsFixed(1)}% vs ${_prevMonthName()}';
+    final deltaStr = delta.toStringAsFixed(1).replaceAll('.', ',');
+    final label = '$sign$deltaStr% vs ${_prevMonthName()}';
 
     // Verde se gastou menos (delta negativo), vermelho se gastou mais
     final color = isNeutral

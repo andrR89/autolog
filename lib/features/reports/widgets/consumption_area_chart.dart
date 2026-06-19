@@ -118,6 +118,13 @@ class ConsumptionAreaChart extends StatelessWidget {
                   if (data.length > 6 && index % 2 != 0) {
                     return const SizedBox.shrink();
                   }
+                  // Suprime label se o mês é o mesmo do ponto anterior —
+                  // evita "mai/mai/mai" quando o período tem poucos meses.
+                  if (index > 0 &&
+                      data[index].month.month == data[index - 1].month.month &&
+                      data[index].month.year == data[index - 1].month.year) {
+                    return const SizedBox.shrink();
+                  }
                   return SideTitleWidget(
                     meta: meta,
                     child: Text(

@@ -106,8 +106,10 @@ class PriceLineChart extends StatelessWidget {
                   return SideTitleWidget(
                     meta: meta,
                     child: Text(
-                      r'R$'
-                      '${fmtShort.format(value)}',
+                      // pt_BR decimal: defensivo contra locale data não
+                      // carregada — força vírgula no eixo monetário.
+                      r'R$' +
+                          fmtShort.format(value).replaceAll('.', ','),
                       style: AppTypography.body(10, color: inkSoft),
                     ),
                   );
@@ -124,6 +126,13 @@ class PriceLineChart extends StatelessWidget {
                     return const SizedBox.shrink();
                   }
                   if (data.length > 6 && index % 2 != 0) {
+                    return const SizedBox.shrink();
+                  }
+                  // Só renderiza label quando o mês muda — evita "mai/mai/mai"
+                  // quando há vários pontos no mesmo mês.
+                  if (index > 0 &&
+                      data[index].month.month == data[index - 1].month.month &&
+                      data[index].month.year == data[index - 1].month.year) {
                     return const SizedBox.shrink();
                   }
                   return SideTitleWidget(

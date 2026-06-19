@@ -58,6 +58,10 @@ class ReportsScreen extends ConsumerWidget {
         backgroundColor: AppColors.brand,
         foregroundColor: AppColors.brandInk,
         iconTheme: const IconThemeData(color: AppColors.brandInk),
+        // actionsIconTheme separado — sem isso os IconButtons em `actions`
+        // herdam o tema global (escuro) em cima do brand, ficando quase
+        // invisíveis (handoff UX 19/06).
+        actionsIconTheme: const IconThemeData(color: AppColors.brandInk),
         titleTextStyle: AppTypography.body(
           18,
           weight: FontWeight.w600,
@@ -606,7 +610,9 @@ class _RecapMenuAction extends StatelessWidget {
   Widget build(BuildContext context) {
     return PopupMenuButton<String>(
       tooltip: 'Recap',
-      icon: const Icon(Icons.auto_awesome_rounded),
+      // PopupMenuButton ignora actionsIconTheme — cor explícita garante
+      // contraste sobre o brand-dark.
+      icon: const Icon(Icons.auto_awesome_rounded, color: AppColors.brandInk),
       onSelected: (route) => context.push(route),
       itemBuilder: (_) => const [
         PopupMenuItem(
