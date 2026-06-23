@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:autolog/core/design/app_theme.dart';
+import 'package:autolog/core/observability/analytics.dart';
 import 'package:autolog/core/router.dart';
 import 'package:autolog/data/local/database.dart';
 import 'package:autolog/features/auth/auth_redirect.dart';
@@ -47,9 +48,19 @@ class _AutoLogAppState extends ConsumerState<AutoLogApp> {
   void _scheduleWidgetRefreshOnLogin() {
     try {
       final supabase = Supabase.instance.client;
+
+      // Sessão restaurada do disco: a auth listener não dispara um SignIn
+      // novo, mas o PostHog precisa de identify pra ligar eventos ao user.
+      final restored = supabase.auth.currentSession;
+      if (restored != null) {
+        unawaited(analyticsIdentify(restored.user.id));
+      }
+
       _authSub = supabase.auth.onAuthStateChange.listen((event) {
         final session = event.session;
         if (session != null) {
+          // Garante identify também em SignIn novo (cobre OAuth + email).
+          unawaited(analyticsIdentify(session.user.id));
           final db = ref.read(appDatabaseProvider);
           final widgetService = ref.read(homeWidgetServiceProvider);
           // ignore: discarded_futures

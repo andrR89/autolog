@@ -1,3 +1,4 @@
+import 'package:autolog/core/observability/analytics.dart';
 import 'package:autolog/data/remote/supabase_client.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -42,11 +43,21 @@ class SupabaseAuthService implements AuthService {
   @override
   Future<void> signUpWithEmail(String email, String password) async {
     await _client.auth.signUp(email: email, password: password);
+    final uid = _client.auth.currentSession?.user.id;
+    if (uid != null) {
+      await analyticsIdentify(uid);
+      await track(AnalyticsEvent.signupComplete, props: {'method': 'email'});
+    }
   }
 
   @override
   Future<void> signInWithEmail(String email, String password) async {
     await _client.auth.signInWithPassword(email: email, password: password);
+    final uid = _client.auth.currentSession?.user.id;
+    if (uid != null) {
+      await analyticsIdentify(uid);
+      await track(AnalyticsEvent.loginSuccess, props: {'method': 'email'});
+    }
   }
 
   @override
@@ -55,10 +66,14 @@ class SupabaseAuthService implements AuthService {
       OAuthProvider.google,
       redirectTo: 'io.supabase.autolog://login-callback/',
     );
+    // signInWithOAuth retorna antes do callback resolver — o identify real
+    // do user Google é feito no listener de authStateChanges em app.dart.
   }
 
   @override
   Future<void> signOut() async {
+    await track(AnalyticsEvent.logout);
+    await analyticsReset();
     await _client.auth.signOut();
   }
 }

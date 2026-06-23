@@ -14,6 +14,7 @@
 // Exemplo de uso:
 //   GeneratePdfButton(vehicleId: vehicle.id)
 
+import 'package:autolog/core/observability/analytics.dart';
 import 'package:autolog/data/repositories/expense_repository.dart';
 import 'package:autolog/data/repositories/fipe_history_repository.dart';
 import 'package:autolog/data/repositories/fuel_entry_repository.dart';
@@ -86,6 +87,8 @@ class _GeneratePdfButtonState extends ConsumerState<GeneratePdfButton> {
         bytes: bytes,
         filename: 'historico-$nickname.pdf',
       );
+
+      await track(AnalyticsEvent.exportPdfUsed);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

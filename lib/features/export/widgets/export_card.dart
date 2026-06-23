@@ -15,6 +15,7 @@
 //        const ExportCard(),
 //        const SizedBox(height: 8),
 
+import 'package:autolog/core/observability/analytics.dart';
 import 'package:autolog/domain/models/vehicle.dart';
 import 'package:autolog/features/export/csv_export_providers.dart';
 import 'package:autolog/features/export/pdf/widgets/generate_pdf_button.dart';
@@ -190,6 +191,9 @@ class _ExportSheetState extends ConsumerState<_ExportSheet> {
 
       switch (result.status) {
         case ShareResultStatus.success:
+          await track(AnalyticsEvent.exportCsvUsed, props: {
+            'export_type': type.name,
+          });
           messenger.showSnackBar(
             const SnackBar(content: Text('Arquivo exportado com sucesso.')),
           );

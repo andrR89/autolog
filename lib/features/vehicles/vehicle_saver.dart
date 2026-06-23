@@ -1,3 +1,4 @@
+import 'package:autolog/core/observability/analytics.dart';
 import 'package:autolog/data/repositories/vehicle_repository.dart';
 import 'package:autolog/domain/models/enums.dart';
 import 'package:autolog/domain/models/vehicle.dart';
@@ -41,7 +42,7 @@ class VehicleSaver {
     String? chassi,
     required FuelType fuelType,
     required int initialOdometer,
-  }) {
+  }) async {
     final now = DateTime.now().toUtc();
     final vehicle = Vehicle(
       id: id ?? _generateId(),
@@ -68,7 +69,15 @@ class VehicleSaver {
       updatedAt: now,
       syncStatus: SyncStatus.pending,
     );
-    return _repo.create(vehicle);
+    final saved = await _repo.create(vehicle);
+    await track(AnalyticsEvent.vehicleCreated, props: {
+      'fuel_type': fuelType.wire,
+      'vehicle_type': type.wire,
+      'has_year': year != null,
+      'has_fipe': fipeCode != null,
+      'used_fipe_search': fipeCode != null,
+    });
+    return saved;
   }
 
   /// Atualiza um veículo existente, preservando id/userId/createdAt do [existing].
@@ -93,7 +102,7 @@ class VehicleSaver {
     String? chassi,
     required FuelType fuelType,
     required int initialOdometer,
-  }) {
+  }) async {
     final updated = existing.copyWith(
       nickname: nickname,
       make: make,
@@ -114,12 +123,15 @@ class VehicleSaver {
       fuelType: fuelType,
       initialOdometer: initialOdometer,
     );
-    return _repo.update(updated);
+    final saved = await _repo.update(updated);
+    await track(AnalyticsEvent.vehicleEdited);
+    return saved;
   }
 
   /// Soft delete via [VehicleRepository.softDelete]. Nunca hard delete.
-  Future<void> delete(String id) {
-    return _repo.softDelete(id);
+  Future<void> delete(String id) async {
+    await _repo.softDelete(id);
+    await track(AnalyticsEvent.vehicleDeleted);
   }
 }
 

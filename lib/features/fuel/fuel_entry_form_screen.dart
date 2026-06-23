@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
+import 'package:autolog/core/observability/analytics.dart';
 import 'package:autolog/data/repositories/fuel_entry_repository.dart';
 import 'package:autolog/domain/models/enums.dart';
 import 'package:autolog/domain/models/fuel_entry.dart';
@@ -306,6 +307,10 @@ class _FuelEntryFormScreenState extends ConsumerState<FuelEntryFormScreen> {
 
     if (origin == null) return;
 
+    await track(AnalyticsEvent.scanReceiptOpened, props: {
+      'origin': origin.name,
+    });
+
     final receipt = await ref
         .read(scanControllerProvider.notifier)
         .scan(origin: origin);
@@ -316,6 +321,8 @@ class _FuelEntryFormScreenState extends ConsumerState<FuelEntryFormScreen> {
 
     if (scanState is ScanQuotaExhausted) {
       unawaited(HapticFeedback.heavyImpact());
+      await track(AnalyticsEvent.quotaExhausted, props: {'feature': 'scan'});
+      if (!mounted) return;
       showQuotaExhaustedBanner(
         context,
         onSeePremium: () {
@@ -331,6 +338,10 @@ class _FuelEntryFormScreenState extends ConsumerState<FuelEntryFormScreen> {
 
     if (scanState is ScanError) {
       unawaited(HapticFeedback.heavyImpact());
+      await track(AnalyticsEvent.scanReceiptFailed, props: {
+        'reason': 'scan_error',
+      });
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(scanState.message),
@@ -382,6 +393,13 @@ class _FuelEntryFormScreenState extends ConsumerState<FuelEntryFormScreen> {
     _scanBanner = extractedAnything
         ? showScanSuccessBanner(context)
         : showScanEmptyBanner(context);
+    if (extractedAnything) {
+      await track(AnalyticsEvent.scanReceiptSucceeded);
+    } else {
+      await track(AnalyticsEvent.scanReceiptFailed, props: {
+        'reason': 'empty_extraction',
+      });
+    }
   }
 
   // ---------------------------------------------------------------------------

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:autolog/core/observability/analytics.dart';
 import 'package:autolog/data/local/database.dart';
 import 'package:autolog/data/repositories/fuel_entry_repository.dart';
 import 'package:autolog/domain/models/enums.dart';
@@ -102,6 +103,11 @@ class FuelEntrySaver {
         userId: vehicle.userId,
       ));
     }
+    await track(AnalyticsEvent.fuelEntryCreated, props: {
+      'source': source.wire,
+      'fuel_type': fuelType.wire,
+      'full_tank': fullTank,
+    });
     return saved;
   }
 
