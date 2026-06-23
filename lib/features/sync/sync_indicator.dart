@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:autolog/core/observability/analytics.dart';
+import 'package:autolog/features/sync/sync_error_mapper.dart';
 import 'package:autolog/features/sync/sync_status.dart';
 import 'package:autolog/features/sync/sync_status_notifier.dart';
 import 'package:flutter/material.dart';
@@ -53,17 +57,11 @@ class SyncIndicator extends ConsumerWidget {
           tooltip: 'Sem conexão — toque pra tentar',
           onPressed: () {
             if (err != null) {
-              final errMsg = err.toString();
-              final shortened = errMsg.length > 500
-                  ? '${errMsg.substring(0, 500)}…'
-                  : errMsg;
+              unawaited(track(AnalyticsEvent.syncFailureShown));
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(
-                    'Sync falhou: $shortened',
-                    style: const TextStyle(fontSize: 11),
-                  ),
-                  duration: const Duration(seconds: 15),
+                  content: Text(mapSyncErrorToUserMessage(err)),
+                  duration: const Duration(seconds: 8),
                   behavior: SnackBarBehavior.floating,
                   action: SnackBarAction(
                     label: 'Tentar',
