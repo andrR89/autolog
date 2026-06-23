@@ -311,8 +311,12 @@ ThemeData buildLightTheme() {
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       shape: const RoundedRectangleBorder(borderRadius: AppRadius.allLg),
-      titleTextStyle: textTheme.titleLarge,
-      contentTextStyle: textTheme.bodyMedium,
+      // cor inline obrigatória — textTheme bruto não carrega AppColors.ink
+      // (o .apply() acima só vale pro `textTheme` raiz, não pros styles
+      // referenciados em sub-temas). Sem isso, título/conteúdo saem com
+      // cor default clara sobre surfaceRaised (também claro) → invisível.
+      titleTextStyle: textTheme.titleLarge?.copyWith(color: AppColors.ink),
+      contentTextStyle: textTheme.bodyMedium?.copyWith(color: AppColors.ink),
     ),
     bottomSheetTheme: const BottomSheetThemeData(
       backgroundColor: AppColors.surfaceRaised,
