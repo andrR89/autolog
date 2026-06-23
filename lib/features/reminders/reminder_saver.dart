@@ -56,6 +56,11 @@ class ReminderSaver {
     );
     final saved = await _repo.create(reminder);
     if (_scheduler != null) {
+      // Lembrete por data dispara notificação local → pedimos permissão
+      // ANTES de agendar. Por km não usa notificação local, então pula.
+      if (type == ReminderType.porData) {
+        await _scheduler.requestPermissionIfNeeded();
+      }
       await _scheduler.scheduleReminder(saved);
     }
     return saved;
@@ -91,6 +96,11 @@ class ReminderSaver {
     final saved = await _repo.update(updated);
     if (_scheduler != null) {
       await _scheduler.cancelReminder(saved.id);
+      // Em update, se o tipo mudou pra porData precisa pedir permissão
+      // (caso user tenha negado o popup antigo do boot).
+      if (type == ReminderType.porData) {
+        await _scheduler.requestPermissionIfNeeded();
+      }
       await _scheduler.scheduleReminder(saved);
     }
     return saved;

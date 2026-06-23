@@ -30,10 +30,14 @@ class LocalNotificationScheduler implements NotificationScheduler {
     const androidSettings = AndroidInitializationSettings(
       '@mipmap/ic_launcher',
     );
+    // iOS: NÃO solicitar permissão no boot — popup fora de contexto é
+    // bait-and-switch e tem taxa de aceite baixa. Pedimos via
+    // [requestPermissionIfNeeded] no momento que o usuário cria o
+    // primeiro lembrete por data (Onda 2 / fidelidade UX).
     const iosSettings = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
     );
     const initSettings = InitializationSettings(
       android: androidSettings,
@@ -42,6 +46,36 @@ class LocalNotificationScheduler implements NotificationScheduler {
 
     await _plugin.initialize(initSettings);
     _initialized = true;
+  }
+
+  /// Pede permissão de notificação de forma idempotente.
+  ///
+  /// Chamado antes de salvar o primeiro lembrete por data — momento de
+  /// maior intenção. Retorna `true` se concedida (ou já estava). Em iOS o
+  /// prompt aparece só na primeira chamada; depois resolve instantâneo.
+  @override
+  Future<bool> requestPermissionIfNeeded() async {
+    if (!_initialized) await init();
+    final ios = _plugin
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
+    if (ios != null) {
+      return await ios.requestPermissions(
+            alert: true,
+            badge: true,
+            sound: true,
+          ) ??
+          false;
+    }
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    if (android != null) {
+      return await android.requestNotificationsPermission() ?? false;
+    }
+    return false;
   }
 
   @override
