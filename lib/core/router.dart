@@ -24,6 +24,7 @@ import 'package:autolog/features/personal_documents/cnh_form_screen.dart';
 import 'package:autolog/features/personal_documents/fine_form_screen.dart';
 import 'package:autolog/features/personal_documents/insurance_form_screen.dart';
 import 'package:autolog/features/personal_documents/personal_documents_screen.dart';
+import 'package:autolog/features/premium/paywall_screen.dart';
 import 'package:autolog/features/recap/recap_data.dart';
 import 'package:autolog/features/recap/recap_screen.dart';
 import 'package:autolog/features/reminders/reminder_form_screen.dart';
@@ -87,6 +88,13 @@ final List<RouteBase> appRoutes = [
 
   // /home redireciona para /vehicles (Sprint 1.3).
   GoRoute(path: '/home', redirect: (context, state) => '/vehicles'),
+
+  // Paywall — acessível de qualquer lugar via context.push('/paywall').
+  GoRoute(
+    path: '/paywall',
+    pageBuilder: (context, state) =>
+        appTransitionPage(state: state, child: const PaywallScreen()),
+  ),
 
   // Lista de veículos.
   GoRoute(

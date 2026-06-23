@@ -326,11 +326,7 @@ class _FuelEntryFormScreenState extends ConsumerState<FuelEntryFormScreen> {
       showQuotaExhaustedBanner(
         context,
         onSeePremium: () {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Premium chega no Sprint 6')),
-            );
-          }
+          if (mounted) context.push('/paywall');
         },
       );
       return;

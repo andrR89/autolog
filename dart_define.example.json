@@ -3,5 +3,6 @@
   "SUPABASE_ANON_KEY": "sua_anon_public_key_aqui",
   "SENTRY_DSN": "",
   "POSTHOG_API_KEY": "",
-  "POSTHOG_HOST": "https://us.i.posthog.com"
+  "POSTHOG_HOST": "https://us.i.posthog.com",
+  "BILLING_ENABLED": "false"
 }

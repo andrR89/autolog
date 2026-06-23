@@ -1,15 +1,19 @@
+import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/data/repositories/user_settings_repository.dart';
 import 'package:autolog/domain/repositories/user_settings_repository.dart';
 import 'package:autolog/features/auth/account_deletion/widgets/delete_account_section.dart';
 import 'package:autolog/features/auth/auth_service.dart';
+import 'package:autolog/features/backup/widgets/backup_card.dart';
 import 'package:autolog/features/calendar/google_calendar_service.dart';
 import 'package:autolog/features/export/widgets/export_card.dart';
+import 'package:autolog/features/premium/entitlements.dart';
 import 'package:autolog/features/settings/notif_prefs_providers.dart';
 import 'package:autolog/features/settings/theme_mode_providers.dart';
 import 'package:autolog/features/vehicles/vehicles_provider.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -36,6 +40,8 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         children: [
           const SizedBox(height: 8),
+          const _PremiumCard(),
+          const SizedBox(height: 8),
           _AppearanceCard(userId: userId, repo: repo, current: current),
           const SizedBox(height: 8),
           _NotificationsCard(userId: userId, repo: repo, prefs: prefs),
@@ -43,6 +49,8 @@ class SettingsScreen extends ConsumerWidget {
           const _GoogleCalendarCard(),
           const SizedBox(height: 8),
           const ExportCard(),
+          const SizedBox(height: 8),
+          const BackupCard(),
           const SizedBox(height: 8),
           const _SignOutCard(),
           const SizedBox(height: 8),
@@ -93,6 +101,44 @@ class _SentryTestCard extends StatelessWidget {
             }
           }
         },
+      ),
+    );
+  }
+}
+
+class _PremiumCard extends ConsumerWidget {
+  const _PremiumCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isPremium = ref.watch(isPremiumProvider);
+    if (isPremium) {
+      return Card(
+        color: AppColors.success.withValues(alpha: 0.10),
+        child: const ListTile(
+          leading: Icon(Icons.workspace_premium, color: AppColors.success),
+          title: Text('Você é Premium 💚'),
+          subtitle: Text('Tudo desbloqueado. Obrigado pelo apoio!'),
+        ),
+      );
+    }
+    return Card(
+      color: AppColors.brand,
+      child: ListTile(
+        leading: const Icon(
+          Icons.workspace_premium,
+          color: AppColors.accent,
+        ),
+        title: const Text(
+          'Virar Premium',
+          style: TextStyle(color: AppColors.brandInk, fontWeight: FontWeight.w700),
+        ),
+        subtitle: Text(
+          'Scan e insights ilimitados.',
+          style: TextStyle(color: AppColors.brandInk.withValues(alpha: 0.7)),
+        ),
+        trailing: const Icon(Icons.chevron_right, color: AppColors.brandInk),
+        onTap: () => context.push('/paywall'),
       ),
     );
   }

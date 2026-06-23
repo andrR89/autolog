@@ -183,13 +183,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
         showQuotaExhaustedBanner(
           context,
           onSeePremium: () {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Premium chega em breve'),
-                ),
-              );
-            }
+            if (mounted) context.push('/paywall');
           },
         );
       }
