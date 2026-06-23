@@ -169,7 +169,7 @@ Patch corretivo pós-homologação:
 
 ## Pré-go-live (curto, mas obrigatório)
 
-- [ ] Patch do débito técnico de cota (vazamento entre meses) — corrigir `scan-receipt`, `scan-expense`, `analyze-history`.
+- [x] Patch do débito técnico de cota (vazamento entre meses) — resolvido pelo helper compartilhado `supabase/functions/_shared/quota.ts` (readQuota zera contadores quando `month` salvo difere do mês atual). 8 functions adotaram: scan-receipt, scan-expense, scan-crlv, analyze-history, chat-history, infer-vehicle-specs, suggest-maintenance, fiscal-calendar-lookup.
 - [ ] **7.x** itens existentes (estados vazios, exclusão LGPD, ícone/splash, política de privacidade, build assinado).
 
 ## POST-LANÇAMENTO (anotado em 26/05/2026)
