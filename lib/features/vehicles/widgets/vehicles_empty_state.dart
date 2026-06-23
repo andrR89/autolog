@@ -2,20 +2,14 @@
 // criar conta: tem que ser CONVIDATIVO, não "você não tem nada".
 //
 // Composição:
-// - Quadrilátero off-white com hairline pontilhado evocando "vaga vazia".
-// - Ícone de carro centralizado dentro, em peso leve.
-// - Headline curta, calorosa ("Sua garagem está esperando").
-// - Subhead com instrução prática.
-// - CTA primário em accent — visualmente em quase rima com o FAB
-//   da tela (mesmo verbo, mesmo destino) para reduzir hesitação.
-//
-// Decisão: o CTA aqui é deliberadamente REDUNDANTE com o FAB. Em
-// empty state, o usuário ainda não conhece a convenção do FAB; o
-// botão inline é mais óbvio.
+// - "Vaga de garagem": frame off-white com hairline tracejado.
+// - Ícone de carro centralizado, peso leve.
+// - Headline calorosa + subhead com instrução prática.
 
 import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
+import 'package:autolog/core/design/widgets/dashed_frame.dart';
 import 'package:flutter/material.dart';
 
 class VehiclesEmptyState extends StatelessWidget {
@@ -34,9 +28,14 @@ class VehiclesEmptyState extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // "Vaga de garagem" — frame com borda tracejada e ícone
-              // grande centralizado. Não usamos asset pra ficar leve.
-              _ParkingSpotFrame(),
+              // Frame um pouco maior + ícone mais nítido — é o "hero" da
+              // tela de boas-vindas pós-cadastro.
+              const DashedFrame(
+                icon: Icons.directions_car_filled_outlined,
+                height: 140,
+                iconSize: 64,
+                iconAlpha: 0.35,
+              ),
               const SizedBox(height: AppSpacing.xxl),
               Text(
                 'Sua garagem está esperando.',
@@ -56,77 +55,11 @@ class VehiclesEmptyState extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              // CTA único: FloatingActionButton "Novo veículo" no Scaffold
-              // (evita 2 botões redundantes apontando pra mesma ação).
+              // CTA único: FloatingActionButton "Novo veículo" no Scaffold.
             ],
           ),
         ),
       ),
     );
   }
-}
-
-class _ParkingSpotFrame extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _DashedRoundedRectPainter(
-        color: context.hairline,
-        radius: AppRadius.lg,
-      ),
-      child: SizedBox(
-        height: 140,
-        child: Center(
-          child: Icon(
-            Icons.directions_car_filled_outlined,
-            size: 64,
-            color: context.ink.withValues(alpha: 0.35),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Pinta um retângulo arredondado com borda tracejada. Necessário porque
-/// Flutter não tem dashed border nativo (`Border.all` é sólido).
-class _DashedRoundedRectPainter extends CustomPainter {
-  _DashedRoundedRectPainter({required this.color, required this.radius});
-
-  final Color color;
-  final double radius;
-  static const double _dashWidth = 6;
-  static const double _dashSpace = 5;
-  static const double _strokeWidth = 1.2;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = _strokeWidth;
-
-    final rect = RRect.fromRectAndRadius(
-      Offset.zero & size,
-      Radius.circular(radius),
-    );
-    final path = Path()..addRRect(rect);
-
-    final metrics = path.computeMetrics().toList();
-    for (final metric in metrics) {
-      var distance = 0.0;
-      while (distance < metric.length) {
-        final next = distance + _dashWidth;
-        canvas.drawPath(
-          metric.extractPath(distance, next.clamp(0, metric.length)),
-          paint,
-        );
-        distance = next + _dashSpace;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _DashedRoundedRectPainter old) =>
-      old.color != color || old.radius != radius;
 }
