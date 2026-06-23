@@ -7,8 +7,10 @@ import 'package:autolog/features/export/widgets/export_card.dart';
 import 'package:autolog/features/settings/notif_prefs_providers.dart';
 import 'package:autolog/features/settings/theme_mode_providers.dart';
 import 'package:autolog/features/vehicles/vehicles_provider.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -45,8 +47,52 @@ class SettingsScreen extends ConsumerWidget {
           const _SignOutCard(),
           const SizedBox(height: 8),
           const DeleteAccountSection(),
+          if (kDebugMode) ...[
+            const SizedBox(height: 8),
+            const _SentryTestCard(),
+          ],
           const SizedBox(height: 8),
         ],
+      ),
+    );
+  }
+}
+
+/// Botão de teste do Sentry. Só renderiza em debug — usuário final
+/// nunca vê. Dispara uma exception sintética e captura via Sentry.captureException.
+class _SentryTestCard extends StatelessWidget {
+  const _SentryTestCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: Colors.amber.shade100,
+      child: ListTile(
+        leading: const Icon(Icons.bug_report, color: Colors.amber),
+        title: const Text('Disparar erro de teste (debug)'),
+        subtitle: const Text(
+          'Envia uma exception sintética pro Sentry. Só aparece em '
+          'debug builds.',
+        ),
+        onTap: () async {
+          try {
+            throw Exception(
+              'AutoLog test event — Sentry handshake from device',
+            );
+          } catch (e, st) {
+            await Sentry.captureException(e, stackTrace: st);
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Erro de teste enviado. Olha o dashboard do Sentry.',
+                  ),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
+          }
+        },
       ),
     );
   }

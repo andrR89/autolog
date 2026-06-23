@@ -79,6 +79,14 @@ dependencies:
   # Onboarding state (Sprint 6.GG fix) — pré-login, independente de userId.
   shared_preferences: ^2.3.0
 
+  # Crash reporting (Onda 1, pré-launch). Free tier 5k events/mês.
+  # DSN injetado via --dart-define=SENTRY_DSN=… (vazio = noop silencioso).
+  sentry_flutter: ^8.10.0
+
+  # Product analytics (Onda 2). Free tier 1M events/mês.
+  # API key + host injetados via --dart-define (vazios = noop silencioso).
+  posthog_flutter: ^4.10.1
+
   # Google Calendar integration (Sprint 6.EE).
   # Mock é o default até o OAuth estar configurado (docs/google-calendar-setup.md).
   google_sign_in: ^7.0.0

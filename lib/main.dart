@@ -1,6 +1,8 @@
 import 'package:autolog/app.dart';
 import 'package:autolog/core/config.dart';
 import 'package:autolog/core/design/tokens.dart';
+import 'package:autolog/core/observability/analytics.dart';
+import 'package:autolog/core/observability/sentry_init.dart';
 import 'package:autolog/features/onboarding/onboarding_repository.dart';
 import 'package:autolog/features/reminders/local_notification_scheduler.dart';
 import 'package:autolog/features/reminders/reminder_saver.dart';
@@ -12,6 +14,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<void> main() async {
+  // runWithSentry envolve TUDO: o init do Sentry roda
+  // WidgetsFlutterBinding.ensureInitialized internamente e captura erros
+  // não tratados de toda a árvore de widgets + zone do Dart.
+  // Sem SENTRY_DSN, é no-op silencioso (chama appRunner direto).
+  await runWithSentry(_appMain);
+}
+
+Future<void> _appMain() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Bloqueia orientação em portrait — app de gestão veicular não tem uso
@@ -41,6 +51,9 @@ Future<void> main() async {
 
   final config = SupabaseConfig.fromEnvironment();
   await Supabase.initialize(url: config.url, anonKey: config.anonKey);
+
+  // PostHog (analytics) — noop silencioso quando POSTHOG_API_KEY vazia.
+  await initAnalytics();
 
   // Pré-carrega SharedPreferences ANTES do runApp para eliminar a race
   // condition no redirect do GoRouter: onboardingNeededProvider é síncrono
