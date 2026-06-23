@@ -160,6 +160,7 @@ class _RecapScreenState extends ConsumerState<RecapScreen> {
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.transparent,
         leading: IconButton(
+          tooltip: 'Fechar',
           icon: const Icon(Icons.close, color: AppColors.brandInk),
           onPressed: () => Navigator.of(context).pop(),
         ),

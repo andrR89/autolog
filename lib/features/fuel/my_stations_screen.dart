@@ -414,7 +414,8 @@ class _StationCard extends StatelessWidget {
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   dateFormatted,
-                  style: AppTypography.body(12, color: context.inkSoft),
+                  // inkMuted (não inkSoft) pra passar WCAG AA em body 12.
+                  style: AppTypography.body(12, color: context.inkMuted),
                 ),
               ],
             ),

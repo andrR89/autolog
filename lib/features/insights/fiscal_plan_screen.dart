@@ -656,7 +656,9 @@ class _FiscalItemCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.xs),
             Text(
               proposal.reminder.rationale,
-              style: textTheme.bodySmall?.copyWith(color: context.inkSoft),
+              // inkMuted (não inkSoft) — bodySmall sobre surface clara
+              // exige ratio ≥ 4.5:1 (WCAG AA texto normal).
+              style: textTheme.bodySmall?.copyWith(color: context.inkMuted),
             ),
           ],
           const SizedBox(height: AppSpacing.sm),

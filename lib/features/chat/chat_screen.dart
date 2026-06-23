@@ -457,6 +457,7 @@ class _InputBar extends StatelessWidget {
                 controller: controller,
                 textCapitalization: TextCapitalization.sentences,
                 decoration: InputDecoration(
+                  labelText: 'Pergunta',
                   hintText: 'Faça uma pergunta...',
                   hintStyle: Theme.of(
                     context,
@@ -491,6 +492,7 @@ class _InputBar extends StatelessWidget {
               builder: (ctx, value, _) {
                 final canSend = value.text.trim().isNotEmpty && !sending;
                 return IconButton(
+                  tooltip: 'Enviar',
                   onPressed: canSend ? onSend : null,
                   icon: const Icon(Icons.send),
                   color: AppColors.brand,

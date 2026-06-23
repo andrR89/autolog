@@ -394,7 +394,7 @@ class _EmptyState extends StatelessWidget {
               const SizedBox(height: AppSpacing.xl),
               Text(
                 'Usa a mesma cota de análises (3/mês no gratuito).',
-                style: textTheme.bodySmall?.copyWith(color: context.inkSoft),
+                style: textTheme.bodySmall?.copyWith(color: context.inkMuted),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.xxl),
@@ -632,7 +632,7 @@ class _MaintenanceItemCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.xs),
             Text(
               item.notes!,
-              style: textTheme.bodySmall?.copyWith(color: context.inkSoft),
+              style: textTheme.bodySmall?.copyWith(color: context.inkMuted),
             ),
           ],
           const SizedBox(height: AppSpacing.md),

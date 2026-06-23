@@ -389,7 +389,10 @@ class _CnhCard extends StatelessWidget {
         p.cnhExpiresAt != null &&
         p.cnhExpiresAt!.difference(DateTime.now()).inDays <= 30;
 
-    return GestureDetector(
+    return Semantics(
+      button: true,
+      label: 'Editar CNH',
+      child: GestureDetector(
       onTap: onEdit,
       child: Container(
         margin: const EdgeInsets.symmetric(
@@ -473,6 +476,7 @@ class _CnhCard extends StatelessWidget {
           ],
         ),
       ),
+      ),
     );
   }
 }
@@ -511,7 +515,8 @@ class _EmptyCard extends StatelessWidget {
             const SizedBox(width: AppSpacing.md),
             Text(
               message,
-              style: AppTypography.body(15, color: context.inkSoft),
+              // inkMuted (não inkSoft) pra passar WCAG AA em body 15.
+              style: AppTypography.body(15, color: context.inkMuted),
             ),
             const Spacer(),
             Icon(Icons.add_rounded, color: context.inkSoft, size: 20),
@@ -590,7 +595,7 @@ class _AsyncAllInsurancesSliverState
           ),
           child: Text(
             'Nenhuma apólice ativa.',
-            style: AppTypography.body(14, color: context.inkSoft),
+            style: AppTypography.body(14, color: context.inkMuted),
           ),
         ),
       );
@@ -629,7 +634,10 @@ class _InsuranceCard extends StatelessWidget {
     final isExpiringSoon = daysLeft <= 60;
     final endStr = DateFormat('dd/MM/yyyy').format(insurance.endsAt);
 
-    return GestureDetector(
+    return Semantics(
+      button: true,
+      label: 'Editar apólice $vehicleNickname',
+      child: GestureDetector(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
@@ -671,6 +679,7 @@ class _InsuranceCard extends StatelessWidget {
             Icon(Icons.chevron_right_rounded, color: context.inkSoft, size: 18),
           ],
         ),
+      ),
       ),
     );
   }
@@ -769,7 +778,10 @@ class _FineCard extends StatelessWidget {
         fine.dueDate != null &&
         fine.dueDate!.difference(DateTime.now()).inDays <= 7;
 
-    return GestureDetector(
+    return Semantics(
+      button: true,
+      label: 'Editar multa $vehicleNickname',
+      child: GestureDetector(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
@@ -822,6 +834,7 @@ class _FineCard extends StatelessWidget {
             Icon(Icons.chevron_right_rounded, color: context.inkSoft, size: 18),
           ],
         ),
+      ),
       ),
     );
   }

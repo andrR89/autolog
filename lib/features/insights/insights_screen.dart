@@ -294,7 +294,7 @@ class _EmptyState extends StatelessWidget {
               const SizedBox(height: AppSpacing.xl),
               Text(
                 'Cota: 3 análises/mês no plano gratuito.',
-                style: textTheme.bodySmall?.copyWith(color: context.inkSoft),
+                style: textTheme.bodySmall?.copyWith(color: context.inkMuted),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.xxl),
@@ -399,7 +399,7 @@ class _LoadingState extends StatelessWidget {
           Center(
             child: Text(
               'Analisando histórico...',
-              style: textTheme.bodySmall?.copyWith(color: context.inkSoft),
+              style: textTheme.bodySmall?.copyWith(color: context.inkMuted),
             ),
           ),
         ],
@@ -709,7 +709,7 @@ class _PatternCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           Text(
             'Confiança: $confidencePct%',
-            style: textTheme.bodySmall?.copyWith(color: context.inkSoft),
+            style: textTheme.bodySmall?.copyWith(color: context.inkMuted),
           ),
           if (pattern.rationale != null && pattern.rationale!.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.xs),
@@ -796,7 +796,7 @@ class _ProposedReminderCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.xs),
             Text(
               proposed.rationale,
-              style: textTheme.bodySmall?.copyWith(color: context.inkSoft),
+              style: textTheme.bodySmall?.copyWith(color: context.inkMuted),
             ),
           ],
           const SizedBox(height: AppSpacing.md),
@@ -902,7 +902,7 @@ class _EmptySectionHint extends StatelessWidget {
       ),
       child: Text(
         message,
-        style: textTheme.bodySmall?.copyWith(color: context.inkSoft),
+        style: textTheme.bodySmall?.copyWith(color: context.inkMuted),
       ),
     );
   }

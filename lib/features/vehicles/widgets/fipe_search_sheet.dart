@@ -281,10 +281,12 @@ class _FipeSearchSheetContentState
             controller: _searchCtrl,
             autofocus: false,
             decoration: InputDecoration(
+              labelText: 'Buscar',
               hintText: _stepHint,
               prefixIcon: const Icon(Icons.search, size: 20),
               suffixIcon: _query.isNotEmpty
                   ? IconButton(
+                      tooltip: 'Limpar busca',
                       icon: const Icon(Icons.clear, size: 18),
                       onPressed: () {
                         _searchCtrl.clear();

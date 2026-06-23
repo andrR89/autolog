@@ -146,6 +146,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   hintText: 'Mínimo 6 caracteres',
                   prefixIcon: const Icon(Icons.lock_outline, size: 20),
                   suffixIcon: IconButton(
+                    tooltip: _obscurePassword
+                        ? 'Mostrar senha'
+                        : 'Ocultar senha',
                     icon: Icon(
                       _obscurePassword
                           ? Icons.visibility_outlined

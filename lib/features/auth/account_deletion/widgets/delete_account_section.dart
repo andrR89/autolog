@@ -289,6 +289,7 @@ class _ConfirmDeleteDialogState extends State<_ConfirmDeleteDialog> {
             autofocus: true,
             textCapitalization: TextCapitalization.characters,
             decoration: InputDecoration(
+              labelText: 'Digite $_kConfirmationWord pra confirmar',
               hintText: _kConfirmationWord,
               border: const OutlineInputBorder(),
               errorText: _controller.text.isNotEmpty && !_confirmed

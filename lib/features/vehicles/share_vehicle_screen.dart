@@ -225,6 +225,7 @@ class _ShareVehicleScreenState extends ConsumerState<ShareVehicleScreen> {
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: (_) => _loading ? null : _submit(),
                     decoration: InputDecoration(
+                      labelText: 'E-mail',
                       hintText: 'email@exemplo.com',
                       hintStyle: textTheme.bodyMedium?.copyWith(
                         color: context.inkSoft,
