@@ -3,6 +3,7 @@ import 'package:autolog/features/auth/auth_error_mapper.dart';
 import 'package:autolog/features/auth/auth_service.dart';
 import 'package:autolog/features/auth/validators.dart';
 import 'package:autolog/features/auth/widgets/auth_widgets.dart';
+import 'package:autolog/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -93,8 +94,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return AuthScaffold(
-      title: 'Entre na sua conta',
+      title: l10n.authLoginTitle,
       formContent: [
         Form(
           key: _formKey,
@@ -108,9 +110,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 textInputAction: TextInputAction.next,
                 autofillHints: const [AutofillHints.email],
                 style: AppTypography.body(15, weight: FontWeight.w500),
-                decoration: const InputDecoration(
-                  labelText: 'E-mail',
-                  prefixIcon: Icon(Icons.email_outlined, size: 20),
+                decoration: InputDecoration(
+                  labelText: l10n.authEmailLabel,
+                  prefixIcon: const Icon(Icons.email_outlined, size: 20),
                 ),
                 validator: validateEmail,
               ),
@@ -125,12 +127,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 onFieldSubmitted: (_) => _signIn(),
                 style: AppTypography.body(15, weight: FontWeight.w500),
                 decoration: InputDecoration(
-                  labelText: 'Senha',
+                  labelText: l10n.authPasswordLabel,
                   prefixIcon: const Icon(Icons.lock_outline, size: 20),
                   suffixIcon: IconButton(
                     tooltip: _obscurePassword
-                        ? 'Mostrar senha'
-                        : 'Ocultar senha',
+                        ? l10n.authPasswordShow
+                        : l10n.authPasswordHide,
                     icon: Icon(
                       _obscurePassword
                           ? Icons.visibility_outlined

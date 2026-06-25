@@ -7,9 +7,11 @@ import 'package:autolog/features/backup/widgets/backup_card.dart';
 import 'package:autolog/features/calendar/google_calendar_service.dart';
 import 'package:autolog/features/export/widgets/export_card.dart';
 import 'package:autolog/features/premium/entitlements.dart';
+import 'package:autolog/features/settings/locale_providers.dart';
 import 'package:autolog/features/settings/notif_prefs_providers.dart';
 import 'package:autolog/features/settings/theme_mode_providers.dart';
 import 'package:autolog/features/vehicles/vehicles_provider.dart';
+import 'package:autolog/l10n/generated/app_localizations.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,14 +37,18 @@ class SettingsScreen extends ConsumerWidget {
     final prefs =
         notifPrefsAsync.valueOrNull ?? const NotificationPreferences();
 
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Configurações')),
+      appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: ListView(
         children: [
           const SizedBox(height: 8),
           const _PremiumCard(),
           const SizedBox(height: 8),
           _AppearanceCard(userId: userId, repo: repo, current: current),
+          const SizedBox(height: 8),
+          const _LanguageCard(),
           const SizedBox(height: 8),
           _NotificationsCard(userId: userId, repo: repo, prefs: prefs),
           const SizedBox(height: 8),
@@ -111,14 +117,18 @@ class _PremiumCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final isPremium = ref.watch(isPremiumProvider);
     if (isPremium) {
       return Card(
         color: AppColors.success.withValues(alpha: 0.10),
-        child: const ListTile(
-          leading: Icon(Icons.workspace_premium, color: AppColors.success),
-          title: Text('Você é Premium 💚'),
-          subtitle: Text('Tudo desbloqueado. Obrigado pelo apoio!'),
+        child: ListTile(
+          leading: const Icon(
+            Icons.workspace_premium,
+            color: AppColors.success,
+          ),
+          title: Text(l10n.premiumActive),
+          subtitle: Text(l10n.premiumActiveSubtitle),
         ),
       );
     }
@@ -129,12 +139,15 @@ class _PremiumCard extends ConsumerWidget {
           Icons.workspace_premium,
           color: AppColors.accent,
         ),
-        title: const Text(
-          'Virar Premium',
-          style: TextStyle(color: AppColors.brandInk, fontWeight: FontWeight.w700),
+        title: Text(
+          l10n.premiumGoCta,
+          style: const TextStyle(
+            color: AppColors.brandInk,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         subtitle: Text(
-          'Scan e insights ilimitados.',
+          l10n.premiumGoSubtitle,
           style: TextStyle(color: AppColors.brandInk.withValues(alpha: 0.7)),
         ),
         trailing: const Icon(Icons.chevron_right, color: AppColors.brandInk),
@@ -144,16 +157,77 @@ class _PremiumCard extends ConsumerWidget {
   }
 }
 
+class _LanguageCard extends ConsumerWidget {
+  const _LanguageCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final selected = ref.watch(localeProvider);
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.translate),
+        title: Text(l10n.settingsLanguageLabel),
+        subtitle: Text(
+          selected == null
+              ? l10n.settingsLanguageSystem
+              : localeDisplayName(selected),
+        ),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => _showPicker(context, ref, selected),
+      ),
+    );
+  }
+
+  Future<void> _showPicker(
+    BuildContext context,
+    WidgetRef ref,
+    Locale? current,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    final picked = await showModalBottomSheet<Locale?>(
+      context: context,
+      builder: (ctx) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: Text(l10n.settingsLanguageSystem),
+                trailing: current == null ? const Icon(Icons.check) : null,
+                onTap: () => Navigator.of(ctx).pop<Locale?>(null),
+              ),
+              for (final locale in supportedLocales)
+                ListTile(
+                  title: Text(localeDisplayName(locale)),
+                  trailing: current?.languageCode == locale.languageCode
+                      ? const Icon(Icons.check)
+                      : null,
+                  onTap: () => Navigator.of(ctx).pop(locale),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+    // Sentinel: usuário fechou sem escolher → showModalBottomSheet retorna
+    // null nesse caso e no "padrão do sistema" (também null). Como a
+    // diferença não importa pra função, aplicamos sempre.
+    await ref.read(localeProvider.notifier).setLocale(picked);
+  }
+}
+
 class _SignOutCard extends ConsumerWidget {
   const _SignOutCard();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     return Card(
       child: ListTile(
         leading: const Icon(Icons.logout),
-        title: const Text('Sair'),
-        subtitle: const Text('Faz logout da conta neste dispositivo.'),
+        title: Text(l10n.settingsSignOut),
+        subtitle: Text(l10n.settingsSignOutSubtitle),
         onTap: () async {
           try {
             await ref.read(authServiceProvider).signOut();
