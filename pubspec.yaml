@@ -29,6 +29,11 @@ dependencies:
   # Backend
   supabase_flutter: ^2.9.0
 
+  # Internationalization (Onda 4). Setup default PT-BR, EN/ES como
+  # placeholders com strings em PT até tradução real.
+  flutter_localizations:
+    sdk: flutter
+
   # Utilities
   uuid: ^4.5.1
   intl: ^0.20.2
@@ -116,6 +121,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true
 
 # ---------------------------------------------------------------------------
 # Splash screen — cor sólida brand já funciona sem asset.

@@ -1,0 +1,35 @@
+{
+  "@@locale": "es",
+  "appTitle": "AutoLog",
+  "commonSave": "Guardar",
+  "commonCancel": "Cancelar",
+  "commonConfirm": "Confirmar",
+  "commonDelete": "Eliminar",
+  "commonEdit": "Editar",
+  "commonClose": "Cerrar",
+  "commonBack": "Volver",
+  "commonRetry": "Reintentar",
+
+  "authLoginTitle": "Inicia sesión en tu cuenta",
+  "authSignupTitle": "Crea tu cuenta",
+  "authEmailLabel": "Correo electrónico",
+  "authPasswordLabel": "Contraseña",
+  "authPasswordShow": "Mostrar contraseña",
+  "authPasswordHide": "Ocultar contraseña",
+  "authLoginCta": "Entrar",
+  "authSignupCta": "Crear cuenta",
+  "authGoogleCta": "Entrar con Google",
+  "authNoAccount": "¿Aún no tienes cuenta?",
+  "authHasAccount": "¿Ya tienes cuenta?",
+
+  "settingsTitle": "Configuración",
+  "settingsLanguageLabel": "Idioma",
+  "settingsLanguageSystem": "Predeterminado del sistema",
+  "settingsSignOut": "Cerrar sesión",
+  "settingsSignOutSubtitle": "Cierra la sesión en este dispositivo.",
+
+  "premiumGoCta": "Hazte Premium",
+  "premiumGoSubtitle": "Escaneos e ideas ilimitados.",
+  "premiumActive": "Eres Premium 💚",
+  "premiumActiveSubtitle": "Todo desbloqueado. ¡Gracias por el apoyo!"
+}

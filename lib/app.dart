@@ -8,7 +8,9 @@ import 'package:autolog/features/auth/auth_redirect.dart';
 import 'package:autolog/features/auth/auth_service.dart';
 import 'package:autolog/features/home_widget/home_widget_service.dart';
 import 'package:autolog/features/onboarding/onboarding_providers.dart';
+import 'package:autolog/features/settings/locale_providers.dart';
 import 'package:autolog/features/settings/theme_mode_providers.dart';
+import 'package:autolog/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -118,6 +120,7 @@ class _AutoLogAppState extends ConsumerState<AutoLogApp> {
   @override
   Widget build(BuildContext context) {
     final themeMode = ref.watch(themeModeProvider);
+    final locale = ref.watch(localeProvider);
 
     return MaterialApp.router(
       title: 'AutoLog',
@@ -125,6 +128,9 @@ class _AutoLogAppState extends ConsumerState<AutoLogApp> {
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: themeMode,
+      locale: locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: supportedLocales,
       routerConfig: _router,
     );
   }

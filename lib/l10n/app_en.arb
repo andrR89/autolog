@@ -1,0 +1,35 @@
+{
+  "@@locale": "en",
+  "appTitle": "AutoLog",
+  "commonSave": "Save",
+  "commonCancel": "Cancel",
+  "commonConfirm": "Confirm",
+  "commonDelete": "Delete",
+  "commonEdit": "Edit",
+  "commonClose": "Close",
+  "commonBack": "Back",
+  "commonRetry": "Try again",
+
+  "authLoginTitle": "Sign in to your account",
+  "authSignupTitle": "Create your account",
+  "authEmailLabel": "Email",
+  "authPasswordLabel": "Password",
+  "authPasswordShow": "Show password",
+  "authPasswordHide": "Hide password",
+  "authLoginCta": "Sign in",
+  "authSignupCta": "Sign up",
+  "authGoogleCta": "Sign in with Google",
+  "authNoAccount": "Don't have an account yet?",
+  "authHasAccount": "Already have an account?",
+
+  "settingsTitle": "Settings",
+  "settingsLanguageLabel": "Language",
+  "settingsLanguageSystem": "System default",
+  "settingsSignOut": "Sign out",
+  "settingsSignOutSubtitle": "Logs out from this device.",
+
+  "premiumGoCta": "Go Premium",
+  "premiumGoSubtitle": "Unlimited scans and insights.",
+  "premiumActive": "You're Premium 💚",
+  "premiumActiveSubtitle": "Everything unlocked. Thanks for the support!"
+}
