@@ -31,6 +31,11 @@ bool get analyticsEnabled => _kPosthogKey.isNotEmpty;
 
 /// Inicializa o PostHog se POSTHOG_API_KEY foi injetada.
 /// Chamado uma única vez em main.dart, ANTES do runApp.
+///
+/// Web: o setup manual quebra com PlatformException em posthog_flutter
+/// 4.11 (o plugin web é auto-init via configuração no index.html). Se
+/// falhar, capturamos e seguimos — analytics fica desligado, mas o app
+/// não trava.
 Future<void> initAnalytics() async {
   if (!analyticsEnabled) return;
   final config = PostHogConfig(_kPosthogKey)
@@ -40,19 +45,31 @@ Future<void> initAnalytics() async {
     ..captureApplicationLifecycleEvents = true
     // Sem session replay no MVP (custa quota + privacidade complexa).
     ..sessionReplay = false;
-  await Posthog().setup(config);
+  try {
+    await Posthog().setup(config);
+  } catch (e) {
+    // Web normalmente cai aqui. Marca como desabilitado pra próximas chamadas.
+    if (kDebugMode) {
+      // ignore: avoid_print
+      print('PostHog setup falhou (analytics desabilitado): $e');
+    }
+    _setupFailed = true;
+  }
 }
+
+bool _setupFailed = false;
+bool get _ready => analyticsEnabled && !_setupFailed;
 
 /// Vincula o evento ao usuário autenticado. Chamado após login bem-sucedido.
 /// [userId] tem que ser o UUID do supabase auth — NUNCA email ou nickname.
 Future<void> analyticsIdentify(String userId) async {
-  if (!analyticsEnabled) return;
+  if (!_ready) return;
   await Posthog().identify(userId: userId);
 }
 
 /// Limpa o distinct_id (chamado no logout).
 Future<void> analyticsReset() async {
-  if (!analyticsEnabled) return;
+  if (!_ready) return;
   await Posthog().reset();
 }
 
@@ -114,7 +131,7 @@ Future<void> track(
   AnalyticsEvent event, {
   Map<String, Object>? props,
 }) async {
-  if (!analyticsEnabled) return;
+  if (!_ready) return;
   Map<String, Object>? safe;
   if (props != null) {
     safe = {};
@@ -129,7 +146,7 @@ Future<void> track(
 
 /// Marca a tela atual — alimenta `$screen_name` em todos os events seguintes.
 Future<void> trackScreen(String name) async {
-  if (!analyticsEnabled) return;
+  if (!_ready) return;
   await Posthog().screen(screenName: name);
 }
 

@@ -805,7 +805,11 @@ class _EmptyState extends StatelessWidget {
     // SliverFillRemaining(hasScrollBody:false) dá altura fixa — Padding aqui
      // reduz a área útil, fazendo o Center subir o conteúdo acima do FAB
      // extended (≈80px + 16px margem) que mora no Scaffold.
-    return Padding(
+    // SliverFillRemaining(hasScrollBody:false) entrega altura travada igual
+    // à viewport restante. Em janela desktop "baixa" o Column + paddings
+    // estouravam 47px (W2 — Web Sprint 8). SingleChildScrollView absorve
+    // o overflow vertical sem mudar o layout em mobile.
+    return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 96),
       child: Center(
         child: ConstrainedBox(
