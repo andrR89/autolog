@@ -1,5 +1,5 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { corsHeaders, handlePreflight } from '../_shared/cors.ts';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -8,7 +8,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 }
 
@@ -16,7 +16,10 @@ function json(body: unknown, status = 200): Response {
 // Main handler
 // ---------------------------------------------------------------------------
 
-serve(async (req: Request) => {
+Deno.serve(async (req: Request) => {
+  const preflight = handlePreflight(req);
+  if (preflight) return preflight;
+
   // Only accept POST.
   if (req.method !== 'POST') {
     return json({ error: 'method_not_allowed' }, 405);
