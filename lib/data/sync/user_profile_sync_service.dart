@@ -40,6 +40,7 @@ class UserProfileSyncService {
         await _facade.markSynced(entry.userId);
         pushed++;
       } catch (_) {
+        // Mantém pending — será reenviado no próximo sync.
         pushFailures++;
       }
     }

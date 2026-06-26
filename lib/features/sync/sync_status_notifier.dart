@@ -11,6 +11,10 @@ import 'package:autolog/data/sync/vehicle_sync_facade.dart';
 import 'package:autolog/data/sync/vehicle_sync_service.dart';
 import 'package:autolog/features/sync/sync_status.dart';
 import 'package:autolog/features/vehicles/vehicles_provider.dart';
+// kDebugMode guarda o dump. Usamos `print` (não `debugPrint`) porque no
+// build DDC web, debugPrint passa pelo canal DWDS que pode estar caído —
+// print vira console.log nativo do JS, sempre visível via DevTools/MCP.
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Estado imutável do indicador de sync.
@@ -143,6 +147,20 @@ class SyncStatusNotifier extends Notifier<SyncStatusState> {
           'sync errors: ${globalResult.errors.keys.join(", ")} '
           '— $firstKey: $firstErr',
         );
+        // Diagnóstico em dev: lista todos os erros por entidade no console.
+        // Inclui runtimeType pra distinguir AuthException/PostgrestException/
+        // SocketException numa olhada. `print` direto, ver comentário do
+        // import de kDebugMode acima.
+        if (kDebugMode) {
+          for (final entry in globalResult.errors.entries) {
+            final err = entry.value;
+            // ignore: avoid_print
+            print(
+              '[sync] ${entry.key}: '
+              '${err.runtimeType} — $err',
+            );
+          }
+        }
       }
       result = SyncResult(
         pushed: globalResult.totalPushed,

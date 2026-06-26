@@ -40,6 +40,7 @@ class InsuranceSyncService {
         await _facade.markSynced(entry.id);
         pushed++;
       } catch (_) {
+        // Mantém pending — será reenviado no próximo sync.
         pushFailures++;
       }
     }
