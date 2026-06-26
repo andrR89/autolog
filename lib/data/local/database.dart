@@ -1,14 +1,10 @@
-import 'dart:io';
-
 import 'package:autolog/data/local/converters.dart';
 import 'package:autolog/data/local/tables.dart';
 import 'package:autolog/domain/models/enums.dart';
 import 'package:decimal/decimal.dart';
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
+import 'package:drift_flutter/drift_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 
 part 'database.g.dart';
 
@@ -119,14 +115,23 @@ class AppDatabase extends _$AppDatabase {
 }
 
 /// Provider que expõe o singleton [AppDatabase] para o app em produção.
+///
+/// driftDatabase() resolve a plataforma:
+/// - Mobile/desktop → NativeDatabase com arquivo em getApplicationDocumentsDirectory
+/// - Web → WasmDatabase com IndexedDB. Exige sqlite3.wasm e drift_worker.js
+///   servidos em web/ (gerados via `dart run drift_dev make-web-worker` +
+///   sqlite3.wasm copiado do release oficial; CI deve falhar se faltarem).
+///
 /// Em testes, crie [AppDatabase(NativeDatabase.memory())] diretamente.
 final appDatabaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase(
-    LazyDatabase(() async {
-      final dir = await getApplicationDocumentsDirectory();
-      final file = p.join(dir.path, 'autolog.db');
-      return NativeDatabase(File(file));
-    }),
+    driftDatabase(
+      name: 'autolog',
+      web: DriftWebOptions(
+        sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+        driftWorker: Uri.parse('drift_worker.js'),
+      ),
+    ),
   );
   ref.onDispose(db.close);
   return db;

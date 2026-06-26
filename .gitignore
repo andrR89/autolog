@@ -58,3 +58,9 @@ app.*.map.json
 
 # Supabase CLI (refs locais, pooler URL, etc — não versionar)
 /supabase/.temp/
+
+# Drift web worker — artefatos auxiliares do `dart compile js` (deps + sourcemap).
+# O drift_worker.dart fonte e o drift_worker.js compilado SÃO versionados
+# (build reprodutível). Só estes dois auxiliares regeneram a cada compile.
+/web/drift_worker.js.deps
+/web/drift_worker.js.map
