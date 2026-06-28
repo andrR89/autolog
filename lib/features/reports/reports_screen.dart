@@ -15,6 +15,7 @@
 import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
+import 'package:autolog/core/design/widgets/responsive_body.dart';
 import 'package:autolog/domain/models/expense.dart';
 import 'package:autolog/domain/models/fuel_entry.dart';
 import 'package:autolog/domain/models/vehicle.dart';
@@ -86,49 +87,72 @@ class ReportsScreen extends ConsumerWidget {
           const _RecapMenuAction(),
         ],
       ),
-      body: CustomScrollView(
-        slivers: [
-          // Banner Recap contextual — só aparece em fim/início de mês
-          // E com dados suficientes (≥3 entries). Esporádico por design.
-          SliverToBoxAdapter(child: _RecapBanner(vehicle: vehicle)),
+      body: Builder(
+        builder: (context) {
+          // Centraliza conteúdo abaixo do hero em ResponsiveWidths.content (720).
+          // Hero (MonthlyHeroMetric / HeroSkeleton), RecapBanner e AppBar ficam
+          // fora — continuam full-width.
+          Widget center(Widget child) => Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints:
+                  const BoxConstraints(maxWidth: ResponsiveWidths.content),
+              child: child,
+            ),
+          );
 
-          // Hero metric — gasto do mês corrente com count-up
-          SliverToBoxAdapter(
-            child: spendingAsync.when(
-              loading: _HeroSkeleton.new,
-              error: (_, e) => const SizedBox.shrink(),
-              data: (data) => MonthlyHeroMetric(
-                vehicleNickname: vehicle.nickname,
-                monthlyData: data,
+          return CustomScrollView(
+            slivers: [
+              // Banner Recap contextual — full-width por design (edge-to-edge).
+              SliverToBoxAdapter(child: _RecapBanner(vehicle: vehicle)),
+
+              // Hero metric — gasto do mês corrente com count-up, full-width.
+              SliverToBoxAdapter(
+                child: spendingAsync.when(
+                  loading: _HeroSkeleton.new,
+                  error: (_, e) => const SizedBox.shrink(),
+                  data: (data) => MonthlyHeroMetric(
+                    vehicleNickname: vehicle.nickname,
+                    monthlyData: data,
+                  ),
+                ),
               ),
-            ),
-          ),
 
-          // Separador visual
-          const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
+              // Separador visual
+              const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
 
-          // Card "Meus postos" — acesso rápido à agregação por posto
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              child: _MyStationsCard(),
-            ),
-          ),
+              // Card "Meus postos" — acesso rápido à agregação por posto
+              SliverToBoxAdapter(
+                child: center(
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                    ),
+                    child: _MyStationsCard(),
+                  ),
+                ),
+              ),
 
-          const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
+              const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
 
-          // 3 seções de gráfico em cascata
-          SliverToBoxAdapter(
-            child: _ChartSections(
-              spendingAsync: spendingAsync,
-              consumptionAsync: consumptionAsync,
-              priceAsync: priceAsync,
-            ),
-          ),
+              // 3 seções de gráfico em cascata
+              SliverToBoxAdapter(
+                child: center(
+                  _ChartSections(
+                    spendingAsync: spendingAsync,
+                    consumptionAsync: consumptionAsync,
+                    priceAsync: priceAsync,
+                  ),
+                ),
+              ),
 
-          // Espaço inferior para não colar no nav bar
-          const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.huge)),
-        ],
+              // Espaço inferior para não colar no nav bar
+              const SliverToBoxAdapter(
+                child: SizedBox(height: AppSpacing.huge),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

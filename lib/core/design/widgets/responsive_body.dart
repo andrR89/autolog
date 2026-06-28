@@ -29,6 +29,10 @@ abstract class ResponsiveWidths {
 
   /// Sheets modais / paywall hero.
   static const double sheet = 640;
+
+  /// Telas com grid 2-3 colunas (Garagem, Documentos, Lembretes em desktop).
+  /// Limita estiramento extremo em 1920px mantendo respiro pros cards.
+  static const double wide = 1000;
 }
 
 class ResponsiveBody extends StatelessWidget {

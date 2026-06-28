@@ -294,50 +294,62 @@ class _MonthStrip extends StatelessWidget {
     };
 
     return Container(
+      width: double.infinity,
       color: context.surface,
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.xxl,
-        AppSpacing.lg,
-        AppSpacing.xxl,
-        AppSpacing.lg,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            monthLabel,
-            style: textTheme.labelSmall?.copyWith(
-              color: context.inkMuted,
-              letterSpacing: 1.6,
+      // Container full-width (faixa visual sob o hero brand-dark) mas o
+      // conteúdo dentro centraliza em ResponsiveWidths.content pra
+      // alinhar com os cards de detalhe (C1.5).
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 720),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xxl,
+              AppSpacing.lg,
+              AppSpacing.xxl,
+              AppSpacing.lg,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  monthLabel,
+                  style: textTheme.labelSmall?.copyWith(
+                    color: context.inkMuted,
+                    letterSpacing: 1.6,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs + 2),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      spendText,
+                      style: AppTypography.metric(22, weight: FontWeight.w600),
+                    ),
+                    const SizedBox(width: AppSpacing.sm + 2),
+                    // "vírgula respiratória" em hairline pra dar ritmo editorial
+                    // sem precisar de bullet visual.
+                    Container(width: 1, height: 14, color: context.hairline),
+                    const SizedBox(width: AppSpacing.sm + 2),
+                    Flexible(
+                      child: Text(
+                        countText,
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: context.inkMuted,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: AppSpacing.xs + 2),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(
-                spendText,
-                style: AppTypography.metric(22, weight: FontWeight.w600),
-              ),
-              const SizedBox(width: AppSpacing.sm + 2),
-              // "vírgula respiratória" em hairline pra dar ritmo editorial
-              // sem precisar de bullet visual.
-              Container(width: 1, height: 14, color: context.hairline),
-              const SizedBox(width: AppSpacing.sm + 2),
-              Flexible(
-                child: Text(
-                  countText,
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: context.inkMuted,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }

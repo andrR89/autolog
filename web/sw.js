@@ -15,7 +15,7 @@
 // Bump CACHE_VERSION quando assets mudarem (depois do build, mas antes do
 // deploy). Em deploy automatizado, idealmente plugar no CI.
 
-const CACHE_VERSION = 'v1-2026-06-27';
+const CACHE_VERSION = 'v7-2026-06-28';
 const SHELL_CACHE = `autolog-shell-${CACHE_VERSION}`;
 const ASSET_CACHE = `autolog-assets-${CACHE_VERSION}`;
 

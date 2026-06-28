@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:autolog/core/transitions.dart';
+import 'package:autolog/core/widgets/adaptive_shell.dart';
 import 'package:autolog/data/repositories/expense_repository.dart';
 import 'package:autolog/data/repositories/fine_repository.dart';
 import 'package:autolog/data/repositories/fuel_entry_repository.dart';
@@ -36,6 +37,7 @@ import 'package:autolog/features/settings/settings_screen.dart';
 import 'package:autolog/features/trips/trip_detail_screen.dart';
 import 'package:autolog/features/trips/trip_form_screen.dart';
 import 'package:autolog/features/trips/trips_list_screen.dart';
+import 'package:autolog/features/vehicles/providers/active_vehicle_provider.dart';
 import 'package:autolog/features/vehicles/share_vehicle_screen.dart';
 import 'package:autolog/features/vehicles/vehicle_form_screen.dart';
 import 'package:autolog/features/vehicles/vehicles_list_screen.dart';
@@ -67,7 +69,15 @@ class RouterNotifier extends ChangeNotifier {
 ///
 /// Todas as rotas usam [appTransitionPage] para garantir a transição
 /// slide+fade consistente (ver `lib/core/transitions.dart`).
+///
+/// Estrutura:
+///   - Top-level (fora da shell): auth flow, onboarding, paywall, redirect.
+///   - [ShellRoute]: todas as rotas pós-auth — o builder injeta [AdaptiveShell]
+///     com a `location` atual, resolvendo o bug C3 onde o `builder:` do
+///     [MaterialApp.router] não reagia à navegação interna.
 final List<RouteBase> appRoutes = [
+  // ── Fora da shell (auth flow + onboarding + paywall) ─────────────────────
+
   // Tour de onboarding — exibido uma única vez após login novo (Sprint 6.GG).
   GoRoute(
     path: '/onboarding',
@@ -96,329 +106,366 @@ final List<RouteBase> appRoutes = [
         appTransitionPage(state: state, child: const PaywallScreen()),
   ),
 
-  // Lista de veículos.
-  GoRoute(
-    path: '/vehicles',
-    pageBuilder: (context, state) =>
-        appTransitionPage(state: state, child: const VehiclesListScreen()),
-  ),
-
-  // Formulário de criação.
-  GoRoute(
-    path: '/vehicles/new',
-    pageBuilder: (context, state) => appTransitionPage(
-      state: state,
-      child: const VehicleFormScreen(initial: null),
-    ),
-  ),
-
-  // Detalhe/histórico de abastecimentos — carrega o veículo pelo id.
-  GoRoute(
-    path: '/vehicles/:vehicleId',
-    pageBuilder: (context, state) => appTransitionPage(
-      state: state,
-      child: _VehicleDetailLoader(
-        vehicleId: state.pathParameters['vehicleId']!,
-      ),
-    ),
-  ),
-
-  // Formulário de edição — carrega o veículo pelo id.
-  GoRoute(
-    path: '/vehicles/:id/edit',
-    pageBuilder: (context, state) => appTransitionPage(
-      state: state,
-      child: _VehicleEditLoader(vehicleId: state.pathParameters['id']!),
-    ),
-  ),
-
-  // Formulário de novo abastecimento.
-  GoRoute(
-    path: '/vehicles/:vehicleId/fuel/new',
-    pageBuilder: (context, state) => appTransitionPage(
-      state: state,
-      child: _FuelNewLoader(vehicleId: state.pathParameters['vehicleId']!),
-    ),
-  ),
-
-  // Formulário de edição de abastecimento.
-  GoRoute(
-    path: '/vehicles/:vehicleId/fuel/:entryId/edit',
-    pageBuilder: (context, state) => appTransitionPage(
-      state: state,
-      child: _FuelEditLoader(
-        vehicleId: state.pathParameters['vehicleId']!,
-        entryId: state.pathParameters['entryId']!,
-      ),
-    ),
-  ),
-
-  // Lista de despesas do veículo.
-  GoRoute(
-    path: '/vehicles/:vehicleId/expenses',
-    pageBuilder: (context, state) => appTransitionPage(
-      state: state,
-      child: _VehicleExpensesLoader(
-        vehicleId: state.pathParameters['vehicleId']!,
-      ),
-    ),
-  ),
-
-  // Formulário de nova despesa.
-  GoRoute(
-    path: '/vehicles/:vehicleId/expenses/new',
-    pageBuilder: (context, state) => appTransitionPage(
-      state: state,
-      child: _ExpenseNewLoader(vehicleId: state.pathParameters['vehicleId']!),
-    ),
-  ),
-
-  // Formulário de edição de despesa.
-  GoRoute(
-    path: '/vehicles/:vehicleId/expenses/:expenseId/edit',
-    pageBuilder: (context, state) => appTransitionPage(
-      state: state,
-      child: _ExpenseEditLoader(
-        vehicleId: state.pathParameters['vehicleId']!,
-        expenseId: state.pathParameters['expenseId']!,
-      ),
-    ),
-  ),
-
-  // Tela de relatórios do veículo.
-  GoRoute(
-    path: '/vehicles/:vehicleId/reports',
-    pageBuilder: (context, state) => appTransitionPage(
-      state: state,
-      child: _VehicleReportsLoader(
-        vehicleId: state.pathParameters['vehicleId']!,
-      ),
-    ),
-  ),
-
-  // Comparar período (mês vs mês anterior, ano vs ano anterior).
-  GoRoute(
-    path: '/vehicles/:vehicleId/reports/compare',
-    pageBuilder: (context, state) => appTransitionPage(
-      state: state,
-      child: _VehicleCompareLoader(
-        vehicleId: state.pathParameters['vehicleId']!,
-      ),
-    ),
-  ),
-
-  // Calculadora etanol × gasolina — só para veículos flex.
-  GoRoute(
-    path: '/vehicles/:vehicleId/fuel-economy',
-    pageBuilder: (context, state) => appTransitionPage(
-      state: state,
-      child: _FuelEconomyLoader(vehicleId: state.pathParameters['vehicleId']!),
-    ),
-  ),
-
-  // Tela de Insights do veículo.
-  GoRoute(
-    path: '/vehicles/:vehicleId/insights',
-    pageBuilder: (context, state) => appTransitionPage(
-      state: state,
-      child: _VehicleInsightsLoader(
-        vehicleId: state.pathParameters['vehicleId']!,
-      ),
-    ),
-  ),
-
-  // Tela de Plano de Manutenção Sugerido.
-  GoRoute(
-    path: '/vehicles/:vehicleId/insights/maintenance',
-    pageBuilder: (context, state) => appTransitionPage(
-      state: state,
-      child: _VehicleMaintenancePlanLoader(
-        vehicleId: state.pathParameters['vehicleId']!,
-      ),
-    ),
-  ),
-
-  // Tela de Lembretes Fiscais (IPVA + Licenciamento).
-  GoRoute(
-    path: '/vehicles/:vehicleId/insights/fiscal',
-    pageBuilder: (context, state) => appTransitionPage(
-      state: state,
-      child: _VehicleFiscalPlanLoader(
-        vehicleId: state.pathParameters['vehicleId']!,
-      ),
-    ),
-  ),
-
-  // Tela de chat com o assistente IA do histórico.
-  GoRoute(
-    path: '/vehicles/:vehicleId/insights/chat',
-    pageBuilder: (context, state) => appTransitionPage(
-      state: state,
-      child: _VehicleChatLoader(vehicleId: state.pathParameters['vehicleId']!),
-    ),
-  ),
-
-  // ── Documentos pessoais ──────────────────────────────────────────────────
-
-  // Tela principal de documentos.
-  GoRoute(
-    path: '/personal-documents',
-    pageBuilder: (context, state) =>
-        appTransitionPage(state: state, child: const PersonalDocumentsScreen()),
-  ),
-
-  // Formulário de CNH.
-  GoRoute(
-    path: '/personal-documents/cnh',
-    pageBuilder: (context, state) =>
-        appTransitionPage(state: state, child: const CnhFormScreen()),
-  ),
-
-  // Formulário de nova multa.
-  GoRoute(
-    path: '/personal-documents/fines/new',
-    pageBuilder: (context, state) =>
-        appTransitionPage(state: state, child: const FineFormScreen()),
-  ),
-
-  // Formulário de edição de multa (com loader).
-  GoRoute(
-    path: '/personal-documents/fines/:id',
-    pageBuilder: (context, state) => appTransitionPage(
-      state: state,
-      child: _FineEditLoader(fineId: state.pathParameters['id']!),
-    ),
-  ),
-
-  // Formulário de nova apólice.
-  GoRoute(
-    path: '/personal-documents/insurances/new',
-    pageBuilder: (context, state) =>
-        appTransitionPage(state: state, child: const InsuranceFormScreen()),
-  ),
-
-  // Formulário de edição de apólice (com loader).
-  GoRoute(
-    path: '/personal-documents/insurances/:id',
-    pageBuilder: (context, state) => appTransitionPage(
-      state: state,
-      child: _InsuranceEditLoader(insuranceId: state.pathParameters['id']!),
-    ),
-  ),
-
-  // Tela "Meus postos" — agregação histórica por posto/bandeira.
-  GoRoute(
-    path: '/stations',
-    pageBuilder: (context, state) =>
-        appTransitionPage(state: state, child: const MyStationsScreen()),
-  ),
-
-  // Recap mensal/semanal — /recap?period=week|month
-  GoRoute(
-    path: '/recap',
-    pageBuilder: (context, state) {
-      final period = state.uri.queryParameters['period'] == 'week'
-          ? RecapPeriod.week
-          : RecapPeriod.month;
-      return appTransitionPage(
-        state: state,
-        child: RecapScreen(period: period),
-      );
+  // ── Shell persistente (todas as rotas pós-auth) ──────────────────────────
+  //
+  // O [ShellRoute] envolve as rotas filhas num Navigator interno próprio,
+  // garantindo que o [AdaptiveShell] (rail + conteúdo) seja reconstruído
+  // em cada navegação e que `location` reflita a rota real.
+  //
+  // Decisão de movimentação do activeVehicleId: feita aqui no builder via
+  // [ProviderScope.containerOf] (sem necessidade de ConsumerWidget).
+  ShellRoute(
+    builder: (context, state, child) {
+      final location = state.matchedLocation;
+      final vehicleId = state.pathParameters['vehicleId'];
+      if (vehicleId != null && vehicleId != 'new') {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final container = ProviderScope.containerOf(context, listen: false);
+          container.read(activeVehicleIdProvider.notifier).setActive(vehicleId);
+        });
+      }
+      return AdaptiveShell(location: location, child: child);
     },
-  ),
-
-  // Tela de configurações.
-  GoRoute(
-    path: '/settings',
-    pageBuilder: (context, state) =>
-        appTransitionPage(state: state, child: const SettingsScreen()),
-  ),
-
-  // ── Lembretes ─────────────────────────────────────────────────────────────
-
-  // Lista de lembretes do veículo.
-  GoRoute(
-    path: '/vehicles/:vehicleId/reminders',
-    pageBuilder: (context, state) => appTransitionPage(
-      state: state,
-      child: _VehicleRemindersLoader(
-        vehicleId: state.pathParameters['vehicleId']!,
+    routes: [
+      // Lista de veículos.
+      GoRoute(
+        path: '/vehicles',
+        pageBuilder: (context, state) =>
+            appTransitionPage(state: state, child: const VehiclesListScreen()),
       ),
-    ),
-  ),
 
-  // Formulário de novo lembrete.
-  GoRoute(
-    path: '/vehicles/:vehicleId/reminders/new',
-    pageBuilder: (context, state) => appTransitionPage(
-      state: state,
-      child: _ReminderNewLoader(vehicleId: state.pathParameters['vehicleId']!),
-    ),
-  ),
-
-  // Formulário de edição de lembrete.
-  GoRoute(
-    path: '/vehicles/:vehicleId/reminders/:reminderId/edit',
-    pageBuilder: (context, state) => appTransitionPage(
-      state: state,
-      child: _ReminderEditLoader(
-        vehicleId: state.pathParameters['vehicleId']!,
-        reminderId: state.pathParameters['reminderId']!,
+      // Formulário de criação.
+      GoRoute(
+        path: '/vehicles/new',
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
+          child: const VehicleFormScreen(initial: null),
+        ),
       ),
-    ),
-  ),
 
-  // Tela de compartilhamento de veículo.
-  GoRoute(
-    path: '/vehicles/:vehicleId/share',
-    pageBuilder: (context, state) => appTransitionPage(
-      state: state,
-      child: _VehicleShareLoader(vehicleId: state.pathParameters['vehicleId']!),
-    ),
-  ),
-
-  // ── Viagens ───────────────────────────────────────────────────────────────
-
-  // Lista de viagens do veículo.
-  GoRoute(
-    path: '/vehicles/:vehicleId/trips',
-    pageBuilder: (context, state) => appTransitionPage(
-      state: state,
-      child: _VehicleTripsLoader(vehicleId: state.pathParameters['vehicleId']!),
-    ),
-  ),
-
-  // Formulário de nova viagem.
-  GoRoute(
-    path: '/vehicles/:vehicleId/trips/new',
-    pageBuilder: (context, state) => appTransitionPage(
-      state: state,
-      child: _TripNewLoader(vehicleId: state.pathParameters['vehicleId']!),
-    ),
-  ),
-
-  // Detalhe de viagem.
-  GoRoute(
-    path: '/vehicles/:vehicleId/trips/:tripId',
-    pageBuilder: (context, state) => appTransitionPage(
-      state: state,
-      child: _TripDetailLoader(
-        vehicleId: state.pathParameters['vehicleId']!,
-        tripId: state.pathParameters['tripId']!,
+      // Detalhe/histórico de abastecimentos — carrega o veículo pelo id.
+      GoRoute(
+        path: '/vehicles/:vehicleId',
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
+          child: _VehicleDetailLoader(
+            vehicleId: state.pathParameters['vehicleId']!,
+          ),
+        ),
       ),
-    ),
-  ),
 
-  // Formulário de edição de viagem.
-  GoRoute(
-    path: '/vehicles/:vehicleId/trips/:tripId/edit',
-    pageBuilder: (context, state) => appTransitionPage(
-      state: state,
-      child: _TripEditLoader(
-        vehicleId: state.pathParameters['vehicleId']!,
-        tripId: state.pathParameters['tripId']!,
+      // Formulário de edição — carrega o veículo pelo id.
+      GoRoute(
+        path: '/vehicles/:id/edit',
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
+          child: _VehicleEditLoader(vehicleId: state.pathParameters['id']!),
+        ),
       ),
-    ),
+
+      // Formulário de novo abastecimento.
+      GoRoute(
+        path: '/vehicles/:vehicleId/fuel/new',
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
+          child: _FuelNewLoader(vehicleId: state.pathParameters['vehicleId']!),
+        ),
+      ),
+
+      // Formulário de edição de abastecimento.
+      GoRoute(
+        path: '/vehicles/:vehicleId/fuel/:entryId/edit',
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
+          child: _FuelEditLoader(
+            vehicleId: state.pathParameters['vehicleId']!,
+            entryId: state.pathParameters['entryId']!,
+          ),
+        ),
+      ),
+
+      // Lista de despesas do veículo.
+      GoRoute(
+        path: '/vehicles/:vehicleId/expenses',
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
+          child: _VehicleExpensesLoader(
+            vehicleId: state.pathParameters['vehicleId']!,
+          ),
+        ),
+      ),
+
+      // Formulário de nova despesa.
+      GoRoute(
+        path: '/vehicles/:vehicleId/expenses/new',
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
+          child: _ExpenseNewLoader(
+            vehicleId: state.pathParameters['vehicleId']!,
+          ),
+        ),
+      ),
+
+      // Formulário de edição de despesa.
+      GoRoute(
+        path: '/vehicles/:vehicleId/expenses/:expenseId/edit',
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
+          child: _ExpenseEditLoader(
+            vehicleId: state.pathParameters['vehicleId']!,
+            expenseId: state.pathParameters['expenseId']!,
+          ),
+        ),
+      ),
+
+      // Tela de relatórios do veículo.
+      GoRoute(
+        path: '/vehicles/:vehicleId/reports',
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
+          child: _VehicleReportsLoader(
+            vehicleId: state.pathParameters['vehicleId']!,
+          ),
+        ),
+      ),
+
+      // Comparar período (mês vs mês anterior, ano vs ano anterior).
+      GoRoute(
+        path: '/vehicles/:vehicleId/reports/compare',
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
+          child: _VehicleCompareLoader(
+            vehicleId: state.pathParameters['vehicleId']!,
+          ),
+        ),
+      ),
+
+      // Calculadora etanol × gasolina — só para veículos flex.
+      GoRoute(
+        path: '/vehicles/:vehicleId/fuel-economy',
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
+          child: _FuelEconomyLoader(
+            vehicleId: state.pathParameters['vehicleId']!,
+          ),
+        ),
+      ),
+
+      // Tela de Insights do veículo.
+      GoRoute(
+        path: '/vehicles/:vehicleId/insights',
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
+          child: _VehicleInsightsLoader(
+            vehicleId: state.pathParameters['vehicleId']!,
+          ),
+        ),
+      ),
+
+      // Tela de Plano de Manutenção Sugerido.
+      GoRoute(
+        path: '/vehicles/:vehicleId/insights/maintenance',
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
+          child: _VehicleMaintenancePlanLoader(
+            vehicleId: state.pathParameters['vehicleId']!,
+          ),
+        ),
+      ),
+
+      // Tela de Lembretes Fiscais (IPVA + Licenciamento).
+      GoRoute(
+        path: '/vehicles/:vehicleId/insights/fiscal',
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
+          child: _VehicleFiscalPlanLoader(
+            vehicleId: state.pathParameters['vehicleId']!,
+          ),
+        ),
+      ),
+
+      // Tela de chat com o assistente IA do histórico.
+      GoRoute(
+        path: '/vehicles/:vehicleId/insights/chat',
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
+          child: _VehicleChatLoader(
+            vehicleId: state.pathParameters['vehicleId']!,
+          ),
+        ),
+      ),
+
+      // ── Documentos pessoais ──────────────────────────────────────────────
+
+      // Tela principal de documentos.
+      GoRoute(
+        path: '/personal-documents',
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
+          child: const PersonalDocumentsScreen(),
+        ),
+      ),
+
+      // Formulário de CNH.
+      GoRoute(
+        path: '/personal-documents/cnh',
+        pageBuilder: (context, state) =>
+            appTransitionPage(state: state, child: const CnhFormScreen()),
+      ),
+
+      // Formulário de nova multa.
+      GoRoute(
+        path: '/personal-documents/fines/new',
+        pageBuilder: (context, state) =>
+            appTransitionPage(state: state, child: const FineFormScreen()),
+      ),
+
+      // Formulário de edição de multa (com loader).
+      GoRoute(
+        path: '/personal-documents/fines/:id',
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
+          child: _FineEditLoader(fineId: state.pathParameters['id']!),
+        ),
+      ),
+
+      // Formulário de nova apólice.
+      GoRoute(
+        path: '/personal-documents/insurances/new',
+        pageBuilder: (context, state) =>
+            appTransitionPage(state: state, child: const InsuranceFormScreen()),
+      ),
+
+      // Formulário de edição de apólice (com loader).
+      GoRoute(
+        path: '/personal-documents/insurances/:id',
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
+          child: _InsuranceEditLoader(insuranceId: state.pathParameters['id']!),
+        ),
+      ),
+
+      // Tela "Meus postos" — agregação histórica por posto/bandeira.
+      GoRoute(
+        path: '/stations',
+        pageBuilder: (context, state) =>
+            appTransitionPage(state: state, child: const MyStationsScreen()),
+      ),
+
+      // Recap mensal/semanal — /recap?period=week|month
+      GoRoute(
+        path: '/recap',
+        pageBuilder: (context, state) {
+          final period = state.uri.queryParameters['period'] == 'week'
+              ? RecapPeriod.week
+              : RecapPeriod.month;
+          return appTransitionPage(
+            state: state,
+            child: RecapScreen(period: period),
+          );
+        },
+      ),
+
+      // Tela de configurações.
+      GoRoute(
+        path: '/settings',
+        pageBuilder: (context, state) =>
+            appTransitionPage(state: state, child: const SettingsScreen()),
+      ),
+
+      // ── Lembretes ─────────────────────────────────────────────────────────
+
+      // Lista de lembretes do veículo.
+      GoRoute(
+        path: '/vehicles/:vehicleId/reminders',
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
+          child: _VehicleRemindersLoader(
+            vehicleId: state.pathParameters['vehicleId']!,
+          ),
+        ),
+      ),
+
+      // Formulário de novo lembrete.
+      GoRoute(
+        path: '/vehicles/:vehicleId/reminders/new',
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
+          child: _ReminderNewLoader(
+            vehicleId: state.pathParameters['vehicleId']!,
+          ),
+        ),
+      ),
+
+      // Formulário de edição de lembrete.
+      GoRoute(
+        path: '/vehicles/:vehicleId/reminders/:reminderId/edit',
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
+          child: _ReminderEditLoader(
+            vehicleId: state.pathParameters['vehicleId']!,
+            reminderId: state.pathParameters['reminderId']!,
+          ),
+        ),
+      ),
+
+      // Tela de compartilhamento de veículo.
+      GoRoute(
+        path: '/vehicles/:vehicleId/share',
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
+          child: _VehicleShareLoader(
+            vehicleId: state.pathParameters['vehicleId']!,
+          ),
+        ),
+      ),
+
+      // ── Viagens ───────────────────────────────────────────────────────────
+
+      // Lista de viagens do veículo.
+      GoRoute(
+        path: '/vehicles/:vehicleId/trips',
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
+          child: _VehicleTripsLoader(
+            vehicleId: state.pathParameters['vehicleId']!,
+          ),
+        ),
+      ),
+
+      // Formulário de nova viagem.
+      GoRoute(
+        path: '/vehicles/:vehicleId/trips/new',
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
+          child: _TripNewLoader(vehicleId: state.pathParameters['vehicleId']!),
+        ),
+      ),
+
+      // Detalhe de viagem.
+      GoRoute(
+        path: '/vehicles/:vehicleId/trips/:tripId',
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
+          child: _TripDetailLoader(
+            vehicleId: state.pathParameters['vehicleId']!,
+            tripId: state.pathParameters['tripId']!,
+          ),
+        ),
+      ),
+
+      // Formulário de edição de viagem.
+      GoRoute(
+        path: '/vehicles/:vehicleId/trips/:tripId/edit',
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
+          child: _TripEditLoader(
+            vehicleId: state.pathParameters['vehicleId']!,
+            tripId: state.pathParameters['tripId']!,
+          ),
+        ),
+      ),
+    ],
   ),
 ];
 

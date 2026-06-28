@@ -27,10 +27,12 @@
 import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
+import 'package:autolog/core/design/widgets/responsive_body.dart';
 import 'package:autolog/core/design/widgets/skeleton.dart';
 import 'package:autolog/domain/models/vehicle.dart';
 import 'package:autolog/features/auth/auth_service.dart';
-import 'package:autolog/features/fuel/fuel_history_screen.dart' show fuelEntriesByVehicleProvider;
+import 'package:autolog/features/fuel/fuel_history_screen.dart'
+    show fuelEntriesByVehicleProvider;
 import 'package:autolog/features/sync/sync_indicator.dart';
 import 'package:autolog/features/sync/sync_status_notifier.dart';
 import 'package:autolog/features/vehicles/vehicle_saver.dart';
@@ -84,16 +86,20 @@ class _VehiclesListScreenState extends ConsumerState<VehiclesListScreen> {
         title: null,
         actions: [
           const SyncIndicator(),
-          IconButton(
-            icon: Icon(Icons.badge_outlined, color: context.inkMuted),
-            tooltip: 'Documentos',
-            onPressed: () => context.push('/personal-documents'),
-          ),
-          IconButton(
-            icon: Icon(Icons.settings_outlined, color: context.inkMuted),
-            tooltip: 'Configurações',
-            onPressed: () => context.push('/settings'),
-          ),
+          // Documentos e Settings ficam no rail em viewport ≥1024 — exibe
+          // só em mobile/tablet para evitar duplicação.
+          if (MediaQuery.sizeOf(context).width < 1024) ...[
+            IconButton(
+              icon: Icon(Icons.badge_outlined, color: context.inkMuted),
+              tooltip: 'Documentos',
+              onPressed: () => context.push('/personal-documents'),
+            ),
+            IconButton(
+              icon: Icon(Icons.settings_outlined, color: context.inkMuted),
+              tooltip: 'Configurações',
+              onPressed: () => context.push('/settings'),
+            ),
+          ],
           IconButton(
             icon: Icon(Icons.logout, color: context.inkMuted),
             tooltip: 'Sair',
@@ -141,36 +147,71 @@ class _Body extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (vehicles.isEmpty) {
-      return const Column(
-        children: [
-          _Header(count: 0),
-          Expanded(
-            child: VehiclesEmptyState(),
-          ),
-        ],
+      return const ResponsiveBody(
+        maxWidth: ResponsiveWidths.wide,
+        child: Column(
+          children: [
+            _Header(count: 0),
+            Expanded(child: VehiclesEmptyState()),
+          ],
+        ),
       );
     }
 
-    // ListView.builder com header como primeiro item — evita CustomScrollView
-    // (que complicaria o sliver-app-bar sem ganho real para a quantidade
-    // típica de carros, 1-3).
-    return ListView.separated(
-      padding: const EdgeInsets.only(
-        left: AppSpacing.lg,
-        right: AppSpacing.lg,
-        // Bottom padding generoso para o FAB extended não cobrir o último
-        // card.
-        bottom: AppSpacing.huge + AppSpacing.xl,
+    // Grid responsivo (Camada 2): em desktop largo, cards lado a lado em
+    // vez de 1 carro esticado por linha inteira.
+    //   < 600  → 1 coluna  (mobile)
+    //   600-959 → 2 colunas (tablet)
+    //   ≥ 960  → 3 colunas  (desktop)
+    return ResponsiveBody(
+      maxWidth: ResponsiveWidths.wide,
+      child: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              0,
+              AppSpacing.lg,
+              AppSpacing.md,
+            ),
+            sliver: SliverToBoxAdapter(child: _Header(count: vehicles.length)),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.only(
+              left: AppSpacing.lg,
+              right: AppSpacing.lg,
+              // Bottom padding generoso para o FAB extended não cobrir
+              // o último card.
+              bottom: AppSpacing.huge + AppSpacing.xl,
+            ),
+            sliver: SliverLayoutBuilder(
+              builder: (context, constraints) {
+                final w = constraints.crossAxisExtent;
+                final cols = w >= 960
+                    ? 3
+                    : w >= 600
+                    ? 2
+                    : 1;
+                return SliverGrid.builder(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: cols,
+                    mainAxisSpacing: AppSpacing.md,
+                    crossAxisSpacing: AppSpacing.md,
+                    // Card vai com altura próxima do conteúdo natural —
+                    // estimativa por aspecto (largura/altura). Em 1 col
+                    // o card precisa ser maior verticalmente; em 2-3
+                    // pode encolher.
+                    childAspectRatio: cols == 1 ? 2.6 : 1.55,
+                  ),
+                  itemCount: vehicles.length,
+                  itemBuilder: (context, index) =>
+                      _DismissibleVehicleCard(vehicle: vehicles[index]),
+                );
+              },
+            ),
+          ),
+        ],
       ),
-      itemCount: vehicles.length + 1,
-      separatorBuilder: (_, index) => const SizedBox(height: AppSpacing.md),
-      itemBuilder: (context, index) {
-        if (index == 0) {
-          return _Header(count: vehicles.length);
-        }
-        final vehicle = vehicles[index - 1];
-        return _DismissibleVehicleCard(vehicle: vehicle);
-      },
     );
   }
 }
@@ -275,10 +316,12 @@ class _DismissibleVehicleCard extends ConsumerWidget {
             .valueOrNull
             ?.fold<int?>(
               null,
-              (acc, e) =>
-                  acc == null || e.odometer > acc ? e.odometer : acc,
+              (acc, e) => acc == null || e.odometer > acc ? e.odometer : acc,
             ),
-        onTap: () => context.push('/vehicles/${vehicle.id}'),
+        // `go` em vez de `push` porque dentro da ShellRoute o push empilha
+        // no Navigator interno sem atualizar o URL/hash — quebra deep-link
+        // e dessincroniza o estado selecionado do rail.
+        onTap: () => context.go('/vehicles/${vehicle.id}'),
         onEdit: () => context.push('/vehicles/${vehicle.id}/edit'),
         onDelete: () => _deleteFromMenu(context, ref),
       ),

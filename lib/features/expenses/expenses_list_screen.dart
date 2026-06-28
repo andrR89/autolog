@@ -16,6 +16,7 @@
 import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
+import 'package:autolog/core/design/widgets/responsive_body.dart';
 import 'package:autolog/data/repositories/expense_repository.dart';
 import 'package:autolog/domain/models/expense.dart';
 import 'package:autolog/domain/models/vehicle.dart';
@@ -152,6 +153,16 @@ class _Body extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final stats = _last30DaysStats(expenses);
 
+    // Centraliza conteúdo abaixo do hero em ResponsiveWidths.content (720).
+    // Hero e AppBar ficam fora — continuam full-width.
+    Widget center(Widget child) => Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: ResponsiveWidths.content),
+        child: child,
+      ),
+    );
+
     // Hero always visible (mesmo no empty state, para dar contexto do veículo).
     final hero = ExpensesHeroHeader(
       vehicle: vehicle,
@@ -164,8 +175,8 @@ class _Body extends ConsumerWidget {
         children: [
           // SafeArea top só nesta primeira coluna — o hero cobre a status bar.
           hero,
-          const Expanded(
-            child: ExpensesEmptyState(),
+          Expanded(
+            child: center(const ExpensesEmptyState()),
           ),
         ],
       );
@@ -173,22 +184,24 @@ class _Body extends ConsumerWidget {
 
     final groups = _groupByMonth(expenses);
 
-    // Constrói a lista plana de itens: [hero, sectionHeader, card, card, …]
+    // Constrói a lista plana de itens: [sectionHeader, card, card, …]
     // usando um CustomScrollView + SliverList para integrar o hero no scroll.
     final sliverItems = <Widget>[];
     final currentYear = DateTime.now().year;
 
     for (final group in groups) {
-      sliverItems.add(_MonthSectionHeader(label: group.label));
+      sliverItems.add(center(_MonthSectionHeader(label: group.label)));
       for (final expense in group.items) {
         final showYear = expense.date.year != currentYear;
         sliverItems.add(
-          Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.md),
-            child: _DismissibleExpenseCard(
-              expense: expense,
-              vehicleId: vehicle.id,
-              showYear: showYear,
+          center(
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.md),
+              child: _DismissibleExpenseCard(
+                expense: expense,
+                vehicleId: vehicle.id,
+                showYear: showYear,
+              ),
             ),
           ),
         );
@@ -197,7 +210,7 @@ class _Body extends ConsumerWidget {
 
     return CustomScrollView(
       slivers: [
-        // Hero como sliver — rola com o conteúdo.
+        // Hero como sliver — rola com o conteúdo, full-width.
         SliverToBoxAdapter(child: hero),
 
         // Lista de grupos.

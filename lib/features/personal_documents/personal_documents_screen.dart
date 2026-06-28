@@ -9,6 +9,7 @@
 import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
+import 'package:autolog/core/design/widgets/responsive_body.dart';
 import 'package:autolog/data/repositories/fine_repository.dart';
 import 'package:autolog/data/repositories/insurance_repository.dart';
 import 'package:autolog/data/repositories/reminder_repository.dart';
@@ -92,7 +93,8 @@ class _PersonalDocumentsScreenState
           ref.invalidate(_userProfileProvider);
           ref.invalidate(_vehiclesProvider);
         },
-        child: CustomScrollView(
+        child: ResponsiveBody(
+          child: CustomScrollView(
           slivers: [
             // ── CNH ─────────────────────────────────────────────────────────
             //
@@ -190,6 +192,7 @@ class _PersonalDocumentsScreenState
 
             const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.huge)),
           ],
+          ),
         ),
       ),
     );

@@ -35,6 +35,7 @@ import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/core/design/widgets/dashed_frame.dart';
+import 'package:autolog/core/design/widgets/responsive_body.dart';
 import 'package:autolog/core/design/widgets/skeleton.dart';
 import 'package:autolog/data/repositories/fuel_entry_repository.dart';
 import 'package:autolog/domain/models/enums.dart';
@@ -283,6 +284,16 @@ class _DataBody extends ConsumerWidget {
         : allItems;
     final hasMore = visibleCount != null && visibleCount! < allItems.length;
 
+    // Centraliza um widget em ResponsiveWidths.content (720). Hero e AppBar
+    // ficam fora — continuam full-width. Conteúdo abaixo do hero é limitado.
+    Widget center(Widget child) => Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: ResponsiveWidths.content),
+        child: child,
+      ),
+    );
+
     return CustomScrollView(
       controller: scrollController,
       slivers: [
@@ -303,38 +314,46 @@ class _DataBody extends ConsumerWidget {
         ),
         // Gráfico FIPE — só aparece se o veículo tem código FIPE configurado.
         if (vehicle.fipeCode != null)
-          SliverToBoxAdapter(child: FipeHistoryChart(vehicleId: vehicle.id)),
+          SliverToBoxAdapter(
+            child: center(FipeHistoryChart(vehicleId: vehicle.id)),
+          ),
         // Cards de custo por km e tendência — só se há ao menos 1 entry no
         // histórico completo (não dependem do filtro).
         if (allEntries.isNotEmpty) ...[
-          SliverToBoxAdapter(child: CostPerKmCard(vehicle: vehicle)),
-          SliverToBoxAdapter(child: TrendCard(vehicle: vehicle)),
-          SliverToBoxAdapter(child: Co2InsightCard(vehicle: vehicle)),
-          SliverToBoxAdapter(child: FavoriteStationCard(vehicle: vehicle)),
+          SliverToBoxAdapter(child: center(CostPerKmCard(vehicle: vehicle))),
+          SliverToBoxAdapter(child: center(TrendCard(vehicle: vehicle))),
+          SliverToBoxAdapter(child: center(Co2InsightCard(vehicle: vehicle))),
+          SliverToBoxAdapter(
+            child: center(FavoriteStationCard(vehicle: vehicle)),
+          ),
           // Card de viagens — acesso rápido ao modo viagem.
-          SliverToBoxAdapter(child: _TripsBannerCard(vehicleId: vehicle.id)),
+          SliverToBoxAdapter(
+            child: center(_TripsBannerCard(vehicleId: vehicle.id)),
+          ),
           // Calculadora etanol × gasolina — exclusiva pra veículos flex.
           if (vehicle.fuelType == FuelType.flex)
             SliverToBoxAdapter(
-              child: _FuelEconomyBannerCard(vehicleId: vehicle.id),
+              child: center(_FuelEconomyBannerCard(vehicleId: vehicle.id)),
             ),
         ],
         if (items.isEmpty)
           SliverFillRemaining(
             hasScrollBody: false,
-            child: filterState.hasActiveFilters
-                ? _FilteredEmptyState(
-                    onClear: () => ref
-                        .read(fuelFilterStateProvider(vehicle.id).notifier)
-                        .clear(),
-                  )
-                : _EmptyState(
-                    onAdd: () =>
-                        context.push('/vehicles/${vehicle.id}/fuel/new'),
-                  ),
+            child: center(
+              filterState.hasActiveFilters
+                  ? _FilteredEmptyState(
+                      onClear: () => ref
+                          .read(fuelFilterStateProvider(vehicle.id).notifier)
+                          .clear(),
+                    )
+                  : _EmptyState(
+                      onAdd: () =>
+                          context.push('/vehicles/${vehicle.id}/fuel/new'),
+                    ),
+            ),
           )
         else ...[
-          const SliverToBoxAdapter(child: _HistoryHeader()),
+          SliverToBoxAdapter(child: center(const _HistoryHeader())),
           SliverPadding(
             padding: EdgeInsets.fromLTRB(
               AppSpacing.lg,
@@ -347,7 +366,7 @@ class _DataBody extends ConsumerWidget {
               itemCount: items.length,
               itemBuilder: (context, index) {
                 final item = items[index];
-                return switch (item) {
+                return center(switch (item) {
                   _MonthHeaderItem(:final label) => Padding(
                     padding: EdgeInsets.only(
                       top: index == 0 ? 0 : AppSpacing.xl,
@@ -364,7 +383,7 @@ class _DataBody extends ConsumerWidget {
                       showYear: showYear,
                     ),
                   ),
-                };
+                });
               },
             ),
           ),
@@ -600,57 +619,65 @@ class _AppBar extends ConsumerWidget {
                 context.push('/vehicles/${vehicle.id}/edit');
             }
           },
-          itemBuilder: (_) => const [
-            PopupMenuItem(
-              value: 'reports',
-              child: ListTile(
-                leading: Icon(Icons.bar_chart),
-                title: Text('Relatórios'),
-                contentPadding: EdgeInsets.zero,
+          itemBuilder: (context) {
+            // Em desktop (≥1024px) o rail já expõe Despesas/Lembretes/
+            // Relatórios no bloco contextual do veículo. Escondemos do menu
+            // pra evitar duplicidade.
+            final isDesktop = MediaQuery.sizeOf(context).width >= 1024;
+            return [
+              if (!isDesktop) ...[
+                const PopupMenuItem(
+                  value: 'reports',
+                  child: ListTile(
+                    leading: Icon(Icons.bar_chart),
+                    title: Text('Relatórios'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'expenses',
+                  child: ListTile(
+                    leading: Icon(Icons.attach_money),
+                    title: Text('Despesas'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'reminders',
+                  child: ListTile(
+                    leading: Icon(Icons.notifications_outlined),
+                    title: Text('Lembretes'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ],
+              const PopupMenuItem(
+                value: 'insights',
+                child: ListTile(
+                  leading: Icon(Icons.auto_awesome_outlined),
+                  title: Text('Insights'),
+                  contentPadding: EdgeInsets.zero,
+                ),
               ),
-            ),
-            PopupMenuItem(
-              value: 'expenses',
-              child: ListTile(
-                leading: Icon(Icons.attach_money),
-                title: Text('Despesas'),
-                contentPadding: EdgeInsets.zero,
+              const PopupMenuDivider(),
+              const PopupMenuItem(
+                value: 'share',
+                child: ListTile(
+                  leading: Icon(Icons.share_outlined),
+                  title: Text('Compartilhar'),
+                  contentPadding: EdgeInsets.zero,
+                ),
               ),
-            ),
-            PopupMenuItem(
-              value: 'reminders',
-              child: ListTile(
-                leading: Icon(Icons.notifications_outlined),
-                title: Text('Lembretes'),
-                contentPadding: EdgeInsets.zero,
+              const PopupMenuItem(
+                value: 'edit',
+                child: ListTile(
+                  leading: Icon(Icons.edit),
+                  title: Text('Editar veículo'),
+                  contentPadding: EdgeInsets.zero,
+                ),
               ),
-            ),
-            PopupMenuItem(
-              value: 'insights',
-              child: ListTile(
-                leading: Icon(Icons.auto_awesome_outlined),
-                title: Text('Insights'),
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
-            PopupMenuDivider(),
-            PopupMenuItem(
-              value: 'share',
-              child: ListTile(
-                leading: Icon(Icons.share_outlined),
-                title: Text('Compartilhar'),
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
-            PopupMenuItem(
-              value: 'edit',
-              child: ListTile(
-                leading: Icon(Icons.edit),
-                title: Text('Editar veículo'),
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
-          ],
+            ];
+          },
         ),
         const SizedBox(width: AppSpacing.xs),
       ],
@@ -803,8 +830,8 @@ class _EmptyState extends StatelessWidget {
     // altura insuficiente pra ícone + título + corpo (regressão 28/05/2026:
     // 14px overflow em alguns devices).
     // SliverFillRemaining(hasScrollBody:false) dá altura fixa — Padding aqui
-     // reduz a área útil, fazendo o Center subir o conteúdo acima do FAB
-     // extended (≈80px + 16px margem) que mora no Scaffold.
+    // reduz a área útil, fazendo o Center subir o conteúdo acima do FAB
+    // extended (≈80px + 16px margem) que mora no Scaffold.
     // SliverFillRemaining(hasScrollBody:false) entrega altura travada igual
     // à viewport restante. Em janela desktop "baixa" o Column + paddings
     // estouravam 47px (W2 — Web Sprint 8). SingleChildScrollView absorve
@@ -1670,4 +1697,3 @@ class _PeriodPresetChip extends StatelessWidget {
     );
   }
 }
-

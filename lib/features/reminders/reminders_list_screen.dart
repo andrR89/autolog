@@ -13,6 +13,7 @@
 import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
+import 'package:autolog/core/design/widgets/responsive_body.dart';
 import 'package:autolog/data/repositories/reminder_repository.dart';
 import 'package:autolog/domain/models/reminder.dart';
 import 'package:autolog/domain/models/vehicle.dart';
@@ -110,6 +111,16 @@ class _Body extends ConsumerWidget {
     final pending = reminders.where((r) => !r.isDone).toList();
     final done = reminders.where((r) => r.isDone).toList();
 
+    // Centraliza conteúdo abaixo do hero em ResponsiveWidths.content (720).
+    // Hero e AppBar ficam fora — continuam full-width.
+    Widget center(Widget child) => Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: ResponsiveWidths.content),
+        child: child,
+      ),
+    );
+
     final hero = RemindersHeroHeader(
       vehicle: vehicle,
       pendingCount: pending.length,
@@ -120,8 +131,8 @@ class _Body extends ConsumerWidget {
       return Column(
         children: [
           hero,
-          const Expanded(
-            child: RemindersEmptyState(),
+          Expanded(
+            child: center(const RemindersEmptyState()),
           ),
         ],
       );
@@ -130,6 +141,7 @@ class _Body extends ConsumerWidget {
     // Constrói lista plana de slivers: hero + seção pendentes + seção concluídos.
     return CustomScrollView(
       slivers: [
+        // Hero full-width — não envolver com center().
         SliverToBoxAdapter(child: hero),
 
         SliverPadding(
@@ -141,7 +153,9 @@ class _Body extends ConsumerWidget {
           ),
           sliver: SliverList(
             delegate: SliverChildListDelegate(
-              _buildItems(context, ref, pending, done),
+              _buildItems(context, ref, pending, done)
+                  .map(center)
+                  .toList(),
             ),
           ),
         ),
