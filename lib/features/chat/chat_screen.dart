@@ -16,6 +16,7 @@
 import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
+import 'package:autolog/core/design/widgets/responsive_body.dart';
 import 'package:autolog/domain/models/vehicle.dart';
 import 'package:autolog/features/chat/chat_message.dart';
 import 'package:autolog/features/chat/chat_message_repository.dart';
@@ -206,8 +207,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
+      body: ResponsiveBody(
+        child: Column(
+          children: [
           // Quota banner
           if (_quotaExhausted)
             MaterialBanner(
@@ -265,6 +267,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             onSend: _send,
           ),
         ],
+        ),
       ),
     );
   }

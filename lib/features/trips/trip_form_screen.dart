@@ -1,5 +1,6 @@
 import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
+import 'package:autolog/core/design/widgets/responsive_body.dart';
 import 'package:autolog/data/repositories/trip_repository.dart';
 import 'package:autolog/domain/models/trip.dart';
 import 'package:autolog/domain/models/vehicle.dart';
@@ -196,9 +197,11 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
         child: Column(
           children: [
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Column(
+              child: ResponsiveBody(
+                maxWidth: ResponsiveWidths.form,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // ── Nome ──────────────────────────────────────────────────
@@ -255,6 +258,7 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
                   ],
                 ),
               ),
+            ),
             ),
 
             // ── Barra sticky de salvar ────────────────────────────────────────

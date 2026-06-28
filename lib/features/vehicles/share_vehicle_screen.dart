@@ -1,5 +1,6 @@
 import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
+import 'package:autolog/core/design/widgets/responsive_body.dart';
 import 'package:autolog/data/repositories/vehicle_member_repository.dart';
 import 'package:autolog/domain/models/vehicle.dart';
 import 'package:autolog/domain/models/vehicle_member.dart';
@@ -178,9 +179,11 @@ class _ShareVehicleScreenState extends ConsumerState<ShareVehicleScreen> {
           style: textTheme.titleLarge?.copyWith(color: context.ink),
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        children: [
+      body: ResponsiveBody(
+        maxWidth: ResponsiveWidths.form,
+        child: ListView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          children: [
           // ── Header ──────────────────────────────────────────────────────
           Text(
             widget.vehicle.nickname,
@@ -332,6 +335,7 @@ class _ShareVehicleScreenState extends ConsumerState<ShareVehicleScreen> {
             },
           ),
         ],
+        ),
       ),
     );
   }

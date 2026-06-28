@@ -12,6 +12,7 @@
 
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
+import 'package:autolog/core/design/widgets/responsive_body.dart';
 import 'package:autolog/core/observability/analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -62,8 +63,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Só o scroll de features/planos é centralizado — o CTA sticky
+            // do footer fica full-width (mesmo padrão dos save bars dos
+            // forms — fidelidade C1, achado D1).
             Expanded(
-              child: SingleChildScrollView(
+              child: ResponsiveBody(
+                child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -143,6 +148,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                     ),
                   ],
                 ),
+              ),
               ),
             ),
             // Sticky footer com CTA

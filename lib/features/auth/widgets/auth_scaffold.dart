@@ -8,6 +8,7 @@
 //  - Hero: fade + slide de cima para baixo (emphasizedCurve, 400ms).
 //  - Formulário: fade + slide de baixo para cima (emphasizedCurve, 400ms, delay 80ms).
 
+import 'package:autolog/core/design/widgets/responsive_body.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -232,28 +233,31 @@ class _FormSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.only(
-        left: AppSpacing.xxl,
-        right: AppSpacing.xxl,
-        top: AppSpacing.xxl,
-        bottom: AppSpacing.xxl + MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Título da tela
-          Text(
-            title,
-            style: AppTypography.display(
-              22,
-              weight: FontWeight.w700,
-              color: AppColors.ink,
+    return ResponsiveBody(
+      maxWidth: ResponsiveWidths.form,
+      child: SingleChildScrollView(
+        padding: EdgeInsets.only(
+          left: AppSpacing.xxl,
+          right: AppSpacing.xxl,
+          top: AppSpacing.xxl,
+          bottom: AppSpacing.xxl + MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Título da tela
+            Text(
+              title,
+              style: AppTypography.display(
+                22,
+                weight: FontWeight.w700,
+                color: AppColors.ink,
+              ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.xxl),
-          ...children,
-        ],
+            const SizedBox(height: AppSpacing.xxl),
+            ...children,
+          ],
+        ),
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
+import 'package:autolog/core/design/widgets/responsive_body.dart';
 import 'package:autolog/data/repositories/user_profile_repository.dart';
 import 'package:autolog/domain/models/enums.dart';
 import 'package:autolog/domain/models/user_profile.dart';
@@ -147,8 +148,10 @@ class _CnhFormScreenState extends ConsumerState<CnhFormScreen> {
         child: Column(
           children: [
             Expanded(
-              child: SingleChildScrollView(
-                child: Column(
+              child: ResponsiveBody(
+                maxWidth: ResponsiveWidths.form,
+                child: SingleChildScrollView(
+                  child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     FormSectionCard(
@@ -203,6 +206,7 @@ class _CnhFormScreenState extends ConsumerState<CnhFormScreen> {
                   ],
                 ),
               ),
+            ),
             ),
 
             // Barra sticky

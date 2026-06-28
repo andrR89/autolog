@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
+import 'package:autolog/core/design/widgets/responsive_body.dart';
 import 'package:autolog/core/observability/analytics.dart';
 import 'package:autolog/data/repositories/fuel_entry_repository.dart';
 import 'package:autolog/domain/models/enums.dart';
@@ -601,7 +602,9 @@ class _FuelEntryFormScreenState extends ConsumerState<FuelEntryFormScreen> {
           children: [
             // Scrollable content — cresce até o limite; TotalActionBar fica sticky.
             Expanded(
-              child: SingleChildScrollView(
+              child: ResponsiveBody(
+                maxWidth: ResponsiveWidths.form,
+                child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -806,6 +809,7 @@ class _FuelEntryFormScreenState extends ConsumerState<FuelEntryFormScreen> {
                   ],
                 ),
               ),
+            ),
             ),
 
             // ── Barra sticky: total + botão Salvar ──────────────────────────

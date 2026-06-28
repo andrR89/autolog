@@ -1,5 +1,6 @@
 import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
+import 'package:autolog/core/design/widgets/responsive_body.dart';
 import 'package:autolog/domain/models/enums.dart';
 import 'package:autolog/domain/models/expense.dart';
 import 'package:autolog/domain/models/vehicle.dart';
@@ -316,8 +317,10 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
           children: [
             // Scrollable content.
             Expanded(
-              child: SingleChildScrollView(
-                child: Column(
+              child: ResponsiveBody(
+                maxWidth: ResponsiveWidths.form,
+                child: SingleChildScrollView(
+                  child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // ── Contexto do veículo ──────────────────────────────────
@@ -405,6 +408,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                   ],
                 ),
               ),
+            ),
             ),
 
             // ── Barra sticky de salvar ───────────────────────────────────────

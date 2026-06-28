@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
+import 'package:autolog/core/design/widgets/responsive_body.dart';
 import 'package:autolog/data/repositories/fuel_entry_repository.dart';
 import 'package:autolog/domain/models/enums.dart';
 import 'package:autolog/domain/models/reminder.dart';
@@ -289,8 +290,10 @@ class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
           children: [
             // Scrollable content.
             Expanded(
-              child: SingleChildScrollView(
-                child: Column(
+              child: ResponsiveBody(
+                maxWidth: ResponsiveWidths.form,
+                child: SingleChildScrollView(
+                  child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // ── Contexto do veículo ──────────────────────────────────
@@ -425,6 +428,7 @@ class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
                   ],
                 ),
               ),
+            ),
             ),
 
             // ── Barra sticky de salvar ───────────────────────────────────────

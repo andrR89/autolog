@@ -1,4 +1,5 @@
 import 'package:autolog/core/design/tokens.dart';
+import 'package:autolog/core/design/widgets/responsive_body.dart';
 import 'package:autolog/data/repositories/user_settings_repository.dart';
 import 'package:autolog/domain/repositories/user_settings_repository.dart';
 import 'package:autolog/features/auth/account_deletion/widgets/delete_account_section.dart';
@@ -41,7 +42,8 @@ class SettingsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsTitle)),
-      body: ListView(
+      body: ResponsiveBody(
+        child: ListView(
         children: [
           const SizedBox(height: 8),
           const _PremiumCard(),
@@ -67,6 +69,7 @@ class SettingsScreen extends ConsumerWidget {
           ],
           const SizedBox(height: 8),
         ],
+      ),
       ),
     );
   }

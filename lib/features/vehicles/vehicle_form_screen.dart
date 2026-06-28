@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
+import 'package:autolog/core/design/widgets/responsive_body.dart';
 import 'package:autolog/data/remote/fipe_models.dart';
 import 'package:autolog/data/repositories/fipe_history_repository.dart';
 import 'package:autolog/domain/models/enums.dart';
@@ -547,10 +548,12 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
           children: [
             // Scrollable content — cresce até o limite; botão fica sticky no fundo.
             Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
+              child: ResponsiveBody(
+                maxWidth: ResponsiveWidths.form,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
                     // ── Seletor de tipo carro/moto ───────────────────────────
                     Padding(
                       padding: const EdgeInsets.fromLTRB(
@@ -870,6 +873,7 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
                   ],
                 ),
               ),
+            ),
             ),
 
             // ── Barra sticky de salvar ───────────────────────────────────────
