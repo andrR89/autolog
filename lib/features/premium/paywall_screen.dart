@@ -10,6 +10,7 @@
 //   - "Restaurar" aciona Purchases.restorePurchases
 //   - On success → entitlement atualiza e a tela fecha
 
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/core/design/widgets/responsive_body.dart';
@@ -53,6 +54,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.transparent,
         elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: context.hairline),
+        ),
         leading: IconButton(
           tooltip: 'Fechar',
           icon: const Icon(Icons.close),
@@ -69,86 +74,86 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
             Expanded(
               child: ResponsiveBody(
                 child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      'Tudo do AutoLog,\nsem limites.',
-                      style: AppTypography.display(
-                        34,
-                        weight: FontWeight.w800,
-                        height: 1.05,
-                        color: AppColors.brandInk,
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'Tudo do AutoLog,\nsem limites.',
+                        style: AppTypography.display(
+                          34,
+                          weight: FontWeight.w800,
+                          height: 1.05,
+                          color: AppColors.brandInk,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 28),
-                    const _FeatureLine(
-                      icon: Icons.qr_code_scanner_outlined,
-                      title: 'Scan de cupom ilimitado',
-                      subtitle:
-                          'Tire foto, app preenche tudo. Sem cota mensal.',
-                    ),
-                    const _FeatureLine(
-                      icon: Icons.auto_awesome_outlined,
-                      title: 'Insights de IA ilimitados',
-                      subtitle:
-                          'Análises de histórico, previsões de manutenção '
-                          'e plano fiscal sem limite.',
-                    ),
-                    const _FeatureLine(
-                      icon: Icons.chat_outlined,
-                      title: 'Chat com seu histórico',
-                      subtitle:
-                          'Pergunte qualquer coisa sobre seus dados — quantas '
-                          'vezes quiser.',
-                    ),
-                    const _FeatureLine(
-                      icon: Icons.cloud_sync_outlined,
-                      title: 'Sync entre dispositivos',
-                      subtitle:
-                          'Seus dados em todos os seus aparelhos, sempre '
-                          'atualizados.',
-                    ),
-                    const _FeatureLine(
-                      icon: Icons.favorite_outline,
-                      title: 'Apoia o app indie',
-                      subtitle:
-                          'AutoLog é feito por uma pessoa só. Sua assinatura '
-                          'paga a infra e mantém tudo grátis pra quem ainda '
-                          'não pode pagar.',
-                    ),
-                    const SizedBox(height: 24),
-                    _PlanCard(
-                      plan: _Plan.monthly,
-                      label: 'Mensal',
-                      price: r'R$ 9,90/mês',
-                      sub: 'Cancele quando quiser.',
-                      selected: _selected == _Plan.monthly,
-                      onTap: () => setState(() => _selected = _Plan.monthly),
-                    ),
-                    const SizedBox(height: 12),
-                    _PlanCard(
-                      plan: _Plan.yearly,
-                      label: 'Anual',
-                      price: r'R$ 79,90/ano',
-                      sub: 'Economiza 33% vs mensal.',
-                      badge: 'Mais escolhido',
-                      selected: _selected == _Plan.yearly,
-                      onTap: () => setState(() => _selected = _Plan.yearly),
-                    ),
-                    const SizedBox(height: 12),
-                    _PlanCard(
-                      plan: _Plan.lifetime,
-                      label: 'Vitalício',
-                      price: r'R$ 199,90 uma vez',
-                      sub: 'Sem renovação. Pra sempre.',
-                      selected: _selected == _Plan.lifetime,
-                      onTap: () => setState(() => _selected = _Plan.lifetime),
-                    ),
-                  ],
+                      const SizedBox(height: 28),
+                      const _FeatureLine(
+                        icon: Icons.qr_code_scanner_outlined,
+                        title: 'Scan de cupom ilimitado',
+                        subtitle:
+                            'Tire foto, app preenche tudo. Sem cota mensal.',
+                      ),
+                      const _FeatureLine(
+                        icon: Icons.auto_awesome_outlined,
+                        title: 'Insights de IA ilimitados',
+                        subtitle:
+                            'Análises de histórico, previsões de manutenção '
+                            'e plano fiscal sem limite.',
+                      ),
+                      const _FeatureLine(
+                        icon: Icons.chat_outlined,
+                        title: 'Chat com seu histórico',
+                        subtitle:
+                            'Pergunte qualquer coisa sobre seus dados — quantas '
+                            'vezes quiser.',
+                      ),
+                      const _FeatureLine(
+                        icon: Icons.cloud_sync_outlined,
+                        title: 'Sync entre dispositivos',
+                        subtitle:
+                            'Seus dados em todos os seus aparelhos, sempre '
+                            'atualizados.',
+                      ),
+                      const _FeatureLine(
+                        icon: Icons.favorite_outline,
+                        title: 'Apoia o app indie',
+                        subtitle:
+                            'AutoLog é feito por uma pessoa só. Sua assinatura '
+                            'paga a infra e mantém tudo grátis pra quem ainda '
+                            'não pode pagar.',
+                      ),
+                      const SizedBox(height: 24),
+                      _PlanCard(
+                        plan: _Plan.monthly,
+                        label: 'Mensal',
+                        price: r'R$ 9,90/mês',
+                        sub: 'Cancele quando quiser.',
+                        selected: _selected == _Plan.monthly,
+                        onTap: () => setState(() => _selected = _Plan.monthly),
+                      ),
+                      const SizedBox(height: 12),
+                      _PlanCard(
+                        plan: _Plan.yearly,
+                        label: 'Anual',
+                        price: r'R$ 79,90/ano',
+                        sub: 'Economiza 33% vs mensal.',
+                        badge: 'Mais escolhido',
+                        selected: _selected == _Plan.yearly,
+                        onTap: () => setState(() => _selected = _Plan.yearly),
+                      ),
+                      const SizedBox(height: 12),
+                      _PlanCard(
+                        plan: _Plan.lifetime,
+                        label: 'Vitalício',
+                        price: r'R$ 199,90 uma vez',
+                        sub: 'Sem renovação. Pra sempre.',
+                        selected: _selected == _Plan.lifetime,
+                        onTap: () => setState(() => _selected = _Plan.lifetime),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
               ),
             ),
             // Sticky footer com CTA
@@ -223,9 +228,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   Future<void> _onRestore() async {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text(
-          'Restauração estará disponível junto com pagamentos.',
-        ),
+        content: Text('Restauração estará disponível junto com pagamentos.'),
         behavior: SnackBarBehavior.floating,
       ),
     );

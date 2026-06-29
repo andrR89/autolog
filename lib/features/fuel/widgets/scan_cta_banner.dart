@@ -200,6 +200,9 @@ class _ScanningContentState extends State<_ScanningContent>
                         t.clamp(0.0, 1.0),
                         (t + 0.25).clamp(0.0, 1.0),
                       ],
+                      // shimmer sobre accent lima — branco translúcido intencional;
+                      // não existe token DS para "branco sobre lima", accentInk
+                      // é escuro e quebraria o efeito visual.
                       colors: const [
                         Color(0x00FFFFFF),
                         Color(0x66FFFFFF),

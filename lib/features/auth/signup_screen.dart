@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/design/dynamic_colors.dart';
 import '../../core/design/tokens.dart';
 import '../../core/design/typography.dart';
 
@@ -155,7 +156,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                           ? Icons.visibility_outlined
                           : Icons.visibility_off_outlined,
                       size: 20,
-                      color: AppColors.inkMuted,
+                      color: context.inkMuted,
                     ),
                     onPressed: () =>
                         setState(() => _obscurePassword = !_obscurePassword),
@@ -231,7 +232,7 @@ class _OrDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const Expanded(child: Divider(color: AppColors.hairline)),
+        Expanded(child: Divider(color: context.hairline)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: Text(
@@ -243,7 +244,7 @@ class _OrDivider extends StatelessWidget {
             ),
           ),
         ),
-        const Expanded(child: Divider(color: AppColors.hairline)),
+        Expanded(child: Divider(color: context.hairline)),
       ],
     );
   }

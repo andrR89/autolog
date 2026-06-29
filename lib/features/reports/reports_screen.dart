@@ -75,6 +75,10 @@ class ReportsScreen extends ConsumerWidget {
           statusBarIconBrightness: Brightness.light,
           statusBarBrightness: Brightness.dark,
         ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: context.hairline),
+        ),
         // Recap sempre acessível por ✨ no AppBar (3 opções de período),
         // mesmo quando o banner contextual não está visível.
         actions: [
@@ -95,8 +99,9 @@ class ReportsScreen extends ConsumerWidget {
           Widget center(Widget child) => Align(
             alignment: Alignment.topCenter,
             child: ConstrainedBox(
-              constraints:
-                  const BoxConstraints(maxWidth: ResponsiveWidths.content),
+              constraints: const BoxConstraints(
+                maxWidth: ResponsiveWidths.content,
+              ),
               child: child,
             ),
           );

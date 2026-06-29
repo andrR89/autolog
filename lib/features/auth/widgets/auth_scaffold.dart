@@ -12,6 +12,7 @@ import 'package:autolog/core/design/widgets/responsive_body.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../core/design/dynamic_colors.dart';
 import '../../../core/design/tokens.dart';
 import '../../../core/design/typography.dart';
 import '../../../core/widgets/app_logo.dart';
@@ -251,7 +252,7 @@ class _FormSection extends StatelessWidget {
               style: AppTypography.display(
                 22,
                 weight: FontWeight.w700,
-                color: AppColors.ink,
+                color: context.ink,
               ),
             ),
             const SizedBox(height: AppSpacing.xxl),

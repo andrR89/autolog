@@ -1,3 +1,4 @@
+import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/widgets/responsive_body.dart';
 import 'package:autolog/data/repositories/user_settings_repository.dart';
@@ -44,32 +45,32 @@ class SettingsScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: ResponsiveBody(
         child: ListView(
-        children: [
-          const SizedBox(height: 8),
-          const _PremiumCard(),
-          const SizedBox(height: 8),
-          _AppearanceCard(userId: userId, repo: repo, current: current),
-          const SizedBox(height: 8),
-          const _LanguageCard(),
-          const SizedBox(height: 8),
-          _NotificationsCard(userId: userId, repo: repo, prefs: prefs),
-          const SizedBox(height: 8),
-          const _GoogleCalendarCard(),
-          const SizedBox(height: 8),
-          const ExportCard(),
-          const SizedBox(height: 8),
-          const BackupCard(),
-          const SizedBox(height: 8),
-          const _SignOutCard(),
-          const SizedBox(height: 8),
-          const DeleteAccountSection(),
-          if (kDebugMode) ...[
+          children: [
             const SizedBox(height: 8),
-            const _SentryTestCard(),
+            const _PremiumCard(),
+            const SizedBox(height: 8),
+            _AppearanceCard(userId: userId, repo: repo, current: current),
+            const SizedBox(height: 8),
+            const _LanguageCard(),
+            const SizedBox(height: 8),
+            _NotificationsCard(userId: userId, repo: repo, prefs: prefs),
+            const SizedBox(height: 8),
+            const _GoogleCalendarCard(),
+            const SizedBox(height: 8),
+            const ExportCard(),
+            const SizedBox(height: 8),
+            const BackupCard(),
+            const SizedBox(height: 8),
+            const _SignOutCard(),
+            const SizedBox(height: 8),
+            const DeleteAccountSection(),
+            if (kDebugMode) ...[
+              const SizedBox(height: 8),
+              const _SentryTestCard(),
+            ],
+            const SizedBox(height: 8),
           ],
-          const SizedBox(height: 8),
-        ],
-      ),
+        ),
       ),
     );
   }
@@ -124,7 +125,9 @@ class _PremiumCard extends ConsumerWidget {
     final isPremium = ref.watch(isPremiumProvider);
     if (isPremium) {
       return Card(
-        color: AppColors.success.withValues(alpha: 0.10),
+        color: context.isDark
+            ? AppColors.success.withValues(alpha: 0.20)
+            : AppColors.successSoft,
         child: ListTile(
           leading: const Icon(
             Icons.workspace_premium,
@@ -138,10 +141,7 @@ class _PremiumCard extends ConsumerWidget {
     return Card(
       color: AppColors.brand,
       child: ListTile(
-        leading: const Icon(
-          Icons.workspace_premium,
-          color: AppColors.accent,
-        ),
+        leading: const Icon(Icons.workspace_premium, color: AppColors.accent),
         title: Text(
           l10n.premiumGoCta,
           style: const TextStyle(
@@ -461,7 +461,7 @@ class _GoogleCalendarCardState extends ConsumerState<_GoogleCalendarCard> {
                   ListTile(
                     leading: const Icon(
                       Icons.check_circle,
-                      color: Colors.green,
+                      color: AppColors.success,
                     ),
                     title: const Text('Conectado'),
                     subtitle: Text(_email ?? 'Google Calendar'),
@@ -485,7 +485,7 @@ class _GoogleCalendarCardState extends ConsumerState<_GoogleCalendarCard> {
                   horizontal: 16,
                   vertical: 4,
                 ),
-                child: ElevatedButton.icon(
+                child: OutlinedButton.icon(
                   onPressed: _connect,
                   icon: const Icon(Icons.calendar_today, size: 18),
                   label: const Text('Conectar Google Calendar'),

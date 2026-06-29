@@ -191,6 +191,10 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
           statusBarIconBrightness: Brightness.light,
           statusBarBrightness: Brightness.dark,
         ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: context.hairline),
+        ),
         actions: [
           if (_result != null)
             TtsButton(textBuilder: () => narrateInsights(_result!)),
