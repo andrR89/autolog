@@ -53,7 +53,8 @@ class _CnhFormScreenState extends ConsumerState<CnhFormScreen> {
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: _cnhExpiresAt ?? DateTime.now().add(const Duration(days: 365)),
+      initialDate:
+          _cnhExpiresAt ?? DateTime.now().add(const Duration(days: 365)),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365 * 20)),
     );
@@ -127,11 +128,7 @@ class _CnhFormScreenState extends ConsumerState<CnhFormScreen> {
         elevation: 0,
         scrolledUnderElevation: 1,
         shadowColor: context.hairline,
-        systemOverlayStyle: const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.dark,
-          statusBarBrightness: Brightness.light,
-        ),
+        systemOverlayStyle: context.systemUiStyle,
         title: const Text('CNH'),
         leading: BackButton(
           onPressed: () {
@@ -152,61 +149,60 @@ class _CnhFormScreenState extends ConsumerState<CnhFormScreen> {
                 maxWidth: ResponsiveWidths.form,
                 child: SingleChildScrollView(
                   child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    FormSectionCard(
-                      eyebrow: 'Dados da CNH',
-                      children: [
-                        // Número da CNH
-                        TextFormField(
-                          controller: _cnhNumberCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'Número da CNH (opcional)',
-                            hintText: 'Ex.: 01234567891',
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      FormSectionCard(
+                        eyebrow: 'Dados da CNH',
+                        children: [
+                          // Número da CNH
+                          TextFormField(
+                            controller: _cnhNumberCtrl,
+                            decoration: const InputDecoration(
+                              labelText: 'Número da CNH (opcional)',
+                              hintText: 'Ex.: 01234567891',
+                            ),
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(11),
+                            ],
+                            validator: validateCnhNumber,
                           ),
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(11),
-                          ],
-                          validator: validateCnhNumber,
-                        ),
 
-                        const SizedBox(height: AppSpacing.lg),
+                          const SizedBox(height: AppSpacing.lg),
 
-                        // Categoria
-                        DropdownButtonFormField<String>(
-                          initialValue: _cnhCategory,
-                          decoration: const InputDecoration(
-                            labelText: 'Categoria (opcional)',
+                          // Categoria
+                          DropdownButtonFormField<String>(
+                            initialValue: _cnhCategory,
+                            decoration: const InputDecoration(
+                              labelText: 'Categoria (opcional)',
+                            ),
+                            items: _categories
+                                .map(
+                                  (c) => DropdownMenuItem(
+                                    value: c,
+                                    child: Text('Categoria $c'),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (v) => setState(() => _cnhCategory = v),
                           ),
-                          items: _categories
-                              .map(
-                                (c) => DropdownMenuItem(
-                                  value: c,
-                                  child: Text('Categoria $c'),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: (v) => setState(() => _cnhCategory = v),
-                        ),
 
-                        const SizedBox(height: AppSpacing.lg),
+                          const SizedBox(height: AppSpacing.lg),
 
-                        // Vencimento
-                        _ExpiresAtField(
-                          value: _cnhExpiresAt,
-                          onTap: _pickDate,
-                          onClear: () =>
-                              setState(() => _cnhExpiresAt = null),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.xxl),
-                  ],
+                          // Vencimento
+                          _ExpiresAtField(
+                            value: _cnhExpiresAt,
+                            onTap: _pickDate,
+                            onClear: () => setState(() => _cnhExpiresAt = null),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.xxl),
+                    ],
+                  ),
                 ),
               ),
-            ),
             ),
 
             // Barra sticky
@@ -281,4 +277,3 @@ class _ExpiresAtField extends StatelessWidget {
     return DatePickerField(value: value!, onTap: onTap);
   }
 }
-

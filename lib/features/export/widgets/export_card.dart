@@ -15,6 +15,7 @@
 //        const ExportCard(),
 //        const SizedBox(height: 8),
 
+import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/observability/analytics.dart';
 import 'package:autolog/domain/models/vehicle.dart';
 import 'package:autolog/features/export/csv_export_providers.dart';
@@ -191,9 +192,10 @@ class _ExportSheetState extends ConsumerState<_ExportSheet> {
 
       switch (result.status) {
         case ShareResultStatus.success:
-          await track(AnalyticsEvent.exportCsvUsed, props: {
-            'export_type': type.name,
-          });
+          await track(
+            AnalyticsEvent.exportCsvUsed,
+            props: {'export_type': type.name},
+          );
           messenger.showSnackBar(
             const SnackBar(content: Text('Arquivo exportado com sucesso.')),
           );
@@ -202,11 +204,11 @@ class _ExportSheetState extends ConsumerState<_ExportSheet> {
           break;
         case ShareResultStatus.unavailable:
           messenger.showSnackBar(
-            SnackBar(
-              content: const Text(
+            const SnackBar(
+              content: Text(
                 'Compartilhamento indisponível neste dispositivo.',
               ),
-              backgroundColor: Colors.red[700],
+              backgroundColor: AppColors.danger,
             ),
           );
       }
@@ -214,7 +216,7 @@ class _ExportSheetState extends ConsumerState<_ExportSheet> {
       messenger.showSnackBar(
         SnackBar(
           content: Text('Erro ao gerar arquivo: $e'),
-          backgroundColor: Colors.red[700],
+          backgroundColor: AppColors.danger,
         ),
       );
     } finally {
@@ -224,7 +226,7 @@ class _ExportSheetState extends ConsumerState<_ExportSheet> {
 
   void _showError(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: Colors.red[700]),
+      SnackBar(content: Text(msg), backgroundColor: AppColors.danger),
     );
   }
 

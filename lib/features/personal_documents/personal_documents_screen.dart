@@ -26,7 +26,6 @@ import 'package:autolog/features/insights/history_insights.dart';
 import 'package:autolog/features/personal_documents/document_reminder_suggestions.dart';
 import 'package:autolog/features/vehicles/vehicles_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -73,11 +72,7 @@ class _PersonalDocumentsScreenState
         elevation: 0,
         scrolledUnderElevation: 1,
         shadowColor: context.hairline,
-        systemOverlayStyle: const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.dark,
-          statusBarBrightness: Brightness.light,
-        ),
+        systemOverlayStyle: context.systemUiStyle,
         title: const Text('Documentos'),
         actions: [
           TextButton.icon(
@@ -95,103 +90,107 @@ class _PersonalDocumentsScreenState
         },
         child: ResponsiveBody(
           child: CustomScrollView(
-          slivers: [
-            // ── CNH ─────────────────────────────────────────────────────────
-            //
-            // "Editar" só aparece quando há CNH cadastrada — sem isso, o botão
-            // confunde (não há o que editar) e duplica o CTA "Cadastrar CNH"
-            // da própria seção (UX 19/06).
-            SliverToBoxAdapter(
-              child: _SectionHeader(
-                title: 'Minha CNH',
-                action: profileAsync.maybeWhen(
-                  data: (p) {
-                    final hasCnh = p != null &&
-                        (p.cnhNumber != null ||
-                            p.cnhCategory != null ||
-                            p.cnhExpiresAt != null);
-                    if (!hasCnh) return null;
-                    return TextButton(
-                      onPressed: () => context.push('/personal-documents/cnh'),
-                      child: const Text('Editar'),
-                    );
-                  },
-                  orElse: () => null,
+            slivers: [
+              // ── CNH ─────────────────────────────────────────────────────────
+              //
+              // "Editar" só aparece quando há CNH cadastrada — sem isso, o botão
+              // confunde (não há o que editar) e duplica o CTA "Cadastrar CNH"
+              // da própria seção (UX 19/06).
+              SliverToBoxAdapter(
+                child: _SectionHeader(
+                  title: 'Minha CNH',
+                  action: profileAsync.maybeWhen(
+                    data: (p) {
+                      final hasCnh =
+                          p != null &&
+                          (p.cnhNumber != null ||
+                              p.cnhCategory != null ||
+                              p.cnhExpiresAt != null);
+                      if (!hasCnh) return null;
+                      return TextButton(
+                        onPressed: () =>
+                            context.push('/personal-documents/cnh'),
+                        child: const Text('Editar'),
+                      );
+                    },
+                    orElse: () => null,
+                  ),
                 ),
               ),
-            ),
-            SliverToBoxAdapter(
-              child: profileAsync.when(
-                loading: () => const Padding(
-                  padding: EdgeInsets.all(AppSpacing.lg),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-                error: (_, st) => const _ErrorCard(
-                  message: 'Não foi possível carregar a CNH.',
-                ),
-                data: (profile) => _CnhCard(
-                  profile: profile,
-                  onEdit: () => context.push('/personal-documents/cnh'),
+              SliverToBoxAdapter(
+                child: profileAsync.when(
+                  loading: () => const Padding(
+                    padding: EdgeInsets.all(AppSpacing.lg),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                  error: (_, st) => const _ErrorCard(
+                    message: 'Não foi possível carregar a CNH.',
+                  ),
+                  data: (profile) => _CnhCard(
+                    profile: profile,
+                    onEdit: () => context.push('/personal-documents/cnh'),
+                  ),
                 ),
               ),
-            ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xl)),
+              const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xl)),
 
-            // ── Apólices ativas ─────────────────────────────────────────────
-            SliverToBoxAdapter(
-              child: _SectionHeader(
-                title: 'Apólices ativas',
-                action: TextButton.icon(
-                  onPressed: () =>
-                      context.push('/personal-documents/insurances/new'),
-                  icon: const Icon(Icons.add, size: 16),
-                  label: const Text('Nova apólice'),
+              // ── Apólices ativas ─────────────────────────────────────────────
+              SliverToBoxAdapter(
+                child: _SectionHeader(
+                  title: 'Apólices ativas',
+                  action: TextButton.icon(
+                    onPressed: () =>
+                        context.push('/personal-documents/insurances/new'),
+                    icon: const Icon(Icons.add, size: 16),
+                    label: const Text('Nova apólice'),
+                  ),
                 ),
               ),
-            ),
-            vehiclesAsync.when(
-              loading: () => const SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.all(AppSpacing.lg),
-                  child: Center(child: CircularProgressIndicator()),
+              vehiclesAsync.when(
+                loading: () => const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.all(AppSpacing.lg),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                ),
+                error: (_, st) => const SliverToBoxAdapter(
+                  child: _ErrorCard(message: 'Erro ao carregar apólices.'),
+                ),
+                data: (vehicles) => _InsurancesSliver(vehicles: vehicles),
+              ),
+
+              const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xl)),
+
+              // ── Multas pendentes ─────────────────────────────────────────────
+              SliverToBoxAdapter(
+                child: _SectionHeader(
+                  title: 'Multas pendentes',
+                  action: TextButton.icon(
+                    onPressed: () =>
+                        context.push('/personal-documents/fines/new'),
+                    icon: const Icon(Icons.add, size: 16),
+                    label: const Text('Nova multa'),
+                  ),
                 ),
               ),
-              error: (_, st) => const SliverToBoxAdapter(
-                child: _ErrorCard(message: 'Erro ao carregar apólices.'),
-              ),
-              data: (vehicles) => _InsurancesSliver(vehicles: vehicles),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xl)),
-
-            // ── Multas pendentes ─────────────────────────────────────────────
-            SliverToBoxAdapter(
-              child: _SectionHeader(
-                title: 'Multas pendentes',
-                action: TextButton.icon(
-                  onPressed: () =>
-                      context.push('/personal-documents/fines/new'),
-                  icon: const Icon(Icons.add, size: 16),
-                  label: const Text('Nova multa'),
+              vehiclesAsync.when(
+                loading: () => const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.all(AppSpacing.lg),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
                 ),
-              ),
-            ),
-            vehiclesAsync.when(
-              loading: () => const SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.all(AppSpacing.lg),
-                  child: Center(child: CircularProgressIndicator()),
+                error: (_, st) => const SliverToBoxAdapter(
+                  child: _ErrorCard(message: 'Erro ao carregar multas.'),
                 ),
+                data: (vehicles) => _FinesSliver(vehicles: vehicles),
               ),
-              error: (_, st) => const SliverToBoxAdapter(
-                child: _ErrorCard(message: 'Erro ao carregar multas.'),
-              ),
-              data: (vehicles) => _FinesSliver(vehicles: vehicles),
-            ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.huge)),
-          ],
+              const SliverToBoxAdapter(
+                child: SizedBox(height: AppSpacing.huge),
+              ),
+            ],
           ),
         ),
       ),
@@ -268,7 +267,8 @@ class _PersonalDocumentsScreenState
       // Quando o usuário não tem CNH / apólice / multa cadastradas, a
       // sugestão fica vazia "naturalmente" — mostramos uma mensagem
       // orientadora em vez do snackbar genérico (UX 19/06).
-      final hasAnyDoc = profile?.cnhExpiresAt != null ||
+      final hasAnyDoc =
+          profile?.cnhExpiresAt != null ||
           allInsurances.isNotEmpty ||
           allFines.isNotEmpty;
       scaffoldMessenger.showSnackBar(
@@ -396,89 +396,89 @@ class _CnhCard extends StatelessWidget {
       button: true,
       label: 'Editar CNH',
       child: GestureDetector(
-      onTap: onEdit,
-      child: Container(
-        margin: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.sm,
-        ),
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: context.surfaceRaised,
-          borderRadius: AppRadius.allMd,
-          border: Border.all(
-            color: isExpiringSoon ? AppColors.warning : context.hairline,
+        onTap: onEdit,
+        child: Container(
+          margin: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.sm,
           ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.sm),
-              decoration: BoxDecoration(
-                color: isExpiringSoon
-                    ? AppColors.warningSoft
-                    : context.surfaceSunken,
-                borderRadius: AppRadius.allSm,
-              ),
-              child: Icon(
-                Icons.badge_outlined,
-                size: 24,
-                color: isExpiringSoon ? AppColors.warning : context.inkMuted,
-              ),
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          decoration: BoxDecoration(
+            color: context.surfaceRaised,
+            borderRadius: AppRadius.allMd,
+            border: Border.all(
+              color: isExpiringSoon ? AppColors.warning : context.hairline,
             ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (p.cnhNumber != null)
-                    Text(
-                      'CNH ${p.cnhNumber}',
-                      style: AppTypography.body(
-                        15,
-                        weight: FontWeight.w600,
-                        color: context.ink,
-                      ),
-                    ),
-                  if (p.cnhCategory != null)
-                    Text(
-                      'Categoria ${p.cnhCategory}',
-                      style: AppTypography.body(13, color: context.inkMuted),
-                    ),
-                  if (expiresStr != null) ...[
-                    Text(
-                      'Vence: $expiresStr',
-                      style: AppTypography.body(
-                        13,
-                        color: isExpiringSoon
-                            ? AppColors.warning
-                            : context.inkMuted,
-                        weight: isExpiringSoon
-                            ? FontWeight.w600
-                            : FontWeight.w400,
-                      ),
-                    ),
-                    if (isExpiringSoon)
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                decoration: BoxDecoration(
+                  color: isExpiringSoon
+                      ? AppColors.warningSoft
+                      : context.surfaceSunken,
+                  borderRadius: AppRadius.allSm,
+                ),
+                child: Icon(
+                  Icons.badge_outlined,
+                  size: 24,
+                  color: isExpiringSoon ? AppColors.warning : context.inkMuted,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (p.cnhNumber != null)
                       Text(
-                        'Vencimento próximo!',
+                        'CNH ${p.cnhNumber}',
                         style: AppTypography.body(
-                          12,
-                          color: AppColors.warning,
-                          weight: FontWeight.w700,
+                          15,
+                          weight: FontWeight.w600,
+                          color: context.ink,
                         ),
                       ),
+                    if (p.cnhCategory != null)
+                      Text(
+                        'Categoria ${p.cnhCategory}',
+                        style: AppTypography.body(13, color: context.inkMuted),
+                      ),
+                    if (expiresStr != null) ...[
+                      Text(
+                        'Vence: $expiresStr',
+                        style: AppTypography.body(
+                          13,
+                          color: isExpiringSoon
+                              ? AppColors.warning
+                              : context.inkMuted,
+                          weight: isExpiringSoon
+                              ? FontWeight.w600
+                              : FontWeight.w400,
+                        ),
+                      ),
+                      if (isExpiringSoon)
+                        Text(
+                          'Vencimento próximo!',
+                          style: AppTypography.body(
+                            12,
+                            color: AppColors.warning,
+                            weight: FontWeight.w700,
+                          ),
+                        ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-            Icon(
-              Icons.chevron_right_rounded,
-              color: context.inkSoft,
-              size: 20,
-            ),
-          ],
+              Icon(
+                Icons.chevron_right_rounded,
+                color: context.inkSoft,
+                size: 20,
+              ),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -641,48 +641,52 @@ class _InsuranceCard extends StatelessWidget {
       button: true,
       label: 'Editar apólice $vehicleNickname',
       child: GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: context.surfaceRaised,
-          borderRadius: AppRadius.allMd,
-          border: Border.all(
-            color: isExpiringSoon ? AppColors.warning : context.hairline,
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: context.surfaceRaised,
+            borderRadius: AppRadius.allMd,
+            border: Border.all(
+              color: isExpiringSoon ? AppColors.warning : context.hairline,
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.shield_outlined,
+                size: 24,
+                color: isExpiringSoon ? AppColors.warning : context.inkMuted,
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      insurance.insurer ?? 'Seguro',
+                      style: AppTypography.body(
+                        14,
+                        weight: FontWeight.w600,
+                        color: context.ink,
+                      ),
+                    ),
+                    Text(
+                      '$vehicleNickname · vence $endStr',
+                      style: AppTypography.body(12, color: context.inkMuted),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: context.inkSoft,
+                size: 18,
+              ),
+            ],
           ),
         ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.shield_outlined,
-              size: 24,
-              color: isExpiringSoon ? AppColors.warning : context.inkMuted,
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    insurance.insurer ?? 'Seguro',
-                    style: AppTypography.body(
-                      14,
-                      weight: FontWeight.w600,
-                      color: context.ink,
-                    ),
-                  ),
-                  Text(
-                    '$vehicleNickname · vence $endStr',
-                    style: AppTypography.body(12, color: context.inkMuted),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right_rounded, color: context.inkSoft, size: 18),
-          ],
-        ),
-      ),
       ),
     );
   }
@@ -785,59 +789,63 @@ class _FineCard extends StatelessWidget {
       button: true,
       label: 'Editar multa $vehicleNickname',
       child: GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: context.surfaceRaised,
-          borderRadius: AppRadius.allMd,
-          border: Border.all(
-            color: isUrgent ? AppColors.danger : context.hairline,
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: context.surfaceRaised,
+            borderRadius: AppRadius.allMd,
+            border: Border.all(
+              color: isUrgent ? AppColors.danger : context.hairline,
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.warning_amber_rounded,
+                size: 24,
+                color: isUrgent ? AppColors.danger : AppColors.warning,
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      fine.description,
+                      style: AppTypography.body(
+                        14,
+                        weight: FontWeight.w600,
+                        color: context.ink,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      '$vehicleNickname · R\$ ${fine.amount}',
+                      style: AppTypography.body(12, color: context.inkMuted),
+                    ),
+                    if (dueStr != null)
+                      Text(
+                        dueStr,
+                        style: AppTypography.body(
+                          12,
+                          color: isUrgent ? AppColors.danger : context.inkMuted,
+                          weight: isUrgent ? FontWeight.w600 : FontWeight.w400,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: context.inkSoft,
+                size: 18,
+              ),
+            ],
           ),
         ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.warning_amber_rounded,
-              size: 24,
-              color: isUrgent ? AppColors.danger : AppColors.warning,
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    fine.description,
-                    style: AppTypography.body(
-                      14,
-                      weight: FontWeight.w600,
-                      color: context.ink,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    '$vehicleNickname · R\$ ${fine.amount}',
-                    style: AppTypography.body(12, color: context.inkMuted),
-                  ),
-                  if (dueStr != null)
-                    Text(
-                      dueStr,
-                      style: AppTypography.body(
-                        12,
-                        color: isUrgent ? AppColors.danger : context.inkMuted,
-                        weight: isUrgent ? FontWeight.w600 : FontWeight.w400,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right_rounded, color: context.inkSoft, size: 18),
-          ],
-        ),
-      ),
       ),
     );
   }

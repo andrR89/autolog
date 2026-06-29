@@ -57,9 +57,7 @@ class _FineFormScreenState extends ConsumerState<FineFormScreen> {
       text: f != null ? f.amount.toString().replaceAll('.', ',') : '',
     );
     _dueDate = f?.dueDate;
-    _pointsCtrl = TextEditingController(
-      text: f?.points?.toString() ?? '',
-    );
+    _pointsCtrl = TextEditingController(text: f?.points?.toString() ?? '');
     _loadVehicles();
   }
 
@@ -220,11 +218,7 @@ class _FineFormScreenState extends ConsumerState<FineFormScreen> {
         elevation: 0,
         scrolledUnderElevation: 1,
         shadowColor: context.hairline,
-        systemOverlayStyle: const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.dark,
-          statusBarBrightness: Brightness.light,
-        ),
+        systemOverlayStyle: context.systemUiStyle,
         title: Text(_isEditing ? 'Editar multa' : 'Nova multa'),
         leading: BackButton(
           onPressed: () {
@@ -247,153 +241,154 @@ class _FineFormScreenState extends ConsumerState<FineFormScreen> {
                       maxWidth: ResponsiveWidths.form,
                       child: SingleChildScrollView(
                         child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          FormSectionCard(
-                            eyebrow: 'Veículo e infração',
-                            children: [
-                              // Dropdown veículo
-                              DropdownButtonFormField<String>(
-                                initialValue: _vehicleId,
-                                decoration: const InputDecoration(
-                                  labelText: 'Veículo',
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            FormSectionCard(
+                              eyebrow: 'Veículo e infração',
+                              children: [
+                                // Dropdown veículo
+                                DropdownButtonFormField<String>(
+                                  initialValue: _vehicleId,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Veículo',
+                                  ),
+                                  items: _vehicles
+                                      .map(
+                                        (v) => DropdownMenuItem(
+                                          value: v.id,
+                                          child: Text(v.nickname),
+                                        ),
+                                      )
+                                      .toList(),
+                                  onChanged: (v) =>
+                                      setState(() => _vehicleId = v),
+                                  validator: (v) =>
+                                      v == null ? 'Selecione um veículo' : null,
                                 ),
-                                items: _vehicles
-                                    .map(
-                                      (v) => DropdownMenuItem(
-                                        value: v.id,
-                                        child: Text(v.nickname),
+
+                                const SizedBox(height: AppSpacing.lg),
+
+                                // Número do auto
+                                TextFormField(
+                                  controller: _autoNumberCtrl,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Número do auto (opcional)',
+                                    hintText: 'Ex.: AA12345678',
+                                  ),
+                                ),
+
+                                const SizedBox(height: AppSpacing.lg),
+
+                                // Data da infração
+                                DatePickerField(
+                                  value: _issuedAt,
+                                  onTap: _pickIssuedAt,
+                                ),
+                              ],
+                            ),
+
+                            FormSectionCard(
+                              eyebrow: 'Descrição e valor',
+                              children: [
+                                // Descrição
+                                TextFormField(
+                                  controller: _descriptionCtrl,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Descrição',
+                                    hintText: 'Ex.: Excesso de velocidade',
+                                  ),
+                                  textCapitalization:
+                                      TextCapitalization.sentences,
+                                  maxLines: 2,
+                                  validator: (v) =>
+                                      (v == null || v.trim().isEmpty)
+                                      ? 'Informe uma descrição'
+                                      : null,
+                                ),
+
+                                const SizedBox(height: AppSpacing.md),
+
+                                // Valor
+                                TextFormField(
+                                  controller: _amountCtrl,
+                                  decoration: const InputDecoration(
+                                    labelText: r'Valor (R$)',
+                                    hintText: 'Ex.: 293,47',
+                                  ),
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                        decimal: true,
                                       ),
-                                    )
-                                    .toList(),
-                                onChanged: (v) =>
-                                    setState(() => _vehicleId = v),
-                                validator: (v) =>
-                                    v == null ? 'Selecione um veículo' : null,
-                              ),
-
-                              const SizedBox(height: AppSpacing.lg),
-
-                              // Número do auto
-                              TextFormField(
-                                controller: _autoNumberCtrl,
-                                decoration: const InputDecoration(
-                                  labelText: 'Número do auto (opcional)',
-                                  hintText: 'Ex.: AA12345678',
+                                  validator: validateAmount,
                                 ),
-                              ),
 
-                              const SizedBox(height: AppSpacing.lg),
+                                const SizedBox(height: AppSpacing.md),
 
-                              // Data da infração
-                              DatePickerField(
-                                value: _issuedAt,
-                                onTap: _pickIssuedAt,
-                              ),
-                            ],
-                          ),
-
-                          FormSectionCard(
-                            eyebrow: 'Descrição e valor',
-                            children: [
-                              // Descrição
-                              TextFormField(
-                                controller: _descriptionCtrl,
-                                decoration: const InputDecoration(
-                                  labelText: 'Descrição',
-                                  hintText: 'Ex.: Excesso de velocidade',
+                                // Prazo pagamento
+                                _DueDateField(
+                                  value: _dueDate,
+                                  onTap: _pickDueDate,
+                                  onClear: () =>
+                                      setState(() => _dueDate = null),
                                 ),
-                                textCapitalization:
-                                    TextCapitalization.sentences,
-                                maxLines: 2,
-                                validator: (v) =>
-                                    (v == null || v.trim().isEmpty)
-                                        ? 'Informe uma descrição'
-                                        : null,
-                              ),
 
-                              const SizedBox(height: AppSpacing.md),
+                                const SizedBox(height: AppSpacing.md),
 
-                              // Valor
-                              TextFormField(
-                                controller: _amountCtrl,
-                                decoration: const InputDecoration(
-                                  labelText: r'Valor (R$)',
-                                  hintText: 'Ex.: 293,47',
+                                // Pontos
+                                TextFormField(
+                                  controller: _pointsCtrl,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Pontos na CNH (opcional)',
+                                    hintText: 'Ex.: 7',
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                  ],
+                                  validator: validatePoints,
                                 ),
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                  decimal: true,
+                              ],
+                            ),
+
+                            // Botão marcar como pago/não pago em edição
+                            if (_isEditing) ...[
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  AppSpacing.lg,
+                                  0,
+                                  AppSpacing.lg,
+                                  AppSpacing.md,
                                 ),
-                                validator: validateAmount,
-                              ),
-
-                              const SizedBox(height: AppSpacing.md),
-
-                              // Prazo pagamento
-                              _DueDateField(
-                                value: _dueDate,
-                                onTap: _pickDueDate,
-                                onClear: () =>
-                                    setState(() => _dueDate = null),
-                              ),
-
-                              const SizedBox(height: AppSpacing.md),
-
-                              // Pontos
-                              TextFormField(
-                                controller: _pointsCtrl,
-                                decoration: const InputDecoration(
-                                  labelText: 'Pontos na CNH (opcional)',
-                                  hintText: 'Ex.: 7',
-                                ),
-                                keyboardType: TextInputType.number,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                ],
-                                validator: validatePoints,
-                              ),
-                            ],
-                          ),
-
-                          // Botão marcar como pago/não pago em edição
-                          if (_isEditing) ...[
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(
-                                AppSpacing.lg,
-                                0,
-                                AppSpacing.lg,
-                                AppSpacing.md,
-                              ),
-                              child: OutlinedButton(
-                                onPressed: _saving ? null : _togglePaid,
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor:
-                                      widget.initial!.paid
-                                          ? AppColors.warning
-                                          : AppColors.success,
-                                  side: BorderSide(
-                                    color: widget.initial!.paid
+                                child: OutlinedButton(
+                                  onPressed: _saving ? null : _togglePaid,
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: widget.initial!.paid
                                         ? AppColors.warning
                                         : AppColors.success,
+                                    side: BorderSide(
+                                      color: widget.initial!.paid
+                                          ? AppColors.warning
+                                          : AppColors.success,
+                                    ),
+                                    minimumSize: const Size(
+                                      double.infinity,
+                                      48,
+                                    ),
                                   ),
-                                  minimumSize:
-                                      const Size(double.infinity, 48),
-                                ),
-                                child: Text(
-                                  widget.initial!.paid
-                                      ? 'Marcar como não pago'
-                                      : 'Marcar como pago',
+                                  child: Text(
+                                    widget.initial!.paid
+                                        ? 'Marcar como não pago'
+                                        : 'Marcar como pago',
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
 
-                          const SizedBox(height: AppSpacing.xxl),
-                        ],
+                            const SizedBox(height: AppSpacing.xxl),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
                   ),
 
                   // Barra sticky
@@ -402,7 +397,9 @@ class _FineFormScreenState extends ConsumerState<FineFormScreen> {
                     child: Container(
                       decoration: BoxDecoration(
                         color: context.surfaceRaised,
-                        border: Border(top: BorderSide(color: context.hairline)),
+                        border: Border(
+                          top: BorderSide(color: context.hairline),
+                        ),
                       ),
                       padding: const EdgeInsets.fromLTRB(
                         AppSpacing.lg,

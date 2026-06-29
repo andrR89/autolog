@@ -544,15 +544,13 @@ class _AppBar extends ConsumerWidget {
     // canônica com fundo surface + título.
     final foreground = sealed ? context.ink : AppColors.brandInk;
 
-    // Status bar: branca (ícones claros) sobre o hero brand; escura (ícones
-    // escuros) quando a AppBar selou e o fundo virou surface off-white.
+    // Status bar: quando selada, responsiva ao tema (context.systemUiStyle).
+    // Quando não selada, fundo é brand-dark independente do tema → ícones
+    // sempre claros.
     final overlayStyle = sealed
-        ? const SystemUiOverlayStyle(
-            statusBarColor: Colors.transparent,
-            statusBarIconBrightness: Brightness.dark,
-            statusBarBrightness: Brightness.light,
-          )
+        ? context.systemUiStyle
         : const SystemUiOverlayStyle(
+            // branch unsealed: fundo é brand-dark independente do tema → ícones sempre claros.
             statusBarColor: Colors.transparent,
             statusBarIconBrightness: Brightness.light,
             statusBarBrightness: Brightness.dark,

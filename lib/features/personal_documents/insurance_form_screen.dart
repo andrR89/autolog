@@ -11,7 +11,6 @@ import 'package:autolog/features/fuel/widgets/form_section_card.dart';
 import 'package:autolog/features/personal_documents/document_validators.dart';
 import 'package:autolog/features/vehicles/vehicles_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
@@ -100,7 +99,8 @@ class _InsuranceFormScreenState extends ConsumerState<InsuranceFormScreen> {
   Future<void> _pickEndsAt() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: _endsAt ??
+      initialDate:
+          _endsAt ??
           (_startsAt != null
               ? _startsAt!.add(const Duration(days: 365))
               : DateTime.now().add(const Duration(days: 365))),
@@ -208,11 +208,7 @@ class _InsuranceFormScreenState extends ConsumerState<InsuranceFormScreen> {
         elevation: 0,
         scrolledUnderElevation: 1,
         shadowColor: context.hairline,
-        systemOverlayStyle: const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.dark,
-          statusBarBrightness: Brightness.light,
-        ),
+        systemOverlayStyle: context.systemUiStyle,
         title: Text(_isEditing ? 'Editar apólice' : 'Nova apólice'),
         leading: BackButton(
           onPressed: () {
@@ -235,119 +231,118 @@ class _InsuranceFormScreenState extends ConsumerState<InsuranceFormScreen> {
                       maxWidth: ResponsiveWidths.form,
                       child: SingleChildScrollView(
                         child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          FormSectionCard(
-                            eyebrow: 'Veículo e seguradora',
-                            children: [
-                              // Dropdown veículo
-                              DropdownButtonFormField<String>(
-                                initialValue: _vehicleId,
-                                decoration: const InputDecoration(
-                                  labelText: 'Veículo',
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            FormSectionCard(
+                              eyebrow: 'Veículo e seguradora',
+                              children: [
+                                // Dropdown veículo
+                                DropdownButtonFormField<String>(
+                                  initialValue: _vehicleId,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Veículo',
+                                  ),
+                                  items: _vehicles
+                                      .map(
+                                        (v) => DropdownMenuItem(
+                                          value: v.id,
+                                          child: Text(v.nickname),
+                                        ),
+                                      )
+                                      .toList(),
+                                  onChanged: (v) =>
+                                      setState(() => _vehicleId = v),
+                                  validator: (v) =>
+                                      v == null ? 'Selecione um veículo' : null,
                                 ),
-                                items: _vehicles
-                                    .map(
-                                      (v) => DropdownMenuItem(
-                                        value: v.id,
-                                        child: Text(v.nickname),
+
+                                const SizedBox(height: AppSpacing.lg),
+
+                                // Seguradora
+                                TextFormField(
+                                  controller: _insurerCtrl,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Seguradora (opcional)',
+                                    hintText: 'Ex.: Porto Seguro',
+                                  ),
+                                  textCapitalization: TextCapitalization.words,
+                                ),
+
+                                const SizedBox(height: AppSpacing.md),
+
+                                // Número da apólice
+                                TextFormField(
+                                  controller: _policyNumberCtrl,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Número da apólice (opcional)',
+                                    hintText: 'Ex.: 123456789',
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            FormSectionCard(
+                              eyebrow: 'Vigência',
+                              children: [
+                                // Início
+                                _DateField(
+                                  label: 'INÍCIO DA VIGÊNCIA',
+                                  value: _startsAt,
+                                  onTap: _pickStartsAt,
+                                  isRequired: true,
+                                ),
+
+                                const SizedBox(height: AppSpacing.md),
+
+                                // Fim
+                                _DateField(
+                                  label: 'FIM DA VIGÊNCIA',
+                                  value: _endsAt,
+                                  onTap: _pickEndsAt,
+                                  isRequired: true,
+                                ),
+                              ],
+                            ),
+
+                            FormSectionCard(
+                              eyebrow: 'Valor e observações',
+                              children: [
+                                // Prêmio pago
+                                TextFormField(
+                                  controller: _premiumPaidCtrl,
+                                  decoration: const InputDecoration(
+                                    labelText: r'Prêmio pago (R$) — opcional',
+                                    hintText: 'Ex.: 1.200,00',
+                                  ),
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                        decimal: true,
                                       ),
-                                    )
-                                    .toList(),
-                                onChanged: (v) =>
-                                    setState(() => _vehicleId = v),
-                                validator: (v) =>
-                                    v == null ? 'Selecione um veículo' : null,
-                              ),
-
-                              const SizedBox(height: AppSpacing.lg),
-
-                              // Seguradora
-                              TextFormField(
-                                controller: _insurerCtrl,
-                                decoration: const InputDecoration(
-                                  labelText: 'Seguradora (opcional)',
-                                  hintText: 'Ex.: Porto Seguro',
+                                  validator: validateAmountOptional,
                                 ),
-                                textCapitalization:
-                                    TextCapitalization.words,
-                              ),
 
-                              const SizedBox(height: AppSpacing.md),
+                                const SizedBox(height: AppSpacing.md),
 
-                              // Número da apólice
-                              TextFormField(
-                                controller: _policyNumberCtrl,
-                                decoration: const InputDecoration(
-                                  labelText: 'Número da apólice (opcional)',
-                                  hintText: 'Ex.: 123456789',
+                                // Notas
+                                TextFormField(
+                                  controller: _notesCtrl,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Observações (opcional)',
+                                    hintText:
+                                        r'Ex.: Franquia R$ 2.000, cobre terceiros',
+                                  ),
+                                  textCapitalization:
+                                      TextCapitalization.sentences,
+                                  maxLines: 3,
                                 ),
-                              ),
-                            ],
-                          ),
+                              ],
+                            ),
 
-                          FormSectionCard(
-                            eyebrow: 'Vigência',
-                            children: [
-                              // Início
-                              _DateField(
-                                label: 'INÍCIO DA VIGÊNCIA',
-                                value: _startsAt,
-                                onTap: _pickStartsAt,
-                                isRequired: true,
-                              ),
-
-                              const SizedBox(height: AppSpacing.md),
-
-                              // Fim
-                              _DateField(
-                                label: 'FIM DA VIGÊNCIA',
-                                value: _endsAt,
-                                onTap: _pickEndsAt,
-                                isRequired: true,
-                              ),
-                            ],
-                          ),
-
-                          FormSectionCard(
-                            eyebrow: 'Valor e observações',
-                            children: [
-                              // Prêmio pago
-                              TextFormField(
-                                controller: _premiumPaidCtrl,
-                                decoration: const InputDecoration(
-                                  labelText: r'Prêmio pago (R$) — opcional',
-                                  hintText: 'Ex.: 1.200,00',
-                                ),
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                  decimal: true,
-                                ),
-                                validator: validateAmountOptional,
-                              ),
-
-                              const SizedBox(height: AppSpacing.md),
-
-                              // Notas
-                              TextFormField(
-                                controller: _notesCtrl,
-                                decoration: const InputDecoration(
-                                  labelText: 'Observações (opcional)',
-                                  hintText:
-                                      r'Ex.: Franquia R$ 2.000, cobre terceiros',
-                                ),
-                                textCapitalization:
-                                    TextCapitalization.sentences,
-                                maxLines: 3,
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: AppSpacing.xxl),
-                        ],
+                            const SizedBox(height: AppSpacing.xxl),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
                   ),
 
                   // Barra sticky
@@ -356,7 +351,9 @@ class _InsuranceFormScreenState extends ConsumerState<InsuranceFormScreen> {
                     child: Container(
                       decoration: BoxDecoration(
                         color: context.surfaceRaised,
-                        border: Border(top: BorderSide(color: context.hairline)),
+                        border: Border(
+                          top: BorderSide(color: context.hairline),
+                        ),
                       ),
                       padding: const EdgeInsets.fromLTRB(
                         AppSpacing.lg,

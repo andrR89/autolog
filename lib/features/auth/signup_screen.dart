@@ -68,6 +68,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             content: Text(
               'Conta criada! Verifique seu e-mail para confirmar o cadastro.',
             ),
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -103,9 +104,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+    );
   }
 
   @override

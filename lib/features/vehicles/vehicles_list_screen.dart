@@ -40,7 +40,6 @@ import 'package:autolog/features/vehicles/vehicles_provider.dart';
 import 'package:autolog/features/vehicles/widgets/vehicle_card.dart';
 import 'package:autolog/features/vehicles/widgets/vehicles_empty_state.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -74,12 +73,7 @@ class _VehiclesListScreenState extends ConsumerState<VehiclesListScreen> {
       appBar: AppBar(
         elevation: 0,
         scrolledUnderElevation: 0,
-        // Status bar com ícones escuros — fundo é o surface off-white.
-        systemOverlayStyle: const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.dark,
-          statusBarBrightness: Brightness.light,
-        ),
+        systemOverlayStyle: context.systemUiStyle,
         // Necessário pra remover o leading default (back arrow) em tela
         // raiz e abrir espaço para a marca, sem mexer no router.
         automaticallyImplyLeading: false,

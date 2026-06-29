@@ -9,7 +9,6 @@ import 'package:autolog/features/fuel/station_aggregation.dart';
 import 'package:autolog/features/fuel/station_brands.dart';
 import 'package:autolog/features/vehicles/vehicles_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -19,8 +18,9 @@ import 'package:intl/intl.dart';
 
 /// Carrega todos os abastecimentos de todos os veículos do usuário e aplica
 /// [aggregateByStation]. Retorna a lista de [StationStats] ordenada.
-final allStationStatsProvider =
-    FutureProvider.autoDispose<List<StationStats>>((ref) async {
+final allStationStatsProvider = FutureProvider.autoDispose<List<StationStats>>((
+  ref,
+) async {
   final userId = ref.watch(currentUserIdProvider);
   final vehicleRepo = ref.watch(vehicleRepositoryProvider);
   final fuelRepo = ref.watch(fuelEntryRepositoryProvider);
@@ -40,20 +40,20 @@ final allStationStatsProvider =
 /// o [FavoriteStationInsight] agregado (todos os carros juntos).
 final allStationInsightProvider =
     FutureProvider.autoDispose<FavoriteStationInsight>((ref) async {
-  final userId = ref.watch(currentUserIdProvider);
-  final vehicleRepo = ref.watch(vehicleRepositoryProvider);
-  final fuelRepo = ref.watch(fuelEntryRepositoryProvider);
+      final userId = ref.watch(currentUserIdProvider);
+      final vehicleRepo = ref.watch(vehicleRepositoryProvider);
+      final fuelRepo = ref.watch(fuelEntryRepositoryProvider);
 
-  final vehicles = await vehicleRepo.listByUser(userId);
-  final allEntries = <FuelEntry>[];
+      final vehicles = await vehicleRepo.listByUser(userId);
+      final allEntries = <FuelEntry>[];
 
-  for (final v in vehicles) {
-    final entries = await fuelRepo.listByVehicle(v.id);
-    allEntries.addAll(entries);
-  }
+      for (final v in vehicles) {
+        final entries = await fuelRepo.listByVehicle(v.id);
+        allEntries.addAll(entries);
+      }
 
-  return analyzeFavoriteStation(allEntries);
-});
+      return analyzeFavoriteStation(allEntries);
+    });
 
 // ---------------------------------------------------------------------------
 // Tela "Meus postos"
@@ -73,11 +73,7 @@ class MyStationsScreen extends ConsumerWidget {
         elevation: 0,
         scrolledUnderElevation: 1,
         shadowColor: context.hairline,
-        systemOverlayStyle: const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.dark,
-          statusBarBrightness: Brightness.light,
-        ),
+        systemOverlayStyle: context.systemUiStyle,
         title: const Text('Meus postos'),
       ),
       body: statsAsync.when(
@@ -132,7 +128,8 @@ class _StationsList extends ConsumerWidget {
     List<StationStats> stats,
     FavoriteStationInsight? insight,
   ) {
-    final showInsight = insight != null &&
+    final showInsight =
+        insight != null &&
         (insight.favorite != null || insight.cheapestQualified != null);
 
     return ListView.separated(
@@ -186,9 +183,9 @@ class _FavoriteInsightSection extends StatelessWidget {
           child: Text(
             'POSTO PREFERIDO',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: context.inkMuted,
-                  letterSpacing: 1.4,
-                ),
+              color: context.inkMuted,
+              letterSpacing: 1.4,
+            ),
           ),
         ),
         DecoratedBox(
@@ -259,9 +256,9 @@ class _FavoriteInsightSection extends StatelessWidget {
           child: Text(
             'TODOS OS POSTOS',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: context.inkMuted,
-                  letterSpacing: 1.4,
-                ),
+              color: context.inkMuted,
+              letterSpacing: 1.4,
+            ),
           ),
         ),
       ],
@@ -333,8 +330,7 @@ class _StationCard extends StatelessWidget {
     );
     final dateFmt = DateFormat('dd/MM/yy');
 
-    final titleText =
-        '${stat.brand ?? "—"} • ${stat.name ?? "Posto"}';
+    final titleText = '${stat.brand ?? "—"} • ${stat.name ?? "Posto"}';
     final avgFormatted = currencyFmt.format(
       double.parse(stat.avgPricePerLiter.toString()),
     );

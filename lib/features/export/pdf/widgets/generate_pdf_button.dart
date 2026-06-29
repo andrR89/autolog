@@ -14,6 +14,7 @@
 // Exemplo de uso:
 //   GeneratePdfButton(vehicleId: vehicle.id)
 
+import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/observability/analytics.dart';
 import 'package:autolog/data/repositories/expense_repository.dart';
 import 'package:autolog/data/repositories/fipe_history_repository.dart';
@@ -106,10 +107,7 @@ class _GeneratePdfButtonState extends ConsumerState<GeneratePdfButton> {
 
   void _showError(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        backgroundColor: Colors.red[700],
-      ),
+      SnackBar(content: Text(msg), backgroundColor: AppColors.danger),
     );
   }
 
@@ -125,9 +123,7 @@ class _GeneratePdfButtonState extends ConsumerState<GeneratePdfButton> {
             )
           : const Icon(Icons.picture_as_pdf_outlined, size: 18),
       label: Text(_loading ? 'Gerando PDF...' : 'Histórico em PDF'),
-      style: ElevatedButton.styleFrom(
-        minimumSize: const Size.fromHeight(48),
-      ),
+      style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
     );
   }
 }

@@ -60,6 +60,7 @@ class _DeleteAccountSectionState extends ConsumerState<DeleteAccountSection> {
         SnackBar(
           content: Text(e.message),
           backgroundColor: Theme.of(context).colorScheme.error,
+          behavior: SnackBarBehavior.floating,
         ),
       );
     } catch (_) {
@@ -70,6 +71,7 @@ class _DeleteAccountSectionState extends ConsumerState<DeleteAccountSection> {
             'Não foi possível excluir a conta. Tente novamente.',
           ),
           backgroundColor: Theme.of(context).colorScheme.error,
+          behavior: SnackBarBehavior.floating,
         ),
       );
     } finally {

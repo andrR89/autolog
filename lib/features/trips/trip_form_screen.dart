@@ -5,7 +5,6 @@ import 'package:autolog/data/repositories/trip_repository.dart';
 import 'package:autolog/domain/models/trip.dart';
 import 'package:autolog/domain/models/vehicle.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -99,7 +98,9 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
     if (_endDate.isBefore(_startDate)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('A data de término deve ser igual ou posterior ao início.'),
+          content: Text(
+            'A data de término deve ser igual ou posterior ao início.',
+          ),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -111,7 +112,9 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
     try {
       final repo = ref.read(tripRepositoryProvider);
       final name = _nameCtrl.text.trim();
-      final notes = _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim();
+      final notes = _notesCtrl.text.trim().isEmpty
+          ? null
+          : _notesCtrl.text.trim();
 
       if (_isEditing) {
         await repo.update(
@@ -173,11 +176,7 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
         elevation: 0,
         scrolledUnderElevation: 1,
         shadowColor: context.hairline,
-        systemOverlayStyle: const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.dark,
-          statusBarBrightness: Brightness.light,
-        ),
+        systemOverlayStyle: context.systemUiStyle,
         title: Text(_isEditing ? 'Editar viagem' : 'Nova viagem'),
         leading: Tooltip(
           message: 'Voltar',
@@ -202,63 +201,63 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // ── Nome ──────────────────────────────────────────────────
-                    TextFormField(
-                      controller: _nameCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Nome da viagem',
-                        hintText: 'Ex.: Floripa, Trip pra serra',
-                      ),
-                      textCapitalization: TextCapitalization.sentences,
-                      validator: (v) {
-                        if (v == null || v.trim().isEmpty) {
-                          return 'Informe o nome da viagem';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-
-                    // ── Datas ─────────────────────────────────────────────────
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _DateField(
-                            label: 'Início',
-                            value: dateFmt.format(_startDate),
-                            onTap: _pickStartDate,
-                          ),
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // ── Nome ──────────────────────────────────────────────────
+                      TextFormField(
+                        controller: _nameCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Nome da viagem',
+                          hintText: 'Ex.: Floripa, Trip pra serra',
                         ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: _DateField(
-                            label: 'Término',
-                            value: dateFmt.format(_endDate),
-                            onTap: _pickEndDate,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-
-                    // ── Notas ─────────────────────────────────────────────────
-                    TextFormField(
-                      controller: _notesCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Observações (opcional)',
-                        hintText: 'Ex.: Viagem de férias em família',
-                        alignLabelWithHint: true,
+                        textCapitalization: TextCapitalization.sentences,
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) {
+                            return 'Informe o nome da viagem';
+                          }
+                          return null;
+                        },
                       ),
-                      maxLines: 3,
-                      textCapitalization: TextCapitalization.sentences,
-                    ),
-                    const SizedBox(height: AppSpacing.xxl),
-                  ],
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // ── Datas ─────────────────────────────────────────────────
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _DateField(
+                              label: 'Início',
+                              value: dateFmt.format(_startDate),
+                              onTap: _pickStartDate,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: _DateField(
+                              label: 'Término',
+                              value: dateFmt.format(_endDate),
+                              onTap: _pickEndDate,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // ── Notas ─────────────────────────────────────────────────
+                      TextFormField(
+                        controller: _notesCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Observações (opcional)',
+                          hintText: 'Ex.: Viagem de férias em família',
+                          alignLabelWithHint: true,
+                        ),
+                        maxLines: 3,
+                        textCapitalization: TextCapitalization.sentences,
+                      ),
+                      const SizedBox(height: AppSpacing.xxl),
+                    ],
+                  ),
                 ),
               ),
-            ),
             ),
 
             // ── Barra sticky de salvar ────────────────────────────────────────

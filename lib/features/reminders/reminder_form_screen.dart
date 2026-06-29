@@ -264,12 +264,7 @@ class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
         elevation: 0,
         scrolledUnderElevation: 1,
         shadowColor: context.hairline,
-        // Status bar com ícones escuros — fundo é o surface off-white.
-        systemOverlayStyle: const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.dark,
-          statusBarBrightness: Brightness.light,
-        ),
+        systemOverlayStyle: context.systemUiStyle,
         title: Text(_isEditing ? 'Editar lembrete' : 'Novo lembrete'),
         leading: Tooltip(
           message: 'Voltar',
@@ -294,141 +289,144 @@ class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
                 maxWidth: ResponsiveWidths.form,
                 child: SingleChildScrollView(
                   child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // ── Contexto do veículo ──────────────────────────────────
-                    VehicleContextChip(vehicle: widget.vehicle),
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // ── Contexto do veículo ──────────────────────────────────
+                      VehicleContextChip(vehicle: widget.vehicle),
 
-                    // ── Seção 1: O que lembrar ───────────────────────────────
-                    FormSectionCard(
-                      eyebrow: 'O que lembrar',
-                      children: [
-                        TextFormField(
-                          controller: _titleCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'Título',
-                            hintText: 'Ex.: Troca de óleo',
+                      // ── Seção 1: O que lembrar ───────────────────────────────
+                      FormSectionCard(
+                        eyebrow: 'O que lembrar',
+                        children: [
+                          TextFormField(
+                            controller: _titleCtrl,
+                            decoration: const InputDecoration(
+                              labelText: 'Título',
+                              hintText: 'Ex.: Troca de óleo',
+                            ),
+                            textCapitalization: TextCapitalization.sentences,
+                            validator: (v) =>
+                                _validateRequired(v, fieldLabel: 'o título'),
                           ),
-                          textCapitalization: TextCapitalization.sentences,
-                          validator: (v) =>
-                              _validateRequired(v, fieldLabel: 'o título'),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
 
-                    // ── Seção 2: Quando ──────────────────────────────────────
-                    FormSectionCard(
-                      eyebrow: 'Quando',
-                      children: [
-                        // Tipo: porKm / porData — segmentado estilizado.
-                        const _SectionFieldLabel('TIPO DE LEMBRETE'),
-                        const SizedBox(height: AppSpacing.sm),
-                        _ReminderTypeSegmented(
-                          value: _type,
-                          onChanged: (t) {
-                            setState(() {
-                              _type = t;
-                              // Limpa o campo oposto ao trocar de tipo.
+                      // ── Seção 2: Quando ──────────────────────────────────────
+                      FormSectionCard(
+                        eyebrow: 'Quando',
+                        children: [
+                          // Tipo: porKm / porData — segmentado estilizado.
+                          const _SectionFieldLabel('TIPO DE LEMBRETE'),
+                          const SizedBox(height: AppSpacing.sm),
+                          _ReminderTypeSegmented(
+                            value: _type,
+                            onChanged: (t) {
+                              setState(() {
+                                _type = t;
+                                // Limpa o campo oposto ao trocar de tipo.
+                                if (_type == ReminderType.porKm) {
+                                  _dueDate = null;
+                                  _dueKmError = null;
+                                } else {
+                                  _dueKmCtrl.clear();
+                                  _dueKmError = null;
+                                }
+                              });
+                              // Ao selecionar porKm, valida imediatamente.
                               if (_type == ReminderType.porKm) {
-                                _dueDate = null;
-                                _dueKmError = null;
-                              } else {
-                                _dueKmCtrl.clear();
-                                _dueKmError = null;
+                                _runDueKmValidation();
                               }
-                            });
-                            // Ao selecionar porKm, valida imediatamente.
-                            if (_type == ReminderType.porKm) {
-                              _runDueKmValidation();
-                            }
-                          },
-                        ),
+                            },
+                          ),
 
-                        const SizedBox(height: AppSpacing.lg),
-
-                        // Campo condicional por tipo — animado com
-                        // AnimatedSwitcher para suavizar a troca.
-                        AnimatedSwitcher(
-                          duration: AppMotion.standard,
-                          switchInCurve: AppMotion.standardCurve,
-                          switchOutCurve: AppMotion.standardCurve,
-                          transitionBuilder: (child, animation) =>
-                              FadeTransition(opacity: animation, child: child),
-                          child: _type == ReminderType.porKm
-                              ? _DueKmField(
-                                  key: const ValueKey('due_km'),
-                                  controller: _dueKmCtrl,
-                                  error: _dueKmError,
-                                )
-                              : _DueDateField(
-                                  key: const ValueKey('due_date'),
-                                  dueDate: _dueDate,
-                                  onTap: _pickDate,
-                                ),
-                        ),
-
-                        // Switch "Concluído" — só em modo edição.
-                        if (_isEditing) ...[
                           const SizedBox(height: AppSpacing.lg),
-                          _DoneToggle(
-                            value: _isDone,
-                            onChanged: (v) => setState(() => _isDone = v),
-                          ),
-                        ],
-                      ],
-                    ),
 
-                    // ── Seção 3: Recorrência ─────────────────────────────────
-                    FormSectionCard(
-                      eyebrow: 'Recorrência',
-                      children: [
-                        SwitchListTile.adaptive(
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text('Repetir automaticamente'),
-                          subtitle: const Text(
-                            'Quando marcar como feito, criamos o próximo automaticamente',
+                          // Campo condicional por tipo — animado com
+                          // AnimatedSwitcher para suavizar a troca.
+                          AnimatedSwitcher(
+                            duration: AppMotion.standard,
+                            switchInCurve: AppMotion.standardCurve,
+                            switchOutCurve: AppMotion.standardCurve,
+                            transitionBuilder: (child, animation) =>
+                                FadeTransition(
+                                  opacity: animation,
+                                  child: child,
+                                ),
+                            child: _type == ReminderType.porKm
+                                ? _DueKmField(
+                                    key: const ValueKey('due_km'),
+                                    controller: _dueKmCtrl,
+                                    error: _dueKmError,
+                                  )
+                                : _DueDateField(
+                                    key: const ValueKey('due_date'),
+                                    dueDate: _dueDate,
+                                    onTap: _pickDate,
+                                  ),
                           ),
-                          value: _recorrente,
-                          onChanged: (v) => setState(() {
-                            _recorrente = v;
-                            if (!v) {
-                              _intervalDays = null;
-                              _intervalKmCtrl.clear();
-                            }
-                          }),
-                        ),
-                        if (_recorrente) ...[
-                          const SizedBox(height: AppSpacing.md),
-                          // Por data: dropdown de presets de dias.
-                          if (_type == ReminderType.porData)
-                            _IntervalDaysDropdown(
-                              value: _intervalDays,
-                              onChanged: (v) =>
-                                  setState(() => _intervalDays = v),
+
+                          // Switch "Concluído" — só em modo edição.
+                          if (_isEditing) ...[
+                            const SizedBox(height: AppSpacing.lg),
+                            _DoneToggle(
+                              value: _isDone,
+                              onChanged: (v) => setState(() => _isDone = v),
                             ),
-                          // Por km: campo numérico livre.
-                          if (_type == ReminderType.porKm)
-                            TextFormField(
-                              controller: _intervalKmCtrl,
-                              decoration: const InputDecoration(
-                                labelText: 'Repetir a cada (km)',
-                                hintText: '10000',
-                                suffixText: 'km',
+                          ],
+                        ],
+                      ),
+
+                      // ── Seção 3: Recorrência ─────────────────────────────────
+                      FormSectionCard(
+                        eyebrow: 'Recorrência',
+                        children: [
+                          SwitchListTile.adaptive(
+                            contentPadding: EdgeInsets.zero,
+                            title: const Text('Repetir automaticamente'),
+                            subtitle: const Text(
+                              'Quando marcar como feito, criamos o próximo automaticamente',
+                            ),
+                            value: _recorrente,
+                            onChanged: (v) => setState(() {
+                              _recorrente = v;
+                              if (!v) {
+                                _intervalDays = null;
+                                _intervalKmCtrl.clear();
+                              }
+                            }),
+                          ),
+                          if (_recorrente) ...[
+                            const SizedBox(height: AppSpacing.md),
+                            // Por data: dropdown de presets de dias.
+                            if (_type == ReminderType.porData)
+                              _IntervalDaysDropdown(
+                                value: _intervalDays,
+                                onChanged: (v) =>
+                                    setState(() => _intervalDays = v),
                               ),
-                              keyboardType: TextInputType.number,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly,
-                              ],
-                            ),
+                            // Por km: campo numérico livre.
+                            if (_type == ReminderType.porKm)
+                              TextFormField(
+                                controller: _intervalKmCtrl,
+                                decoration: const InputDecoration(
+                                  labelText: 'Repetir a cada (km)',
+                                  hintText: '10000',
+                                  suffixText: 'km',
+                                ),
+                                keyboardType: TextInputType.number,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                ],
+                              ),
+                          ],
                         ],
-                      ],
-                    ),
+                      ),
 
-                    const SizedBox(height: AppSpacing.xxl),
-                  ],
+                      const SizedBox(height: AppSpacing.xxl),
+                    ],
+                  ),
                 ),
               ),
-            ),
             ),
 
             // ── Barra sticky de salvar ───────────────────────────────────────

@@ -291,12 +291,7 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
         elevation: 0,
         scrolledUnderElevation: 1,
         shadowColor: context.hairline,
-        // Status bar com ícones escuros — fundo é o surface off-white.
-        systemOverlayStyle: const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.dark,
-          statusBarBrightness: Brightness.light,
-        ),
+        systemOverlayStyle: context.systemUiStyle,
         title: Text(_isEditing ? 'Editar despesa' : 'Nova despesa'),
         leading: Tooltip(
           message: 'Voltar',
@@ -321,94 +316,95 @@ class _ExpenseFormScreenState extends ConsumerState<ExpenseFormScreen> {
                 maxWidth: ResponsiveWidths.form,
                 child: SingleChildScrollView(
                   child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // ── Contexto do veículo ──────────────────────────────────
-                    // Lembrete passivo de qual carro está recebendo a despesa.
-                    VehicleContextChip(vehicle: widget.vehicle),
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // ── Contexto do veículo ──────────────────────────────────
+                      // Lembrete passivo de qual carro está recebendo a despesa.
+                      VehicleContextChip(vehicle: widget.vehicle),
 
-                    // ── Scan CTA ─────────────────────────────────────────────
-                    // Atalho opcional — o form manual continua disponível 100%
-                    // (Regra de Ouro #3b). Disabled durante saving.
-                    ScanCtaBanner(
-                      onTap: _scan,
-                      scanning: _scanning,
-                    ),
+                      // ── Scan CTA ─────────────────────────────────────────────
+                      // Atalho opcional — o form manual continua disponível 100%
+                      // (Regra de Ouro #3b). Disabled durante saving.
+                      ScanCtaBanner(onTap: _scan, scanning: _scanning),
 
-                    // ── Seção 1: Quando e onde ───────────────────────────────
-                    FormSectionCard(
-                      eyebrow: 'Quando e onde',
-                      children: [
-                        // Data — DatePickerField do DS (mesmo do fuel form).
-                        DatePickerField(value: _date, onTap: _pickDate),
+                      // ── Seção 1: Quando e onde ───────────────────────────────
+                      FormSectionCard(
+                        eyebrow: 'Quando e onde',
+                        children: [
+                          // Data — DatePickerField do DS (mesmo do fuel form).
+                          DatePickerField(value: _date, onTap: _pickDate),
 
-                        const SizedBox(height: AppSpacing.lg),
+                          const SizedBox(height: AppSpacing.lg),
 
-                        // Categoria — eyebrow + pílulas horizontais.
-                        const _SectionFieldLabel('CATEGORIA'),
-                        const SizedBox(height: AppSpacing.sm),
-                        ExpenseCategoryPicker(
-                          value: _category,
-                          onChanged: (v) => setState(() => _category = v),
-                        ),
-
-                        const SizedBox(height: AppSpacing.lg),
-
-                        // Descrição.
-                        TextFormField(
-                          controller: _descriptionCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'Descrição',
-                            hintText: 'Ex.: Troca de óleo',
+                          // Categoria — eyebrow + pílulas horizontais.
+                          const _SectionFieldLabel('CATEGORIA'),
+                          const SizedBox(height: AppSpacing.sm),
+                          ExpenseCategoryPicker(
+                            value: _category,
+                            onChanged: (v) => setState(() => _category = v),
                           ),
-                          textCapitalization: TextCapitalization.sentences,
-                          validator: (v) =>
-                              _validateRequired(v, fieldLabel: 'uma descrição'),
-                        ),
-                      ],
-                    ),
 
-                    // ── Seção 2: Valor e odômetro ────────────────────────────
-                    FormSectionCard(
-                      eyebrow: 'Valor e odômetro',
-                      children: [
-                        // Valor — decimal pt-BR.
-                        TextFormField(
-                          controller: _amountCtrl,
-                          decoration: const InputDecoration(
-                            labelText: r'Valor (R$)',
-                            hintText: 'Ex.: 189,90',
+                          const SizedBox(height: AppSpacing.lg),
+
+                          // Descrição.
+                          TextFormField(
+                            controller: _descriptionCtrl,
+                            decoration: const InputDecoration(
+                              labelText: 'Descrição',
+                              hintText: 'Ex.: Troca de óleo',
+                            ),
+                            textCapitalization: TextCapitalization.sentences,
+                            validator: (v) => _validateRequired(
+                              v,
+                              fieldLabel: 'uma descrição',
+                            ),
                           ),
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
+                        ],
+                      ),
+
+                      // ── Seção 2: Valor e odômetro ────────────────────────────
+                      FormSectionCard(
+                        eyebrow: 'Valor e odômetro',
+                        children: [
+                          // Valor — decimal pt-BR.
+                          TextFormField(
+                            controller: _amountCtrl,
+                            decoration: const InputDecoration(
+                              labelText: r'Valor (R$)',
+                              hintText: 'Ex.: 189,90',
+                            ),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            validator: (v) => validateDecimalPositive(
+                              v,
+                              fieldLabel: 'o valor',
+                            ),
                           ),
-                          validator: (v) =>
-                              validateDecimalPositive(v, fieldLabel: 'o valor'),
-                        ),
 
-                        const SizedBox(height: AppSpacing.md),
+                          const SizedBox(height: AppSpacing.md),
 
-                        // Odômetro — opcional.
-                        TextFormField(
-                          controller: _odometerCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'Odômetro (km) — opcional',
-                            hintText: 'Ex.: 45000',
+                          // Odômetro — opcional.
+                          TextFormField(
+                            controller: _odometerCtrl,
+                            decoration: const InputDecoration(
+                              labelText: 'Odômetro (km) — opcional',
+                              hintText: 'Ex.: 45000',
+                            ),
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            validator: _validateOptionalOdometer,
                           ),
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                          ],
-                          validator: _validateOptionalOdometer,
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
 
-                    const SizedBox(height: AppSpacing.xxl),
-                  ],
+                      const SizedBox(height: AppSpacing.xxl),
+                    ],
+                  ),
                 ),
               ),
-            ),
             ),
 
             // ── Barra sticky de salvar ───────────────────────────────────────

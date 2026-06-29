@@ -520,12 +520,7 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
         elevation: 0,
         scrolledUnderElevation: 1,
         shadowColor: context.hairline,
-        // Status bar com ícones escuros — fundo é o surface off-white.
-        systemOverlayStyle: const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.dark,
-          statusBarBrightness: Brightness.light,
-        ),
+        systemOverlayStyle: context.systemUiStyle,
         title: Text(_isEditing ? 'Editar veículo' : 'Novo veículo'),
         leading: Tooltip(
           message: 'Voltar',
@@ -554,326 +549,332 @@ class _VehicleFormScreenState extends ConsumerState<VehicleFormScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                    // ── Seletor de tipo carro/moto ───────────────────────────
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.lg,
-                        AppSpacing.lg,
-                        AppSpacing.lg,
-                        0,
+                      // ── Seletor de tipo carro/moto ───────────────────────────
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.lg,
+                          AppSpacing.lg,
+                          AppSpacing.lg,
+                          0,
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _VehicleTypeChip(
+                                icon: Icons.directions_car,
+                                label: 'Carro',
+                                selected: _vehicleType == VehicleType.carro,
+                                onTap: () => setState(
+                                  () => _vehicleType = VehicleType.carro,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.md),
+                            Expanded(
+                              child: _VehicleTypeChip(
+                                icon: Icons.two_wheeler,
+                                label: 'Moto',
+                                selected: _vehicleType == VehicleType.moto,
+                                onTap: () => setState(
+                                  () => _vehicleType = VehicleType.moto,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: _VehicleTypeChip(
-                              icon: Icons.directions_car,
-                              label: 'Carro',
-                              selected: _vehicleType == VehicleType.carro,
-                              onTap: () => setState(
-                                () => _vehicleType = VehicleType.carro,
-                              ),
-                            ),
+                      // Espaçamento entre seletor de tipo e botões de busca/scan.
+                      const SizedBox(height: AppSpacing.md),
+                      // ── Botões "Buscar na FIPE" + "Escanear CRLV" ───────────
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg,
+                        ),
+                        child: FilledButton.icon(
+                          onPressed: _openFipeSearch,
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size(double.infinity, 48),
+                            backgroundColor: AppColors.brand,
+                            foregroundColor: AppColors.brandInk,
                           ),
-                          const SizedBox(width: AppSpacing.md),
-                          Expanded(
-                            child: _VehicleTypeChip(
-                              icon: Icons.two_wheeler,
-                              label: 'Moto',
-                              selected: _vehicleType == VehicleType.moto,
-                              onTap: () => setState(
-                                () => _vehicleType = VehicleType.moto,
-                              ),
+                          icon: const Icon(Icons.search, size: 18),
+                          label: const Text('Buscar na FIPE'),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg,
+                        ),
+                        child: FilledButton.icon(
+                          onPressed: _crlvScanning ? null : _openCrlvScan,
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size(double.infinity, 48),
+                            backgroundColor: context.surfaceRaised,
+                            foregroundColor: context.ink,
+                          ),
+                          icon: _crlvScanning
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.document_scanner, size: 18),
+                          label: const Text('Escanear CRLV'),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+
+                      // ── Seção 1: Identificação ───────────────────────────────
+                      FormSectionCard(
+                        eyebrow: 'Identificação',
+                        children: [
+                          // Apelido — campo obrigatório e mais importante.
+                          TextFormField(
+                            key: _nicknameFieldKey,
+                            controller: _nicknameCtrl,
+                            decoration: const InputDecoration(
+                              labelText: 'Apelido',
+                              hintText: 'Ex.: Meu Civic',
                             ),
+                            textCapitalization: TextCapitalization.sentences,
+                            validator: validateNickname,
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+
+                          // Marca e modelo em row — quando cabem lado a lado
+                          // economizam vertical estate e criam par lógico.
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: TweenAnimationBuilder<Color?>(
+                                  tween: ColorTween(
+                                    begin: Colors.transparent,
+                                    end: _fipeHighlight
+                                        ? AppColors.success.withValues(
+                                            alpha: 0.3,
+                                          )
+                                        : Colors.transparent,
+                                  ),
+                                  duration: const Duration(milliseconds: 800),
+                                  builder: (_, color, child) => DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      borderRadius: AppRadius.allMd,
+                                      color: color,
+                                    ),
+                                    child: child,
+                                  ),
+                                  child: TextFormField(
+                                    controller: _makeCtrl,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Marca',
+                                      hintText: 'Ex.: Honda',
+                                    ),
+                                    textCapitalization:
+                                        TextCapitalization.words,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.md),
+                              Expanded(
+                                child: TweenAnimationBuilder<Color?>(
+                                  tween: ColorTween(
+                                    begin: Colors.transparent,
+                                    end: _fipeHighlight
+                                        ? AppColors.success.withValues(
+                                            alpha: 0.3,
+                                          )
+                                        : Colors.transparent,
+                                  ),
+                                  duration: const Duration(milliseconds: 800),
+                                  builder: (_, color, child) => DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      borderRadius: AppRadius.allMd,
+                                      color: color,
+                                    ),
+                                    child: child,
+                                  ),
+                                  child: TextFormField(
+                                    controller: _modelCtrl,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Modelo',
+                                      hintText: 'Ex.: Civic',
+                                    ),
+                                    textCapitalization:
+                                        TextCapitalization.words,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+
+                          // Placa — ocupa linha inteira; formatação all-caps.
+                          TextFormField(
+                            controller: _plateCtrl,
+                            decoration: const InputDecoration(
+                              labelText: 'Placa (opcional)',
+                              hintText: 'Ex.: ABC1D23',
+                            ),
+                            textCapitalization: TextCapitalization.characters,
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+
+                          // RENAVAM — numérico, 9-11 dígitos.
+                          TextFormField(
+                            controller: _renavamCtrl,
+                            decoration: const InputDecoration(
+                              labelText: 'RENAVAM (opcional)',
+                              hintText: '11 dígitos',
+                            ),
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(11),
+                            ],
+                            validator: validateRenavam,
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+
+                          // Chassi — alfanumérico, 17 caracteres.
+                          TextFormField(
+                            controller: _chassiCtrl,
+                            decoration: const InputDecoration(
+                              labelText: 'Chassi (opcional)',
+                              hintText: '17 caracteres',
+                            ),
+                            textCapitalization: TextCapitalization.characters,
+                            maxLength: 17,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp('[a-zA-Z0-9]'),
+                              ),
+                              _UpperCaseTextFormatter(),
+                            ],
+                            validator: validateChassi,
                           ),
                         ],
                       ),
-                    ),
-                    // Espaçamento entre seletor de tipo e botões de busca/scan.
-                    const SizedBox(height: AppSpacing.md),
-                    // ── Botões "Buscar na FIPE" + "Escanear CRLV" ───────────
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.lg,
-                      ),
-                      child: FilledButton.icon(
-                        onPressed: _openFipeSearch,
-                        style: FilledButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 48),
-                          backgroundColor: AppColors.brand,
-                          foregroundColor: AppColors.brandInk,
-                        ),
-                        icon: const Icon(Icons.search, size: 18),
-                        label: const Text('Buscar na FIPE'),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.lg,
-                      ),
-                      child: FilledButton.icon(
-                        onPressed: _crlvScanning ? null : _openCrlvScan,
-                        style: FilledButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 48),
-                          backgroundColor: context.surfaceRaised,
-                          foregroundColor: context.ink,
-                        ),
-                        icon: _crlvScanning
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.document_scanner, size: 18),
-                        label: const Text('Escanear CRLV'),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
 
-                    // ── Seção 1: Identificação ───────────────────────────────
-                    FormSectionCard(
-                      eyebrow: 'Identificação',
-                      children: [
-                        // Apelido — campo obrigatório e mais importante.
-                        TextFormField(
-                          key: _nicknameFieldKey,
-                          controller: _nicknameCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'Apelido',
-                            hintText: 'Ex.: Meu Civic',
-                          ),
-                          textCapitalization: TextCapitalization.sentences,
-                          validator: validateNickname,
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-
-                        // Marca e modelo em row — quando cabem lado a lado
-                        // economizam vertical estate e criam par lógico.
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: TweenAnimationBuilder<Color?>(
-                                tween: ColorTween(
-                                  begin: Colors.transparent,
-                                  end: _fipeHighlight
-                                      ? AppColors.success.withValues(alpha: 0.3)
-                                      : Colors.transparent,
-                                ),
-                                duration: const Duration(milliseconds: 800),
-                                builder: (_, color, child) => DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    borderRadius: AppRadius.allMd,
-                                    color: color,
-                                  ),
-                                  child: child,
-                                ),
+                      // ── Seção 1b: Detalhes do veículo ───────────────────────
+                      FormSectionCard(
+                        eyebrow: 'Detalhes do veículo',
+                        children: [
+                          // Ano e UF em row — relacionados (ano/modelo e UF de emplacamento).
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
                                 child: TextFormField(
-                                  controller: _makeCtrl,
+                                  controller: _yearCtrl,
                                   decoration: const InputDecoration(
-                                    labelText: 'Marca',
-                                    hintText: 'Ex.: Honda',
+                                    labelText: 'Ano (opcional)',
+                                    hintText: 'Ex.: 2018',
                                   ),
-                                  textCapitalization: TextCapitalization.words,
+                                  keyboardType: TextInputType.number,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                    LengthLimitingTextInputFormatter(4),
+                                  ],
+                                  validator: validateYear,
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              child: TweenAnimationBuilder<Color?>(
-                                tween: ColorTween(
-                                  begin: Colors.transparent,
-                                  end: _fipeHighlight
-                                      ? AppColors.success.withValues(alpha: 0.3)
-                                      : Colors.transparent,
-                                ),
-                                duration: const Duration(milliseconds: 800),
-                                builder: (_, color, child) => DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    borderRadius: AppRadius.allMd,
-                                    color: color,
-                                  ),
-                                  child: child,
-                                ),
+                              const SizedBox(width: AppSpacing.md),
+                              Expanded(
                                 child: TextFormField(
-                                  controller: _modelCtrl,
+                                  controller: _ufCtrl,
                                   decoration: const InputDecoration(
-                                    labelText: 'Modelo',
-                                    hintText: 'Ex.: Civic',
+                                    labelText: 'UF (opcional)',
+                                    hintText: 'Ex.: SP',
+                                    // Esconde counter "2/2" — campo curto já é
+                                    // óbvio pelo tamanho. (regressão 26/05/2026)
+                                    counterText: '',
                                   ),
-                                  textCapitalization: TextCapitalization.words,
+                                  textCapitalization:
+                                      TextCapitalization.characters,
+                                  maxLength: 2,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.allow(
+                                      RegExp('[a-zA-Z]'),
+                                    ),
+                                    _UpperCaseTextFormatter(),
+                                  ],
+                                  validator: validateUf,
                                 ),
                               ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+
+                          // Cor — linha inteira, texto livre.
+                          TextFormField(
+                            controller: _colorCtrl,
+                            decoration: const InputDecoration(
+                              labelText: 'Cor (opcional)',
+                              hintText: 'Ex.: preto',
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-
-                        // Placa — ocupa linha inteira; formatação all-caps.
-                        TextFormField(
-                          controller: _plateCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'Placa (opcional)',
-                            hintText: 'Ex.: ABC1D23',
+                            textCapitalization: TextCapitalization.sentences,
                           ),
-                          textCapitalization: TextCapitalization.characters,
-                        ),
-                        const SizedBox(height: AppSpacing.md),
+                        ],
+                      ),
 
-                        // RENAVAM — numérico, 9-11 dígitos.
-                        TextFormField(
-                          controller: _renavamCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'RENAVAM (opcional)',
-                            hintText: '11 dígitos',
-                          ),
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(11),
-                          ],
-                          validator: validateRenavam,
-                        ),
-                        const SizedBox(height: AppSpacing.md),
+                      // ── Seção 1c: Detalhes técnicos (colapsável) ────────────
+                      _TechnicalSpecsSection(
+                        vehicleType: _vehicleType,
+                        make: _makeCtrl.text.trim(),
+                        model: _modelCtrl.text.trim(),
+                        year: int.tryParse(_yearCtrl.text.trim()),
+                        engineCcCtrl: _engineCcCtrl,
+                        tankLCtrl: _tankLCtrl,
+                        horsepowerCtrl: _horsepowerCtrl,
+                        inferring: _inferring,
+                        onInferSpecs: _onInferSpecs,
+                        initiallyExpanded:
+                            _isEditing &&
+                            (widget.initial?.engineDisplacementCc != null ||
+                                widget.initial?.tankCapacityL != null ||
+                                widget.initial?.horsepower != null),
+                      ),
 
-                        // Chassi — alfanumérico, 17 caracteres.
-                        TextFormField(
-                          controller: _chassiCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'Chassi (opcional)',
-                            hintText: '17 caracteres',
+                      // ── Seção 2: Combustível e odômetro ─────────────────────
+                      FormSectionCard(
+                        eyebrow: 'Combustível e odômetro',
+                        children: [
+                          // Label eyebrow interno para o segmentado.
+                          const _SectionFieldLabel('TIPO DE COMBUSTÍVEL'),
+                          const SizedBox(height: AppSpacing.sm),
+                          FuelTypeSegmented(
+                            value: _fuelType,
+                            onChanged: (v) => setState(() => _fuelType = v),
                           ),
-                          textCapitalization: TextCapitalization.characters,
-                          maxLength: 17,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                              RegExp('[a-zA-Z0-9]'),
+
+                          const SizedBox(height: AppSpacing.lg),
+
+                          // Odômetro inicial — digit-only.
+                          TextFormField(
+                            key: _odometerFieldKey,
+                            controller: _odometerCtrl,
+                            decoration: const InputDecoration(
+                              labelText: 'Odômetro inicial (km)',
+                              hintText: 'Ex.: 45000',
                             ),
-                            _UpperCaseTextFormatter(),
-                          ],
-                          validator: validateChassi,
-                        ),
-                      ],
-                    ),
-
-                    // ── Seção 1b: Detalhes do veículo ───────────────────────
-                    FormSectionCard(
-                      eyebrow: 'Detalhes do veículo',
-                      children: [
-                        // Ano e UF em row — relacionados (ano/modelo e UF de emplacamento).
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: TextFormField(
-                                controller: _yearCtrl,
-                                decoration: const InputDecoration(
-                                  labelText: 'Ano (opcional)',
-                                  hintText: 'Ex.: 2018',
-                                ),
-                                keyboardType: TextInputType.number,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                  LengthLimitingTextInputFormatter(4),
-                                ],
-                                validator: validateYear,
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              child: TextFormField(
-                                controller: _ufCtrl,
-                                decoration: const InputDecoration(
-                                  labelText: 'UF (opcional)',
-                                  hintText: 'Ex.: SP',
-                                  // Esconde counter "2/2" — campo curto já é
-                                  // óbvio pelo tamanho. (regressão 26/05/2026)
-                                  counterText: '',
-                                ),
-                                textCapitalization:
-                                    TextCapitalization.characters,
-                                maxLength: 2,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.allow(
-                                    RegExp('[a-zA-Z]'),
-                                  ),
-                                  _UpperCaseTextFormatter(),
-                                ],
-                                validator: validateUf,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-
-                        // Cor — linha inteira, texto livre.
-                        TextFormField(
-                          controller: _colorCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'Cor (opcional)',
-                            hintText: 'Ex.: preto',
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            validator: validateInitialOdometer,
                           ),
-                          textCapitalization: TextCapitalization.sentences,
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
 
-                    // ── Seção 1c: Detalhes técnicos (colapsável) ────────────
-                    _TechnicalSpecsSection(
-                      vehicleType: _vehicleType,
-                      make: _makeCtrl.text.trim(),
-                      model: _modelCtrl.text.trim(),
-                      year: int.tryParse(_yearCtrl.text.trim()),
-                      engineCcCtrl: _engineCcCtrl,
-                      tankLCtrl: _tankLCtrl,
-                      horsepowerCtrl: _horsepowerCtrl,
-                      inferring: _inferring,
-                      onInferSpecs: _onInferSpecs,
-                      initiallyExpanded:
-                          _isEditing &&
-                          (widget.initial?.engineDisplacementCc != null ||
-                              widget.initial?.tankCapacityL != null ||
-                              widget.initial?.horsepower != null),
-                    ),
-
-                    // ── Seção 2: Combustível e odômetro ─────────────────────
-                    FormSectionCard(
-                      eyebrow: 'Combustível e odômetro',
-                      children: [
-                        // Label eyebrow interno para o segmentado.
-                        const _SectionFieldLabel('TIPO DE COMBUSTÍVEL'),
-                        const SizedBox(height: AppSpacing.sm),
-                        FuelTypeSegmented(
-                          value: _fuelType,
-                          onChanged: (v) => setState(() => _fuelType = v),
-                        ),
-
-                        const SizedBox(height: AppSpacing.lg),
-
-                        // Odômetro inicial — digit-only.
-                        TextFormField(
-                          key: _odometerFieldKey,
-                          controller: _odometerCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'Odômetro inicial (km)',
-                            hintText: 'Ex.: 45000',
-                          ),
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                          ],
-                          validator: validateInitialOdometer,
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: AppSpacing.xxl),
-                  ],
+                      const SizedBox(height: AppSpacing.xxl),
+                    ],
+                  ),
                 ),
               ),
-            ),
             ),
 
             // ── Barra sticky de salvar ───────────────────────────────────────
@@ -1006,38 +1007,43 @@ class _VehicleTypeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(
-          vertical: AppSpacing.md,
-          horizontal: AppSpacing.sm,
-        ),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.brand : context.surfaceRaised,
-          borderRadius: AppRadius.allMd,
-          border: Border.all(
-            color: selected ? AppColors.brand : context.hairline,
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: '$label, ${selected ? 'selecionado' : 'não selecionado'}',
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(
+            vertical: AppSpacing.md,
+            horizontal: AppSpacing.sm,
           ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 20,
-              color: selected ? AppColors.brandInk : context.inkMuted,
+          decoration: BoxDecoration(
+            color: selected ? AppColors.brand : context.surfaceRaised,
+            borderRadius: AppRadius.allMd,
+            border: Border.all(
+              color: selected ? AppColors.brand : context.hairline,
             ),
-            const SizedBox(width: AppSpacing.sm),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: selected ? AppColors.brandInk : context.ink,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: selected ? AppColors.brandInk : context.inkMuted,
               ),
-            ),
-          ],
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: selected ? AppColors.brandInk : context.ink,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

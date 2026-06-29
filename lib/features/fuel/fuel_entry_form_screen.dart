@@ -308,9 +308,10 @@ class _FuelEntryFormScreenState extends ConsumerState<FuelEntryFormScreen> {
 
     if (origin == null) return;
 
-    await track(AnalyticsEvent.scanReceiptOpened, props: {
-      'origin': origin.name,
-    });
+    await track(
+      AnalyticsEvent.scanReceiptOpened,
+      props: {'origin': origin.name},
+    );
 
     final receipt = await ref
         .read(scanControllerProvider.notifier)
@@ -335,9 +336,10 @@ class _FuelEntryFormScreenState extends ConsumerState<FuelEntryFormScreen> {
 
     if (scanState is ScanError) {
       unawaited(HapticFeedback.heavyImpact());
-      await track(AnalyticsEvent.scanReceiptFailed, props: {
-        'reason': 'scan_error',
-      });
+      await track(
+        AnalyticsEvent.scanReceiptFailed,
+        props: {'reason': 'scan_error'},
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -393,9 +395,10 @@ class _FuelEntryFormScreenState extends ConsumerState<FuelEntryFormScreen> {
     if (extractedAnything) {
       await track(AnalyticsEvent.scanReceiptSucceeded);
     } else {
-      await track(AnalyticsEvent.scanReceiptFailed, props: {
-        'reason': 'empty_extraction',
-      });
+      await track(
+        AnalyticsEvent.scanReceiptFailed,
+        props: {'reason': 'empty_extraction'},
+      );
     }
   }
 
@@ -555,12 +558,7 @@ class _FuelEntryFormScreenState extends ConsumerState<FuelEntryFormScreen> {
         elevation: 0,
         scrolledUnderElevation: 1,
         shadowColor: context.hairline,
-        // Status bar com ícones escuros — fundo é o surface off-white.
-        systemOverlayStyle: const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.dark,
-          statusBarBrightness: Brightness.light,
-        ),
+        systemOverlayStyle: context.systemUiStyle,
         title: Text(_isEditing ? 'Editar abastecimento' : 'Novo abastecimento'),
         leading: Tooltip(
           message: 'Voltar',
@@ -605,211 +603,214 @@ class _FuelEntryFormScreenState extends ConsumerState<FuelEntryFormScreen> {
               child: ResponsiveBody(
                 maxWidth: ResponsiveWidths.form,
                 child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // ── Contexto do veículo ──────────────────────────────────
-                    VehicleContextChip(vehicle: widget.vehicle),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // ── Contexto do veículo ──────────────────────────────────
+                      VehicleContextChip(vehicle: widget.vehicle),
 
-                    // ── CTA de scan ──────────────────────────────────────────
-                    ScanCtaBanner(onTap: _scan, scanning: isScanning),
+                      // ── CTA de scan ──────────────────────────────────────────
+                      ScanCtaBanner(onTap: _scan, scanning: isScanning),
 
-                    // ── Seção 1: Litros · Preço/litro · Total ───────────────
-                    FormSectionCard(
-                      eyebrow: 'Números do abastecimento',
-                      children: [
-                        // Litros / Volume (m³ para GNV)
-                        _FieldWithAutoBadge(
-                          isAuto: autoField == FuelField.liters,
-                          child: TextFormField(
-                            controller: _litersCtrl,
-                            decoration: InputDecoration(
-                              labelText: litersLabel,
-                              hintText: litersHint,
-                              helperText: isGnv
-                                  ? 'GNV é cobrado em m³, não litros'
-                                  : null,
-                            ),
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            validator: (v) {
-                              // Obrigatório apenas se for o único campo preenchível.
-                              // A validação real do triplet é feita no _submit.
-                              // Aqui só valida formato se houver conteúdo.
-                              if (v != null && v.trim().isNotEmpty) {
-                                return validateDecimalPositive(
-                                  v,
-                                  fieldLabel: litersLabel.toLowerCase(),
-                                );
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-
-                        // Preço por litro
-                        _FieldWithAutoBadge(
-                          isAuto: autoField == FuelField.pricePerLiter,
-                          child: TextFormField(
-                            controller: _priceCtrl,
-                            decoration: const InputDecoration(
-                              labelText: r'Preço por litro (R$)',
-                              hintText: 'Ex.: 5,799',
-                            ),
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            validator: (v) {
-                              if (v != null && v.trim().isNotEmpty) {
-                                return validateDecimalPositive(
-                                  v,
-                                  fieldLabel: 'preço por litro',
-                                );
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-
-                        // Total — agora editável.
-                        _FieldWithAutoBadge(
-                          isAuto: autoField == FuelField.totalCost,
-                          child: TextFormField(
-                            controller: _totalCtrl,
-                            decoration: const InputDecoration(
-                              labelText: r'Total (R$)',
-                              hintText: 'Ex.: 250,63',
-                            ),
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            validator: (v) {
-                              if (v != null && v.trim().isNotEmpty) {
-                                return validateDecimalPositive(
-                                  v,
-                                  fieldLabel: 'total',
-                                );
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    // ── Seção 2: Odômetro · Data · Tanque · Combustível ─────
-                    FormSectionCard(
-                      eyebrow: 'Quando, onde, como',
-                      children: [
-                        // Odômetro
-                        TextFormField(
-                          controller: _odometerCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'Odômetro (km)',
-                            hintText: 'Ex.: 45000',
-                          ),
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                          ],
-                          validator: validateOdometerAtFueling,
-                        ),
-
-                        // Chip de erro de odômetro (validação cronológica).
-                        InlineValidationChip(message: _validationError),
-
-                        const SizedBox(height: AppSpacing.md),
-
-                        // Data
-                        DatePickerField(value: _date, onTap: _pickDate),
-
-                        const SizedBox(height: AppSpacing.md),
-
-                        // Tanque cheio / parcial
-                        FullTankToggle(
-                          value: _fullTank,
-                          onChanged: (v) => setState(() => _fullTank = v),
-                        ),
-
-                        const SizedBox(height: AppSpacing.md),
-
-                        // Tipo de combustível — filtrado pelo veículo.
-                        _FuelTypeSectionLabel(),
-                        const SizedBox(height: AppSpacing.sm),
-                        FuelTypeSegmented(
-                          value: _fuelType,
-                          onChanged: (v) => setState(() => _fuelType = v),
-                          allowed: _availableFuelTypes,
-                        ),
-                      ],
-                    ),
-
-                    // ── Seção 3: Posto (opcional) ────────────────────────────
-                    FormSectionCard(
-                      eyebrow: 'Posto (opcional)',
-                      children: [
-                        // Bandeira com autocomplete
-                        Autocomplete<String>(
-                          initialValue: TextEditingValue(
-                            text: _stationBrandCtrl.text,
-                          ),
-                          optionsBuilder: (textEditingValue) {
-                            final query = textEditingValue.text.toLowerCase();
-                            if (query.isEmpty) return const [];
-                            return brStationBrands.where(
-                              (b) => b.toLowerCase().contains(query),
-                            );
-                          },
-                          onSelected: (selection) {
-                            _stationBrandCtrl.text = selection;
-                          },
-                          fieldViewBuilder:
-                              (
-                                context,
-                                controller,
-                                focusNode,
-                                onFieldSubmitted,
-                              ) {
-                                // Sincroniza estado interno do Autocomplete com nosso ctrl.
-                                controller.addListener(() {
-                                  if (_stationBrandCtrl.text !=
-                                      controller.text) {
-                                    _stationBrandCtrl.text = controller.text;
-                                  }
-                                });
-                                return TextFormField(
-                                  controller: controller,
-                                  focusNode: focusNode,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Bandeira',
-                                    hintText: 'Ex.: Shell',
+                      // ── Seção 1: Litros · Preço/litro · Total ───────────────
+                      FormSectionCard(
+                        eyebrow: 'Números do abastecimento',
+                        children: [
+                          // Litros / Volume (m³ para GNV)
+                          _FieldWithAutoBadge(
+                            isAuto: autoField == FuelField.liters,
+                            child: TextFormField(
+                              controller: _litersCtrl,
+                              decoration: InputDecoration(
+                                labelText: litersLabel,
+                                hintText: litersHint,
+                                helperText: isGnv
+                                    ? 'GNV é cobrado em m³, não litros'
+                                    : null,
+                              ),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
                                   ),
-                                );
+                              validator: (v) {
+                                // Obrigatório apenas se for o único campo preenchível.
+                                // A validação real do triplet é feita no _submit.
+                                // Aqui só valida formato se houver conteúdo.
+                                if (v != null && v.trim().isNotEmpty) {
+                                  return validateDecimalPositive(
+                                    v,
+                                    fieldLabel: litersLabel.toLowerCase(),
+                                  );
+                                }
+                                return null;
                               },
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-
-                        // Nome do posto
-                        TextFormField(
-                          controller: _stationNameCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'Nome do posto',
-                            hintText: 'Ex.: Posto Shell BR-101 km 87',
+                            ),
                           ),
-                          textCapitalization: TextCapitalization.words,
-                        ),
-                      ],
-                    ),
+                          const SizedBox(height: AppSpacing.md),
 
-                    // Espaço extra no fim do scroll.
-                    const SizedBox(height: AppSpacing.xxl),
-                  ],
+                          // Preço por litro
+                          _FieldWithAutoBadge(
+                            isAuto: autoField == FuelField.pricePerLiter,
+                            child: TextFormField(
+                              controller: _priceCtrl,
+                              decoration: const InputDecoration(
+                                labelText: r'Preço por litro (R$)',
+                                hintText: 'Ex.: 5,799',
+                              ),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              validator: (v) {
+                                if (v != null && v.trim().isNotEmpty) {
+                                  return validateDecimalPositive(
+                                    v,
+                                    fieldLabel: 'preço por litro',
+                                  );
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+
+                          // Total — agora editável.
+                          _FieldWithAutoBadge(
+                            isAuto: autoField == FuelField.totalCost,
+                            child: TextFormField(
+                              controller: _totalCtrl,
+                              decoration: const InputDecoration(
+                                labelText: r'Total (R$)',
+                                hintText: 'Ex.: 250,63',
+                              ),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              validator: (v) {
+                                if (v != null && v.trim().isNotEmpty) {
+                                  return validateDecimalPositive(
+                                    v,
+                                    fieldLabel: 'total',
+                                  );
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      // ── Seção 2: Odômetro · Data · Tanque · Combustível ─────
+                      FormSectionCard(
+                        eyebrow: 'Quando, onde, como',
+                        children: [
+                          // Odômetro
+                          TextFormField(
+                            controller: _odometerCtrl,
+                            decoration: const InputDecoration(
+                              labelText: 'Odômetro (km)',
+                              hintText: 'Ex.: 45000',
+                            ),
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            validator: validateOdometerAtFueling,
+                          ),
+
+                          // Chip de erro de odômetro (validação cronológica).
+                          InlineValidationChip(message: _validationError),
+
+                          const SizedBox(height: AppSpacing.md),
+
+                          // Data
+                          DatePickerField(value: _date, onTap: _pickDate),
+
+                          const SizedBox(height: AppSpacing.md),
+
+                          // Tanque cheio / parcial
+                          FullTankToggle(
+                            value: _fullTank,
+                            onChanged: (v) => setState(() => _fullTank = v),
+                          ),
+
+                          const SizedBox(height: AppSpacing.md),
+
+                          // Tipo de combustível — filtrado pelo veículo.
+                          _FuelTypeSectionLabel(),
+                          const SizedBox(height: AppSpacing.sm),
+                          FuelTypeSegmented(
+                            value: _fuelType,
+                            onChanged: (v) => setState(() => _fuelType = v),
+                            allowed: _availableFuelTypes,
+                          ),
+                        ],
+                      ),
+
+                      // ── Seção 3: Posto (opcional) ────────────────────────────
+                      FormSectionCard(
+                        eyebrow: 'Posto (opcional)',
+                        children: [
+                          // Bandeira com autocomplete
+                          Autocomplete<String>(
+                            initialValue: TextEditingValue(
+                              text: _stationBrandCtrl.text,
+                            ),
+                            optionsBuilder: (textEditingValue) {
+                              final query = textEditingValue.text.toLowerCase();
+                              if (query.isEmpty) return const [];
+                              return brStationBrands.where(
+                                (b) => b.toLowerCase().contains(query),
+                              );
+                            },
+                            onSelected: (selection) {
+                              _stationBrandCtrl.text = selection;
+                            },
+                            fieldViewBuilder:
+                                (
+                                  context,
+                                  controller,
+                                  focusNode,
+                                  onFieldSubmitted,
+                                ) {
+                                  // Sincroniza estado interno do Autocomplete com nosso ctrl.
+                                  controller.addListener(() {
+                                    if (_stationBrandCtrl.text !=
+                                        controller.text) {
+                                      _stationBrandCtrl.text = controller.text;
+                                    }
+                                  });
+                                  return TextFormField(
+                                    controller: controller,
+                                    focusNode: focusNode,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Bandeira',
+                                      hintText: 'Ex.: Shell',
+                                    ),
+                                  );
+                                },
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+
+                          // Nome do posto
+                          TextFormField(
+                            controller: _stationNameCtrl,
+                            decoration: const InputDecoration(
+                              labelText: 'Nome do posto',
+                              hintText: 'Ex.: Posto Shell BR-101 km 87',
+                            ),
+                            textCapitalization: TextCapitalization.words,
+                          ),
+                        ],
+                      ),
+
+                      // Espaço extra no fim do scroll.
+                      const SizedBox(height: AppSpacing.xxl),
+                    ],
+                  ),
                 ),
               ),
-            ),
             ),
 
             // ── Barra sticky: total + botão Salvar ──────────────────────────

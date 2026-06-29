@@ -9,6 +9,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/features/backup/backup_models.dart';
 import 'package:autolog/features/backup/backup_service.dart';
 import 'package:autolog/features/vehicles/vehicles_provider.dart';
@@ -74,8 +75,9 @@ class _BackupCardState extends ConsumerState<BackupCard> {
   Future<void> _exportAll() async {
     final messenger = ScaffoldMessenger.of(context);
     final box = context.findRenderObject() as RenderBox?;
-    final origin =
-        box != null ? box.localToGlobal(Offset.zero) & box.size : Rect.zero;
+    final origin = box != null
+        ? box.localToGlobal(Offset.zero) & box.size
+        : Rect.zero;
 
     setState(() => _busy = true);
     try {
@@ -110,7 +112,7 @@ class _BackupCardState extends ConsumerState<BackupCard> {
       messenger.showSnackBar(
         SnackBar(
           content: Text('Erro ao exportar: $e'),
-          backgroundColor: Colors.red.shade700,
+          backgroundColor: AppColors.danger,
         ),
       );
     } finally {
@@ -168,13 +170,13 @@ class _BackupCardState extends ConsumerState<BackupCard> {
       );
     } on FormatException catch (e) {
       messenger.showSnackBar(
-        SnackBar(content: Text(e.message), backgroundColor: Colors.red.shade700),
+        SnackBar(content: Text(e.message), backgroundColor: AppColors.danger),
       );
     } catch (e) {
       messenger.showSnackBar(
         SnackBar(
           content: Text('Erro ao importar: $e'),
-          backgroundColor: Colors.red.shade700,
+          backgroundColor: AppColors.danger,
         ),
       );
     } finally {
