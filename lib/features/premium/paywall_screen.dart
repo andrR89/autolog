@@ -181,7 +181,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                       ),
                     ),
                     child: const Text(
-                      _kBillingEnabled ? 'Assinar' : 'Em breve',
+                      _kBillingEnabled ? 'Assinar' : 'Assinar (em breve)',
                       style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
@@ -424,7 +424,9 @@ class _RadioMark extends StatelessWidget {
         color: selected ? AppColors.accent : Colors.transparent,
       ),
       child: selected
-          ? const Icon(Icons.check, color: AppColors.brand, size: 14)
+          ? const ExcludeSemantics(
+              child: Icon(Icons.check, color: AppColors.brand, size: 14),
+            )
           : null,
     );
   }

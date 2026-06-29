@@ -151,7 +151,7 @@ void main() {
 
         expect(find.text('Garagem'), findsOneWidget);
         expect(find.text('Documentos'), findsOneWidget);
-        expect(find.text('Settings'), findsOneWidget);
+        expect(find.text('Configurações'), findsOneWidget);
       },
     );
 

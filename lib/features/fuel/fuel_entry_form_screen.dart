@@ -419,7 +419,7 @@ class _FuelEntryFormScreenState extends ConsumerState<FuelEntryFormScreen> {
       total,
     ].where((v) => v != null && v > Decimal.zero).length;
     if (filled < 2) {
-      return 'Preencha ao menos 2 dos 3 campos: litros, preço/litro e total.';
+      return 'Faltam pelo menos 2 dos 3 campos: litros, preço/litro e total.';
     }
     return null;
   }

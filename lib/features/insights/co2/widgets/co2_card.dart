@@ -260,20 +260,27 @@ class _ToggleChip extends StatelessWidget {
     final bg = selected ? AppColors.success : context.surfaceSunken;
     final fg = selected ? Colors.white : context.inkMuted;
 
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: AppMotion.fast,
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: 3,
-        ),
-        decoration: BoxDecoration(color: bg, borderRadius: AppRadius.allSm),
-        child: Text(
-          label,
-          style: Theme.of(
-            context,
-          ).textTheme.labelSmall?.copyWith(color: fg, letterSpacing: 0.2),
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: '$label, ${selected ? 'selecionado' : 'não selecionado'}',
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: AppMotion.fast,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: 3,
+          ),
+          decoration: BoxDecoration(color: bg, borderRadius: AppRadius.allSm),
+          child: ExcludeSemantics(
+            child: Text(
+              label,
+              style: Theme.of(
+                context,
+              ).textTheme.labelSmall?.copyWith(color: fg, letterSpacing: 0.2),
+            ),
+          ),
         ),
       ),
     );

@@ -223,30 +223,37 @@ class _Tab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: AppMotion.standard,
-        curve: AppMotion.standardCurve,
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.sm,
-        ),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.accent : Colors.transparent,
-          borderRadius: AppRadius.allSm,
-          border: Border.all(
-            color: selected
-                ? AppColors.accent
-                : AppColors.brandInk.withValues(alpha: 0.3),
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: '$label, ${selected ? 'selecionado' : 'não selecionado'}',
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: AppMotion.standard,
+          curve: AppMotion.standardCurve,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.sm,
           ),
-        ),
-        child: Text(
-          label,
-          style: AppTypography.body(
-            14,
-            weight: FontWeight.w600,
-            color: selected ? AppColors.accentInk : AppColors.brandInk,
+          decoration: BoxDecoration(
+            color: selected ? AppColors.accent : Colors.transparent,
+            borderRadius: AppRadius.allSm,
+            border: Border.all(
+              color: selected
+                  ? AppColors.accent
+                  : AppColors.brandInk.withValues(alpha: 0.3),
+            ),
+          ),
+          child: ExcludeSemantics(
+            child: Text(
+              label,
+              style: AppTypography.body(
+                14,
+                weight: FontWeight.w600,
+                color: selected ? AppColors.accentInk : AppColors.brandInk,
+              ),
+            ),
           ),
         ),
       ),

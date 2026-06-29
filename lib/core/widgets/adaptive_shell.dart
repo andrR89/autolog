@@ -151,7 +151,7 @@ class _RailContent extends ConsumerWidget {
 
           // ── Settings no rodapé ───────────────────────────────────────────
           _RailNavItem(
-            label: 'Settings',
+            label: 'Configurações',
             icon: Icons.settings_outlined,
             selectedIcon: Icons.settings,
             route: '/settings',
@@ -217,7 +217,13 @@ class _RailNavItem extends StatelessWidget {
           children: [
             Icon(isActive ? selectedIcon : icon, size: 20, color: fg),
             const SizedBox(width: AppSpacing.md),
-            Text(label, style: AppTypography.body(14, color: fg)),
+            Expanded(
+              child: Text(
+                label,
+                style: AppTypography.body(14, color: fg),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
       ),

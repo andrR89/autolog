@@ -227,12 +227,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
           vehicle: widget.vehicle,
           onAnalyze: _analyze,
         ),
-        _ScreenState.genericError => _EmptyState(
-          vehicle: widget.vehicle,
-          onAnalyze: _analyze,
-          onOpenChat: () =>
-              context.push('/vehicles/${widget.vehicle.id}/insights/chat'),
-        ),
+        _ScreenState.genericError => _ErrorState(onRetry: _analyze),
       },
     );
   }
@@ -353,6 +348,72 @@ class _EmptyState extends StatelessWidget {
                   onPressed: onOpenChat,
                   icon: const Text('💬', style: TextStyle(fontSize: 16)),
                   label: const Text('Pergunte ao histórico'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Error state
+// ---------------------------------------------------------------------------
+
+class _ErrorState extends StatelessWidget {
+  const _ErrorState({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 360),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xxxl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: context.surfaceSunken,
+                  borderRadius: AppRadius.allLg,
+                ),
+                child: Icon(
+                  Icons.warning_amber_rounded,
+                  size: 32,
+                  color: context.inkMuted,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              Text(
+                'Algo deu errado na análise',
+                style: AppTypography.display(
+                  22,
+                  weight: FontWeight.w700,
+                  height: 1.2,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                'Tente novamente em alguns segundos.',
+                style: textTheme.bodyMedium?.copyWith(color: context.inkMuted),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.xxl),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.tonal(
+                  onPressed: onRetry,
+                  child: const Text('Tentar novamente'),
                 ),
               ),
             ],
@@ -542,9 +603,7 @@ class _SuccessBody extends StatelessWidget {
           ),
 
         // Seção Plano de manutenção sugerido
-        const SliverToBoxAdapter(
-          child: _SectionHeader(label: 'MANUTENÇÃO', count: 0),
-        ),
+        const SliverToBoxAdapter(child: _SectionHeader(label: 'MANUTENÇÃO')),
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
           sliver: SliverToBoxAdapter(
@@ -553,9 +612,7 @@ class _SuccessBody extends StatelessWidget {
         ),
 
         // Seção Fiscal (IPVA + Licenciamento)
-        const SliverToBoxAdapter(
-          child: _SectionHeader(label: 'FISCAL', count: 0),
-        ),
+        const SliverToBoxAdapter(child: _SectionHeader(label: 'FISCAL')),
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
           sliver: SliverToBoxAdapter(
@@ -564,9 +621,7 @@ class _SuccessBody extends StatelessWidget {
         ),
 
         // Seção Assistente
-        const SliverToBoxAdapter(
-          child: _SectionHeader(label: 'ASSISTENTE', count: 0),
-        ),
+        const SliverToBoxAdapter(child: _SectionHeader(label: 'ASSISTENTE')),
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
           sliver: SliverToBoxAdapter(
@@ -600,10 +655,10 @@ class _SuccessBody extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.label, required this.count});
+  const _SectionHeader({required this.label, this.count});
 
   final String label;
-  final int count;
+  final int? count;
 
   @override
   Widget build(BuildContext context) {
@@ -624,26 +679,28 @@ class _SectionHeader extends StatelessWidget {
               letterSpacing: 1.6,
             ),
           ),
-          const SizedBox(width: AppSpacing.sm),
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.sm,
-              vertical: 1,
-            ),
-            decoration: BoxDecoration(
-              color: context.surfaceSunken,
-              borderRadius: const BorderRadius.all(
-                Radius.circular(AppRadius.pill),
+          if (count != null) ...[
+            const SizedBox(width: AppSpacing.sm),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: 1,
+              ),
+              decoration: BoxDecoration(
+                color: context.surfaceSunken,
+                borderRadius: const BorderRadius.all(
+                  Radius.circular(AppRadius.pill),
+                ),
+              ),
+              child: Text(
+                '$count',
+                style: textTheme.labelSmall?.copyWith(
+                  color: context.inkSoft,
+                  letterSpacing: 0.2,
+                ),
               ),
             ),
-            child: Text(
-              '$count',
-              style: textTheme.labelSmall?.copyWith(
-                color: context.inkSoft,
-                letterSpacing: 0.2,
-              ),
-            ),
-          ),
+          ],
         ],
       ),
     );
