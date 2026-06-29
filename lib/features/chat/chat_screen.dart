@@ -210,63 +210,72 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       body: ResponsiveBody(
         child: Column(
           children: [
-          // Quota banner
-          if (_quotaExhausted)
-            MaterialBanner(
-              backgroundColor: AppColors.warningSoft,
-              content: Text(
-                'Cota de chat esgotada — vire premium pra ilimitado.',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: AppColors.warning),
-              ),
-              leading: const Icon(Icons.info_outline, color: AppColors.warning),
-              actions: [
-                TextButton(
-                  onPressed: () => setState(() => _quotaExhausted = false),
-                  child: const Text('Fechar'),
-                ),
-              ],
-            ),
-
-          // Message list
-          Expanded(
-            child: messages.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(
-                child: Text(
-                  'Erro ao carregar mensagens.',
+            // Quota banner
+            if (_quotaExhausted)
+              MaterialBanner(
+                backgroundColor: AppColors.warningSoft,
+                content: Text(
+                  'Cota de chat esgotada — vire premium pra ilimitado.',
                   style: Theme.of(
                     context,
-                  ).textTheme.bodyMedium?.copyWith(color: context.inkMuted),
+                  ).textTheme.bodyMedium?.copyWith(color: AppColors.warning),
                 ),
-              ),
-              data: (msgs) {
-                if (msgs.isEmpty) {
-                  return _EmptyState(onSuggestionTap: _prefillSuggestion);
-                }
-                return ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.lg,
-                    AppSpacing.md,
-                    AppSpacing.lg,
-                    AppSpacing.md,
+                leading: const Icon(
+                  Icons.info_outline,
+                  color: AppColors.warning,
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => setState(() => _quotaExhausted = false),
+                    child: const Text('Fechar'),
                   ),
-                  itemCount: msgs.length,
-                  itemBuilder: (ctx, i) => _ChatBubble(message: msgs[i]),
-                );
-              },
-            ),
-          ),
+                ],
+              ),
 
-          // Input area
-          _InputBar(
-            controller: _textController,
-            sending: _sending,
-            onSend: _send,
-          ),
-        ],
+            // Message list
+            Expanded(
+              child: messages.when(
+                loading: () => const Center(
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+                error: (e, _) => Center(
+                  child: Text(
+                    'Erro ao carregar mensagens.',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: context.inkMuted),
+                  ),
+                ),
+                data: (msgs) {
+                  if (msgs.isEmpty) {
+                    return _EmptyState(onSuggestionTap: _prefillSuggestion);
+                  }
+                  return ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.lg,
+                      AppSpacing.md,
+                      AppSpacing.lg,
+                      AppSpacing.md,
+                    ),
+                    itemCount: msgs.length,
+                    itemBuilder: (ctx, i) => _ChatBubble(message: msgs[i]),
+                  );
+                },
+              ),
+            ),
+
+            // Input area
+            _InputBar(
+              controller: _textController,
+              sending: _sending,
+              onSend: _send,
+            ),
+          ],
         ),
       ),
     );

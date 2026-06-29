@@ -14,11 +14,13 @@ import 'package:go_router/go_router.dart';
 // Provider para stream de membros
 // ---------------------------------------------------------------------------
 
-final _membersProvider =
-    StreamProvider.family<List<VehicleMember>, String>((ref, vehicleId) {
-      final repo = ref.watch(vehicleMemberRepositoryProvider);
-      return repo.watchByVehicle(vehicleId);
-    });
+final _membersProvider = StreamProvider.family<List<VehicleMember>, String>((
+  ref,
+  vehicleId,
+) {
+  final repo = ref.watch(vehicleMemberRepositoryProvider);
+  return repo.watchByVehicle(vehicleId);
+});
 
 // ---------------------------------------------------------------------------
 // Tela
@@ -80,7 +82,9 @@ class _ShareVehicleScreenState extends ConsumerState<ShareVehicleScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Email não encontrado. Peça para a pessoa criar uma conta.'),
+            content: Text(
+              'Email não encontrado. Peça para a pessoa criar uma conta.',
+            ),
           ),
         );
       }
@@ -88,7 +92,9 @@ class _ShareVehicleScreenState extends ConsumerState<ShareVehicleScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Não conseguimos adicionar. Verifique sua conexão e tente novamente.'),
+            content: Text(
+              'Não conseguimos adicionar. Verifique sua conexão e tente novamente.',
+            ),
           ),
         );
       }
@@ -96,7 +102,9 @@ class _ShareVehicleScreenState extends ConsumerState<ShareVehicleScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Não conseguimos adicionar. Verifique sua conexão e tente novamente.'),
+            content: Text(
+              'Não conseguimos adicionar. Verifique sua conexão e tente novamente.',
+            ),
           ),
         );
       }
@@ -133,9 +141,9 @@ class _ShareVehicleScreenState extends ConsumerState<ShareVehicleScreen> {
       final repo = ref.read(vehicleMemberRepositoryProvider);
       await repo.remove(member.vehicleId, member.userId);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Membro removido.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Membro removido.')));
       }
     } catch (_) {
       if (mounted) {
@@ -184,157 +192,163 @@ class _ShareVehicleScreenState extends ConsumerState<ShareVehicleScreen> {
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.lg),
           children: [
-          // ── Header ──────────────────────────────────────────────────────
-          Text(
-            widget.vehicle.nickname,
-            style: textTheme.headlineSmall?.copyWith(
-              color: context.ink,
-              fontWeight: FontWeight.w700,
+            // ── Header ──────────────────────────────────────────────────────
+            Text(
+              widget.vehicle.nickname,
+              style: textTheme.headlineSmall?.copyWith(
+                color: context.ink,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            'Quem você adicionar verá e poderá editar este veículo, '
-            'abastecimentos, despesas e lembretes.',
-            style: textTheme.bodyMedium?.copyWith(color: context.inkMuted),
-          ),
-          const SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'Quem você adicionar verá e poderá editar este veículo, '
+              'abastecimentos, despesas e lembretes.',
+              style: textTheme.bodyMedium?.copyWith(color: context.inkMuted),
+            ),
+            const SizedBox(height: AppSpacing.xl),
 
-          // ── Formulário de adição ─────────────────────────────────────
-          Container(
-            decoration: BoxDecoration(
-              color: context.surfaceRaised,
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(color: context.hairline),
-            ),
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Adicionar por email',
-                    style: textTheme.titleMedium?.copyWith(
-                      color: context.ink,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  TextFormField(
-                    controller: _emailCtrl,
-                    keyboardType: TextInputType.emailAddress,
-                    autocorrect: false,
-                    textInputAction: TextInputAction.done,
-                    onFieldSubmitted: (_) => _loading ? null : _submit(),
-                    decoration: InputDecoration(
-                      labelText: 'E-mail',
-                      hintText: 'email@exemplo.com',
-                      hintStyle: textTheme.bodyMedium?.copyWith(
-                        color: context.inkSoft,
-                      ),
-                      filled: true,
-                      fillColor: context.surfaceSunken,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: AppSpacing.md,
+            // ── Formulário de adição ─────────────────────────────────────
+            Container(
+              decoration: BoxDecoration(
+                color: context.surfaceRaised,
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                border: Border.all(color: context.hairline),
+              ),
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Adicionar por email',
+                      style: textTheme.titleMedium?.copyWith(
+                        color: context.ink,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) {
-                        return 'Informe o email';
-                      }
-                      final email = v.trim();
-                      if (!email.contains('@') || !email.contains('.')) {
-                        return 'Email inválido';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: _loading ? null : _submit,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.brand,
-                        foregroundColor: AppColors.brandInk,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.md),
+                    const SizedBox(height: AppSpacing.md),
+                    TextFormField(
+                      controller: _emailCtrl,
+                      keyboardType: TextInputType.emailAddress,
+                      autocorrect: false,
+                      textInputAction: TextInputAction.done,
+                      onFieldSubmitted: (_) => _loading ? null : _submit(),
+                      decoration: InputDecoration(
+                        labelText: 'E-mail',
+                        hintText: 'email@exemplo.com',
+                        hintStyle: textTheme.bodyMedium?.copyWith(
+                          color: context.inkSoft,
                         ),
-                        padding: const EdgeInsets.symmetric(
+                        filled: true,
+                        fillColor: context.surfaceSunken,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
                           vertical: AppSpacing.md,
                         ),
                       ),
-                      child: _loading
-                          ? const SizedBox(
-                              height: 18,
-                              width: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: AppColors.brandInk,
-                              ),
-                            )
-                          : const Text('Adicionar'),
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) {
+                          return 'Informe o email';
+                        }
+                        final email = v.trim();
+                        if (!email.contains('@') || !email.contains('.')) {
+                          return 'Email inválido';
+                        }
+                        return null;
+                      },
                     ),
-                  ),
-                ],
+                    const SizedBox(height: AppSpacing.md),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: _loading ? null : _submit,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.brand,
+                          foregroundColor: AppColors.brandInk,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: AppSpacing.md,
+                          ),
+                        ),
+                        child: _loading
+                            ? const SizedBox(
+                                height: 18,
+                                width: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.brandInk,
+                                ),
+                              )
+                            : const Text('Adicionar'),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
 
-          const SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: AppSpacing.xl),
 
-          // ── Lista de membros atuais ──────────────────────────────────
-          Text(
-            'MEMBROS ATUAIS',
-            style: textTheme.labelSmall?.copyWith(
-              color: context.inkMuted,
-              letterSpacing: 1.6,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-
-          membersAsync.when(
-            loading: () => const Center(
-              child: Padding(
-                padding: EdgeInsets.all(AppSpacing.lg),
-                child: CircularProgressIndicator(),
+            // ── Lista de membros atuais ──────────────────────────────────
+            Text(
+              'MEMBROS ATUAIS',
+              style: textTheme.labelSmall?.copyWith(
+                color: context.inkMuted,
+                letterSpacing: 1.6,
               ),
             ),
-            error: (_, _) => Text(
-              'Erro ao carregar membros.',
-              style: textTheme.bodyMedium?.copyWith(color: AppColors.danger),
-            ),
-            data: (members) {
-              if (members.isEmpty) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: AppSpacing.lg,
+            const SizedBox(height: AppSpacing.md),
+
+            membersAsync.when(
+              loading: () => const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(AppSpacing.lg),
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
                   ),
-                  child: Text(
-                    'Nenhum membro adicionado ainda.',
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: context.inkSoft,
+                ),
+              ),
+              error: (_, _) => Text(
+                'Erro ao carregar membros.',
+                style: textTheme.bodyMedium?.copyWith(color: AppColors.danger),
+              ),
+              data: (members) {
+                if (members.isEmpty) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.lg,
                     ),
-                  ),
-                );
-              }
-              return Column(
-                children: members
-                    .map((m) => _MemberTile(
+                    child: Text(
+                      'Nenhum membro adicionado ainda.',
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: context.inkSoft,
+                      ),
+                    ),
+                  );
+                }
+                return Column(
+                  children: members
+                      .map(
+                        (m) => _MemberTile(
                           member: m,
                           onRemove: () => _removeMember(m),
-                        ))
-                    .toList(),
-              );
-            },
-          ),
-        ],
+                        ),
+                      )
+                      .toList(),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );
@@ -381,7 +395,10 @@ class _MemberTile extends StatelessWidget {
           style: textTheme.bodySmall?.copyWith(color: context.inkMuted),
         ),
         trailing: IconButton(
-          icon: const Icon(Icons.person_remove_outlined, color: AppColors.danger),
+          icon: const Icon(
+            Icons.person_remove_outlined,
+            color: AppColors.danger,
+          ),
           tooltip: 'Remover membro',
           onPressed: onRemove,
         ),

@@ -263,9 +263,7 @@ class _FiscalPlanScreenState extends ConsumerState<FiscalPlanScreen> {
           statusBarBrightness: Brightness.dark,
         ),
         actions: [
-          TtsButton(
-            textBuilder: () => narrateFiscal(_visibleProposals),
-          ),
+          TtsButton(textBuilder: () => narrateFiscal(_visibleProposals)),
           if (_ignoredTitles.isNotEmpty)
             IconButton(
               tooltip: 'Mostrar propostas ignoradas',
@@ -305,9 +303,10 @@ class _FiscalPlanScreenState extends ConsumerState<FiscalPlanScreen> {
     // Loading inicial do lookup (primeira vez — cache miss).
     if (lookupAsync.isLoading && !lookupAsync.hasValue) {
       return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(AppSpacing.xxl),
-          child: CircularProgressIndicator(),
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(strokeWidth: 2),
         ),
       );
     }
@@ -332,9 +331,10 @@ class _FiscalPlanScreenState extends ConsumerState<FiscalPlanScreen> {
   ) {
     if (remindersAsync.isLoading && !remindersAsync.hasValue) {
       return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(AppSpacing.xxl),
-          child: CircularProgressIndicator(),
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(strokeWidth: 2),
         ),
       );
     }

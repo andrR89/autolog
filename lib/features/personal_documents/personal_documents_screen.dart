@@ -10,6 +10,7 @@ import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/core/design/widgets/responsive_body.dart';
+import 'package:autolog/core/design/widgets/skeleton.dart';
 import 'package:autolog/data/repositories/fine_repository.dart';
 import 'package:autolog/data/repositories/insurance_repository.dart';
 import 'package:autolog/data/repositories/reminder_repository.dart';
@@ -119,10 +120,7 @@ class _PersonalDocumentsScreenState
               ),
               SliverToBoxAdapter(
                 child: profileAsync.when(
-                  loading: () => const Padding(
-                    padding: EdgeInsets.all(AppSpacing.lg),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
+                  loading: () => const _DocsSectionSkeleton(cardCount: 1),
                   error: (_, st) => const _ErrorCard(
                     message: 'Não foi possível carregar a CNH.',
                   ),
@@ -149,10 +147,7 @@ class _PersonalDocumentsScreenState
               ),
               vehiclesAsync.when(
                 loading: () => const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.all(AppSpacing.lg),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
+                  child: _DocsSectionSkeleton(cardCount: 2),
                 ),
                 error: (_, st) => const SliverToBoxAdapter(
                   child: _ErrorCard(message: 'Erro ao carregar apólices.'),
@@ -176,10 +171,7 @@ class _PersonalDocumentsScreenState
               ),
               vehiclesAsync.when(
                 loading: () => const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.all(AppSpacing.lg),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
+                  child: _DocsSectionSkeleton(cardCount: 2),
                 ),
                 error: (_, st) => const SliverToBoxAdapter(
                   child: _ErrorCard(message: 'Erro ao carregar multas.'),
@@ -356,6 +348,35 @@ class _ErrorCard extends StatelessWidget {
         borderRadius: AppRadius.allMd,
       ),
       child: Text(message, style: const TextStyle(color: AppColors.danger)),
+    );
+  }
+}
+
+// ── Skeleton de seção de documentos ──────────────────────────────────────────
+
+/// Skeleton para uma seção de documentos: [cardCount] cards com ícone + 2 linhas.
+class _DocsSectionSkeleton extends StatelessWidget {
+  const _DocsSectionSkeleton({this.cardCount = 2});
+
+  final int cardCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.lg,
+        AppSpacing.sm,
+      ),
+      child: Column(
+        children: [
+          for (int i = 0; i < cardCount; i++) ...[
+            if (i > 0) const SizedBox(height: AppSpacing.sm),
+            const SkeletonListCard(),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -582,10 +603,7 @@ class _AsyncAllInsurancesSliverState
   Widget build(BuildContext context) {
     if (_items == null) {
       return const SliverToBoxAdapter(
-        child: Padding(
-          padding: EdgeInsets.all(AppSpacing.lg),
-          child: Center(child: CircularProgressIndicator()),
-        ),
+        child: _DocsSectionSkeleton(cardCount: 2),
       );
     }
 
@@ -728,10 +746,7 @@ class _FinesSliverState extends ConsumerState<_FinesSliver> {
   Widget build(BuildContext context) {
     if (_items == null) {
       return const SliverToBoxAdapter(
-        child: Padding(
-          padding: EdgeInsets.all(AppSpacing.lg),
-          child: Center(child: CircularProgressIndicator()),
-        ),
+        child: _DocsSectionSkeleton(cardCount: 2),
       );
     }
 

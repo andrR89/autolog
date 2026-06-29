@@ -1,6 +1,7 @@
 import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
+import 'package:autolog/core/design/widgets/skeleton.dart';
 import 'package:autolog/data/repositories/trip_repository.dart';
 import 'package:autolog/domain/models/trip.dart';
 import 'package:autolog/domain/models/vehicle.dart';
@@ -75,7 +76,7 @@ class TripsListScreen extends ConsumerWidget {
         tooltip: 'Registrar viagem',
       ),
       body: tripsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const _TripsSkeleton(),
         error: (_, _) => _ErrorState(
           onRetry: () => ref.invalidate(tripsByVehicleProvider(vehicle.id)),
         ),
@@ -183,6 +184,35 @@ class _TripCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// Skeleton de carregamento da lista de viagens
+// ============================================================================
+
+class _TripsSkeleton extends StatelessWidget {
+  const _TripsSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.lg,
+        AppSpacing.lg,
+        AppSpacing.huge,
+      ),
+      child: Column(
+        children: [
+          SkeletonListCard(),
+          SizedBox(height: AppSpacing.md),
+          SkeletonListCard(),
+          SizedBox(height: AppSpacing.md),
+          SkeletonListCard(),
+        ],
       ),
     );
   }

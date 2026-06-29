@@ -210,6 +210,72 @@ class SkeletonInsightCard extends StatelessWidget {
 }
 
 // ============================================================================
+// SkeletonListCard — skeleton genérico de card de lista (título + subtítulo)
+// ============================================================================
+
+/// Skeleton de um card de lista simples: ícone-box + título + subtítulo opcional.
+/// Usado em despesas, lembretes, viagens e postos.
+///
+/// [showLeadingBox] — quando true (padrão) renderiza o ícone-box à esquerda.
+/// [showTrailing] — quando true renderiza coluna de trailing (valor + data).
+class SkeletonListCard extends StatelessWidget {
+  const SkeletonListCard({
+    super.key,
+    this.showLeadingBox = true,
+    this.showTrailing = false,
+  });
+
+  final bool showLeadingBox;
+  final bool showTrailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: context.surfaceRaised,
+        borderRadius: AppRadius.allMd,
+        border: Border.all(color: context.hairline),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          if (showLeadingBox) ...[
+            const SkeletonBox(
+              width: 44,
+              height: 44,
+              borderRadius: AppRadius.allSm,
+            ),
+            const SizedBox(width: AppSpacing.md),
+          ],
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SkeletonLine(height: 15),
+                SizedBox(height: AppSpacing.xs),
+                SkeletonLine(width: 140, height: 12),
+              ],
+            ),
+          ),
+          if (showTrailing) ...[
+            const SizedBox(width: AppSpacing.sm),
+            const Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                SkeletonLine(width: 64, height: 14),
+                SizedBox(height: AppSpacing.xs),
+                SkeletonLine(width: 40, height: 11),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================================
 // SkeletonKpiCard — skeleton de card de KPI (dashboard / hero)
 // ============================================================================
 

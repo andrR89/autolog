@@ -17,6 +17,7 @@ import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/core/design/widgets/responsive_body.dart';
+import 'package:autolog/core/design/widgets/skeleton.dart';
 import 'package:autolog/data/repositories/expense_repository.dart';
 import 'package:autolog/domain/models/expense.dart';
 import 'package:autolog/domain/models/vehicle.dart';
@@ -83,7 +84,7 @@ class ExpensesListScreen extends ConsumerWidget {
         iconTheme: const IconThemeData(color: AppColors.brandInk),
       ),
       body: expensesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const _ExpensesSkeleton(),
         error: (error, _) => _ErrorState(
           onRetry: () => ref.invalidate(expensesByVehicleProvider(vehicle.id)),
         ),
@@ -175,9 +176,7 @@ class _Body extends ConsumerWidget {
         children: [
           // SafeArea top só nesta primeira coluna — o hero cobre a status bar.
           hero,
-          Expanded(
-            child: center(const ExpensesEmptyState()),
-          ),
+          Expanded(child: center(const ExpensesEmptyState())),
         ],
       );
     }
@@ -356,6 +355,42 @@ class _DismissBackground extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Skeleton de carregamento da lista de despesas
+// ---------------------------------------------------------------------------
+
+class _ExpensesSkeleton extends StatelessWidget {
+  const _ExpensesSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.lg,
+        AppSpacing.lg,
+        AppSpacing.huge,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SkeletonLine(width: 80, height: 11),
+          SizedBox(height: AppSpacing.sm),
+          SkeletonListCard(showTrailing: true),
+          SizedBox(height: AppSpacing.md),
+          SkeletonListCard(showTrailing: true),
+          SizedBox(height: AppSpacing.md),
+          SkeletonListCard(showTrailing: true),
+          SizedBox(height: AppSpacing.xl),
+          SkeletonLine(width: 80, height: 11),
+          SizedBox(height: AppSpacing.sm),
+          SkeletonListCard(showTrailing: true),
         ],
       ),
     );

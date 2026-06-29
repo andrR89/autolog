@@ -24,10 +24,8 @@ Future<FipeVehicleDetails?> showFipeSearchSheet(
       maxChildSize: 0.95,
       minChildSize: 0.5,
       expand: false,
-      builder: (_, controller) => _FipeSearchSheetContent(
-        type: type,
-        scrollController: controller,
-      ),
+      builder: (_, controller) =>
+          _FipeSearchSheetContent(type: type, scrollController: controller),
     ),
   );
 }
@@ -227,25 +225,19 @@ class _FipeSearchSheetContentState
   List<FipeBrand> get _filteredBrands {
     if (_query.isEmpty) return _brands;
     final q = _query.toLowerCase();
-    return _brands
-        .where((b) => b.name.toLowerCase().contains(q))
-        .toList();
+    return _brands.where((b) => b.name.toLowerCase().contains(q)).toList();
   }
 
   List<FipeModel> get _filteredModels {
     if (_query.isEmpty) return _models;
     final q = _query.toLowerCase();
-    return _models
-        .where((m) => m.name.toLowerCase().contains(q))
-        .toList();
+    return _models.where((m) => m.name.toLowerCase().contains(q)).toList();
   }
 
   List<FipeYear> get _filteredYears {
     if (_query.isEmpty) return _years;
     final q = _query.toLowerCase();
-    return _years
-        .where((y) => y.name.toLowerCase().contains(q))
-        .toList();
+    return _years.where((y) => y.name.toLowerCase().contains(q)).toList();
   }
 
   // -------------------------------------------------------------------------
@@ -270,7 +262,10 @@ class _FipeSearchSheetContentState
         ),
 
         // Breadcrumb
-        _BreadcrumbBar(step: _step, onBack: _step != _Step.brand ? _goBack : null),
+        _BreadcrumbBar(
+          step: _step,
+          onBack: _step != _Step.brand ? _goBack : null,
+        ),
 
         Divider(height: 1, color: context.hairline),
 
@@ -304,9 +299,7 @@ class _FipeSearchSheetContentState
         ),
 
         // Conteúdo
-        Expanded(
-          child: _buildContent(),
-        ),
+        Expanded(child: _buildContent()),
       ],
     );
   }
@@ -325,7 +318,11 @@ class _FipeSearchSheetContentState
   Widget _buildContent() {
     if (_loading) {
       return const Center(
-        child: CircularProgressIndicator(),
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
       );
     }
 
@@ -340,17 +337,17 @@ class _FipeSearchSheetContentState
               const SizedBox(height: 12),
               Text(
                 'Não conseguimos buscar agora',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: context.ink,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(color: context.ink),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 6),
               Text(
                 _error!,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: context.inkMuted,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: context.inkMuted),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 20),
@@ -370,10 +367,7 @@ class _FipeSearchSheetContentState
         begin: const Offset(0.08, 0),
         end: Offset.zero,
       ).animate(CurvedAnimation(parent: _slideCtrl, curve: Curves.easeOut)),
-      child: FadeTransition(
-        opacity: _slideCtrl,
-        child: _buildList(),
-      ),
+      child: FadeTransition(opacity: _slideCtrl, child: _buildList()),
     );
   }
 
@@ -436,9 +430,9 @@ class _FipeSearchSheetContentState
     return Center(
       child: Text(
         'Nenhum resultado para "$_query"',
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          color: context.inkSoft,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.bodyMedium?.copyWith(color: context.inkSoft),
       ),
     );
   }
@@ -521,14 +515,17 @@ class _BreadcrumbItem extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (done)
-          const Icon(Icons.check_circle_outline, size: 14, color: AppColors.success),
+          const Icon(
+            Icons.check_circle_outline,
+            size: 14,
+            color: AppColors.success,
+          ),
         if (done) const SizedBox(width: 3),
         Text(
           label,
-          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-            color: color,
-            fontWeight: weight,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.labelMedium?.copyWith(color: color, fontWeight: weight),
         ),
       ],
     );
@@ -573,16 +570,16 @@ class _ItemTile extends StatelessWidget {
             Expanded(
               child: Text(
                 name,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: context.ink,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: context.ink),
               ),
             ),
             Text(
               code,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: context.inkSoft,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.labelSmall?.copyWith(color: context.inkSoft),
             ),
             const SizedBox(width: 4),
             Icon(Icons.chevron_right, size: 18, color: context.inkSoft),

@@ -1,6 +1,7 @@
 import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
+import 'package:autolog/core/design/widgets/skeleton.dart';
 import 'package:autolog/data/repositories/fuel_entry_repository.dart';
 import 'package:autolog/data/repositories/vehicle_repository.dart';
 import 'package:autolog/domain/models/fuel_entry.dart';
@@ -77,7 +78,7 @@ class MyStationsScreen extends ConsumerWidget {
         title: const Text('Meus postos'),
       ),
       body: statsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const _StationsSkeleton(),
         error: (err, _) => Center(
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.xxl),
@@ -102,6 +103,33 @@ class MyStationsScreen extends ConsumerWidget {
 // ---------------------------------------------------------------------------
 // Widgets internos
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Skeleton de carregamento da lista de postos
+// ---------------------------------------------------------------------------
+
+class _StationsSkeleton extends StatelessWidget {
+  const _StationsSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.lg,
+      ),
+      child: Column(
+        children: [
+          SkeletonListCard(showTrailing: true),
+          SizedBox(height: AppSpacing.sm),
+          SkeletonListCard(showTrailing: true),
+          SizedBox(height: AppSpacing.sm),
+          SkeletonListCard(showTrailing: true),
+        ],
+      ),
+    );
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Lista de postos com seção de posto preferido no topo

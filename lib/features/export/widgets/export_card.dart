@@ -205,9 +205,7 @@ class _ExportSheetState extends ConsumerState<_ExportSheet> {
         case ShareResultStatus.unavailable:
           messenger.showSnackBar(
             const SnackBar(
-              content: Text(
-                'Compartilhamento indisponível neste dispositivo.',
-              ),
+              content: Text('Compartilhamento indisponível neste dispositivo.'),
               backgroundColor: AppColors.danger,
             ),
           );
@@ -364,7 +362,13 @@ class _ExportSheetState extends ConsumerState<_ExportSheet> {
 
           // Botões de exportação
           if (_loading)
-            const Center(child: CircularProgressIndicator())
+            const Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            )
           else ...[
             _ExportButton(
               label: 'Abastecimentos',

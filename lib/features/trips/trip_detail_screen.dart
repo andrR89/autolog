@@ -96,11 +96,23 @@ class TripDetailScreen extends ConsumerWidget {
         onPressed: () => _showAddSheet(context, vehicle.id),
       ),
       body: fuelsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(
+          child: SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
         error: (_, _) =>
             const Center(child: Text('Não foi possível carregar os dados.')),
         data: (fuels) => expensesAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(
+            child: SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ),
           error: (_, _) =>
               const Center(child: Text('Não foi possível carregar os dados.')),
           data: (expenses) =>

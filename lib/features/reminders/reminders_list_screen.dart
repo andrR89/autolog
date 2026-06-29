@@ -14,6 +14,7 @@ import 'package:autolog/core/design/dynamic_colors.dart';
 import 'package:autolog/core/design/tokens.dart';
 import 'package:autolog/core/design/typography.dart';
 import 'package:autolog/core/design/widgets/responsive_body.dart';
+import 'package:autolog/core/design/widgets/skeleton.dart';
 import 'package:autolog/data/repositories/reminder_repository.dart';
 import 'package:autolog/domain/models/reminder.dart';
 import 'package:autolog/domain/models/vehicle.dart';
@@ -74,7 +75,7 @@ class RemindersListScreen extends ConsumerWidget {
         iconTheme: const IconThemeData(color: AppColors.brandInk),
       ),
       body: remindersAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const _RemindersSkeleton(),
         error: (error, _) => _ErrorState(
           onRetry: () => ref.invalidate(remindersByVehicleProvider(vehicle.id)),
         ),
@@ -131,9 +132,7 @@ class _Body extends ConsumerWidget {
       return Column(
         children: [
           hero,
-          Expanded(
-            child: center(const RemindersEmptyState()),
-          ),
+          Expanded(child: center(const RemindersEmptyState())),
         ],
       );
     }
@@ -153,9 +152,7 @@ class _Body extends ConsumerWidget {
           ),
           sliver: SliverList(
             delegate: SliverChildListDelegate(
-              _buildItems(context, ref, pending, done)
-                  .map(center)
-                  .toList(),
+              _buildItems(context, ref, pending, done).map(center).toList(),
             ),
           ),
         ),
@@ -367,6 +364,40 @@ class _DismissBackground extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Skeleton de carregamento da lista de lembretes
+// ---------------------------------------------------------------------------
+
+class _RemindersSkeleton extends StatelessWidget {
+  const _RemindersSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.lg,
+        AppSpacing.lg,
+        AppSpacing.huge,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SkeletonLine(width: 90, height: 11),
+          SizedBox(height: AppSpacing.sm),
+          SkeletonListCard(showLeadingBox: false),
+          SizedBox(height: AppSpacing.md),
+          SkeletonListCard(showLeadingBox: false),
+          SizedBox(height: AppSpacing.xl),
+          SkeletonLine(width: 100, height: 11),
+          SizedBox(height: AppSpacing.sm),
+          SkeletonListCard(showLeadingBox: false),
         ],
       ),
     );
