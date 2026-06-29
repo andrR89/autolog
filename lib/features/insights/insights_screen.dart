@@ -679,7 +679,10 @@ class _SectionHeader extends StatelessWidget {
               letterSpacing: 1.6,
             ),
           ),
-          if (count != null) ...[
+          // Esconde o badge também quando o count é zero — "0 itens" gera
+          // ruído visual em seções vazias; o empty state interno da seção
+          // já comunica que está sem dados.
+          if (count != null && count! > 0) ...[
             const SizedBox(width: AppSpacing.sm),
             Container(
               padding: const EdgeInsets.symmetric(

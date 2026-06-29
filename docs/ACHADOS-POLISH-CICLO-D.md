@@ -124,3 +124,19 @@ regressão — é um polimento opcional.
 
 **Veredito Ciclo D:** todos os 6 blocos **aprovados** (code + runtime). Uma observação 🟡
 menor no Bloco 2 (badge "0" em seções de contagem vazias) pra sua decisão.
+
+---
+
+## ✅ Reteste da observação 🟡 do Bloco 2 — badge "0" RESOLVIDO (build v12)
+
+O Code aplicou o ajuste: `_SectionHeader` agora renderiza o badge em
+**`if (count != null && count! > 0)`** (`insights_screen.dart:685`), com comentário
+"Esconde o badge também quando o count é zero — '0 itens' gera ruído".
+
+**Runtime (SW `v12-2026-06-29`, logado, dark):** rodei "Analisar agora" de novo —
+**LEMBRETES SUGERIDOS** agora aparece **só com o label, sem o "0"** (antes mostrava
+"LEMBRETES SUGERIDOS  0"). PADRÕES DETECTADOS usa o mesmo `_SectionHeader`/condição, então
+com 0 padrões também não exibe badge. As 3 seções de navegação (MANUTENÇÃO/FISCAL/ASSISTENTE)
+seguem sem badge. **Todos os headers limpos do "0".** Observação fechada.
+
+**Ciclo D 100% homologado** do meu lado — 6 blocos + a observação do badge resolvida.
